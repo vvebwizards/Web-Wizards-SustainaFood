@@ -3,6 +3,7 @@ version: "3.8"
 services:
   backend:
     build: ./backend
+    image: soufienessalah/my-repo:latest  # Specify your Docker Hub username and repo here
     ports:
       - "5000:5000"
     depends_on:
@@ -15,6 +16,7 @@ services:
 
   frontend:
     build: ./frontend
+    image: soufienessalah/my-repo:latest  # Specify your Docker Hub username and repo here
     ports:
       - "5173:5173"
     depends_on:
