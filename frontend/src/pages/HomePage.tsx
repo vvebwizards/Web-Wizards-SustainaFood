@@ -23,7 +23,7 @@ backgroundPosition: 'center'
 Get Involved
 </Link>
 <div>
-<Link to="/login" className="inline-block bg-white hover:bg-gray-100 text-gray-800 px-8 py-3 rounded-full text-lg font-semibold transition-colors duration-300" >
+<Link to="/signin" className="inline-block bg-white hover:bg-gray-100 text-gray-800 px-8 py-3 rounded-full text-lg font-semibold transition-colors duration-300" >
 Sign In
 </Link>
 </div>
