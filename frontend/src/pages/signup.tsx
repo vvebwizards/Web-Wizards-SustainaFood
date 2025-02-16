@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, Mail, Lock, User, AlertTriangle } from "lucide-react";
-
+import { useAuth } from "../context/AuthContext";
 
 interface LocationState {
   role?: string;
@@ -10,7 +10,7 @@ interface LocationState {
 function SignUp() {
   const location = useLocation();
   const navigate = useNavigate();
-
+  const { signup } = useAuth();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -38,7 +38,7 @@ function SignUp() {
     try {
       console.log("📡 Sending signup request:", { name, email, password, role });
   
-   
+      await signup(name, email, password, role);
       
       console.log("✅ Signup Successful. Redirecting to login...");
       navigate("/login"); // ✅ Only navigate if signup succeeds
