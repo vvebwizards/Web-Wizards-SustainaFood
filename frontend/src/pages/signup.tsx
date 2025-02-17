@@ -31,7 +31,7 @@ function SignUp() {
     setError(""); // Reset previous errors
   
     if (password !== confirmPassword) {
-      setError("⚠️ Passwords do not match.");
+      setError(" Passwords do not match.");
       return;
     }
   
