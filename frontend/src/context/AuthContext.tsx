@@ -20,37 +20,37 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(() => {
-    return localStorage.getItem("token") || null;
-  });
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem("token") || null);
 
   useEffect(() => {
     if (token) {
       const storedUser = localStorage.getItem("user");
-      if (storedUser) setUser(JSON.parse(storedUser));
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
     }
   }, [token]);
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await axios.post("http://localhost:5000/api/auth/login", {
-        email,
-        password,
-      });
-  
+      const response = await axios.post("http://localhost:5000/api/auth/login", { email, password });
+
       console.log("✅ Login Success:", response.data);
-      
+
+      // 🔹 Store in localStorage
       localStorage.setItem("user", JSON.stringify(response.data.user));
       localStorage.setItem("token", response.data.token);
-      
-      return response.data; // ✅ Return success data
+
+      // 🔥 Update React state
+      setUser(response.data.user);
+      setToken(response.data.token);
+
+      return response.data;
     } catch (error: any) {
       console.error("❌ Login Failed:", error.response?.data?.message || error.message);
-      
-      throw error; // 🔥 Ensure errors are thrown to `handleSubmit`
+      throw error;
     }
   };
-  
 
   const signup = async (username: string, email: string, password: string, role: string) => {
     try {
@@ -60,19 +60,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         password,
         role,
       });
-  
-      console.log("✅ Backend Response:", response.data);
-  
-      return response.data; // ✅ Return response on success
+
+      console.log("✅ Signup Success:", response.data);
+
+      return response.data;
     } catch (error: any) {
       console.error("❌ Signup Failed:", error.response?.data || error.message);
-      
-      throw error; // 🔥 Ensure errors are thrown so `handleSubmit` can catch them
+      throw error;
     }
   };
-  
 
   const logout = () => {
+    console.log("👋 Logging Out");
     setUser(null);
     setToken(null);
     localStorage.removeItem("user");
