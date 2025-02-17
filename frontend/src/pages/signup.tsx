@@ -41,7 +41,7 @@ function SignUp() {
       await signup(name, email, password, role);
       
       console.log("✅ Signup Successful. Redirecting to login...");
-      navigate("/login"); // ✅ Only navigate if signup succeeds
+      navigate("/signin"); // ✅ Only navigate if signup succeeds
     } catch (err: any) {
       console.error("❌ Signup Failed:", err.response?.data?.message || err.message);
   

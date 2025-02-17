@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode } from "react";
 import axios from "axios";
 
 interface User {
@@ -10,38 +10,13 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (username: string, email: string, password: string, role: string) => Promise<void>;
-  logout: () => void;
+  signup: (username: string, email: string, password: string, role: string) => Promise<any>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(() => {
-    return localStorage.getItem("token") || null;
-  });
-
-  useEffect(() => {
-    if (token) {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) setUser(JSON.parse(storedUser));
-    }
-  }, [token]);
-
-  const login = async (email: string, password: string) => {
-    try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", { email, password });
-      setUser(res.data.user);
-      setToken(res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-      localStorage.setItem("token", res.data.token);
-    } catch (error: any) {
-      console.error("Login failed:", error?.response?.data?.message || "Unknown error");
-    }
-  };
 
   const signup = async (username: string, email: string, password: string, role: string) => {
     try {
@@ -51,30 +26,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         password,
         role,
       });
-  
-      console.log("✅ Backend Response:", response.data);
-  
-      return response.data; // ✅ Return response on success
+
+      console.log("✅ Signup Successful:", response.data);
+      setUser(response.data.user); // Update user state after signup
+      return response.data;
     } catch (error: any) {
       console.error("❌ Signup Failed:", error.response?.data || error.message);
-      
-      throw error; // 🔥 Ensure errors are thrown so `handleSubmit` can catch them
+      throw error;
     }
   };
-  
 
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-  };
-
-  return (
-    <AuthContext.Provider value={{ user, token, login, signup, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={{ user, signup }}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {

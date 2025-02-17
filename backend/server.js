@@ -1,8 +1,8 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const morgan = require('morgan');
-const connectDB = require('./config/db');
+import express from "express";
+import cors from "cors";
+import morgan from "morgan";
+import connectDB from "./config/db.js";
+import authRoutes from "./routes/authRoutes.js"; // Import with 'import'
 
 const app = express();
 connectDB();
@@ -10,6 +10,7 @@ connectDB();
 app.use(express.json());
 app.use(cors());
 app.use(morgan('dev'));
+app.use("/api/auth", authRoutes);
 
 app.get('/', (req, res) => {
     res.send('backend connected to front');
