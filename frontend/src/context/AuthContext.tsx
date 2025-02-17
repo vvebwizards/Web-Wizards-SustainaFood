@@ -14,6 +14,9 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   signup: (username: string, email: string, password: string, role: string) => Promise<void>;
   logout: () => void;
+  requestPasswordReset: (email: string) => Promise<void>;
+  resetPassword: (token: string, newPassword: string) => Promise<void>;
+  verifyTwoFactor: (code: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,27 +34,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [token]);
 
+  // ✅ LOGIN FUNCTION
   const login = async (email: string, password: string) => {
     try {
       const response = await axios.post("http://localhost:5000/api/auth/login", { email, password });
 
       console.log("✅ Login Success:", response.data);
 
-      // 🔹 Store in localStorage
+      if (response.data.requiresTwoFactor) {
+        window.location.href = "/2fa"; // Redirect to 2FA if required
+        return;
+      }
+
       localStorage.setItem("user", JSON.stringify(response.data.user));
       localStorage.setItem("token", response.data.token);
 
-      // 🔥 Update React state
       setUser(response.data.user);
       setToken(response.data.token);
-
-      return response.data;
     } catch (error: any) {
       console.error("❌ Login Failed:", error.response?.data?.message || error.message);
       throw error;
     }
   };
 
+  // ✅ SIGNUP FUNCTION
   const signup = async (username: string, email: string, password: string, role: string) => {
     try {
       const response = await axios.post("http://localhost:5000/api/auth/signup", {
@@ -62,7 +68,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       console.log("✅ Signup Success:", response.data);
-
       return response.data;
     } catch (error: any) {
       console.error("❌ Signup Failed:", error.response?.data || error.message);
@@ -70,6 +75,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // ✅ LOGOUT FUNCTION
   const logout = () => {
     console.log("👋 Logging Out");
     setUser(null);
@@ -78,8 +84,47 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem("token");
   };
 
+  // ✅ PASSWORD RESET REQUEST
+  const requestPasswordReset = async (email: string) => {
+    try {
+      await axios.post("http://localhost:5000/api/auth/request-reset", { email });
+      console.log("📧 Password reset request sent.");
+    } catch (error: any) {
+      console.error("❌ Password Reset Request Failed:", error.response?.data || error.message);
+      throw error;
+    }
+  };
+
+  // ✅ PASSWORD RESET FUNCTION
+  const resetPassword = async (token: string, newPassword: string) => {
+    try {
+      await axios.post("http://localhost:5000/api/auth/reset-password", { token, newPassword });
+      console.log("🔑 Password reset successful.");
+    } catch (error: any) {
+      console.error("❌ Password Reset Failed:", error.response?.data || error.message);
+      throw error;
+    }
+  };
+
+  // ✅ VERIFY TWO-FACTOR AUTHENTICATION CODE
+  const verifyTwoFactor = async (code: string) => {
+    try {
+      const response = await axios.post("http://localhost:5000/api/auth/verify-2fa", { code });
+
+      console.log("✅ 2FA Verified:", response.data);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+      localStorage.setItem("token", response.data.token);
+
+      setUser(response.data.user);
+      setToken(response.data.token);
+    } catch (error: any) {
+      console.error("❌ 2FA Verification Failed:", error.response?.data || error.message);
+      throw error;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, token, login, signup, logout, requestPasswordReset, resetPassword, verifyTwoFactor }}>
       {children}
     </AuthContext.Provider>
   );
