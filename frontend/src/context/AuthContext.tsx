@@ -33,15 +33,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", { email, password });
-      setUser(res.data.user);
-      setToken(res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-      localStorage.setItem("token", res.data.token);
+      const response = await axios.post("http://localhost:5000/api/auth/login", {
+        email,
+        password,
+      });
+  
+      console.log("✅ Login Success:", response.data);
+      
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+      localStorage.setItem("token", response.data.token);
+      
+      return response.data; // ✅ Return success data
     } catch (error: any) {
-      console.error("Login failed:", error?.response?.data?.message || "Unknown error");
+      console.error("❌ Login Failed:", error.response?.data?.message || error.message);
+      
+      throw error; // 🔥 Ensure errors are thrown to `handleSubmit`
     }
   };
+  
 
   const signup = async (username: string, email: string, password: string, role: string) => {
     try {

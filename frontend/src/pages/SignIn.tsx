@@ -13,17 +13,22 @@ function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(""); // Reset previous errors
-
+  
     try {
+      console.log("📡 Sending login request:", { email, password });
+  
       await login(email, password);
+  
       console.log("✅ Login successful, redirecting...");
-      navigate("/dashboard"); // ✅ Only navigate on success
+      navigate("/dashboard"); // ✅ Only navigate if login succeeds
     } catch (err: any) {
       console.error("❌ Login Failed:", err.response?.data?.message || err.message);
+  
+      // 🔥 Show error message in UI
       setError(err.response?.data?.message || "⚠️ Invalid email or password.");
     }
   };
-
+  
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -36,7 +41,7 @@ function Login() {
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
           Or{" "}
-          <Link to="/signup" className="font-medium text-green-600 hover:text-green-500">
+          <Link to="/get-involved" className="font-medium text-green-600 hover:text-green-500">
             create a new account
           </Link>
         </p>
