@@ -1,21 +1,21 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Mail, Lock } from "lucide-react";
-
+import { useAuth } from "../context/AuthContext";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(""); // 🔥 Error state to display messages
   const navigate = useNavigate();
- 
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(""); // Reset previous errors
 
     try {
-      
+      await login(email, password);
       console.log("✅ Login successful, redirecting...");
       navigate("/dashboard"); // ✅ Only navigate on success
     } catch (err: any) {
