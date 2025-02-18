@@ -1,11 +1,14 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
 import User from "../models/User.js";
 import geoip from 'geoip-lite';
 import crypto from 'crypto';
 import {UAParser} from'ua-parser-js';
-dotenv.config(); 
+import deviceLocationLoginAlert from "../emailTemplates/deviceLocationLoginAlert.js";
+import { sendEmail} from '../utils/helpers.js';
+import dotenv from 'dotenv';
+dotenv.config();
+
 
 export async function signup(req, res) {
   try {
@@ -75,45 +78,63 @@ export async function login(req, res) {
       expiresIn: "1h",
     });
 
-    // ✅ Set the token as an HTTP-only cookie
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // Secure in production
-      sameSite: "Strict", // Protects against CSRF
-      maxAge: 60 * 60 * 1000, // 1 hour
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Strict",
+      maxAge: 60 * 60 * 1000,
     });
 
     const userData = { id: user._id, username: user.username, email: user.email, role: user.role };
     const userAgent = req.headers['user-agent']; 
     const deviceFingerprint = crypto.createHash('sha256').update(userAgent).digest('hex'); 
     const ip = req.ip || req.connection.remoteAddress; 
- // Parse device information
-        const parser = new UAParser(userAgent);
-        const deviceInfo = parser.getResult();
-        const deviceDetails = {
-            browser: deviceInfo.browser.name,
-            os: deviceInfo.os.name,
-            device: deviceInfo.device.type || 'Desktop', 
-        };
 
-        // Get location information
-        const location = geoip.lookup(ip);
-        const locationDetails = location
-            ? `${location.city}, ${location.region}, ${location.country}`
-            : 'Unknown Location';
+    // Parse device information
+    const parser = new UAParser(userAgent);
+    const deviceInfo = parser.getResult();
+    const deviceDetails = {
+        browser: deviceInfo.browser.name,
+        os: deviceInfo.os.name,
+        device: deviceInfo.device.type || 'Desktop', 
+    };
+
+    // Get location information
+    const location = geoip.lookup(ip);
+    const locationDetails = location
+        ? `${location.city}, ${location.region}, ${location.country}`
+        : 'Unknown Location';
+    
     const isRegisteredDevice = user.registeredDevices.includes(deviceFingerprint);
     const isRegisteredLocation = user.registeredLocations.includes(ip);
 
-    if (!isRegisteredDevice ) {
+    if (!isRegisteredDevice) {
+      const template = deviceLocationLoginAlert(
+        user.username,
+        deviceDetails.device, 
+        deviceDetails.browser,
+        deviceDetails.os,
+      );
+
+      const data = {
+        from: process.env.MAILER_EMAIL_ID,
+        to: user.email, 
+        subject: 'Login Alert',
+        html: template,
+      };
+      
+      await sendEmail(data);
+      
       return res.status(403).json({
         success: false,
-        message: `Connexion à partir d'un appareil non enregistré ${deviceDetails.device} sur ${deviceDetails.browser} (${deviceDetails.os})`,
+        message: `Login from unregistered device: ${deviceDetails.device} on ${deviceDetails.browser} (${deviceDetails.os})`,
       });
     }
+    
     if (!isRegisteredLocation) {
       return res.status(403).json({
         success: false,
-        message: `Connexion à partir d'un emplacement non enregistré ${locationDetails.city} , ${locationDetails.region} ,${locationDetails.country}`,
+        message: `Login from unregistered location: ${locationDetails}`,
       });
     }
     
@@ -123,6 +144,7 @@ export async function login(req, res) {
     res.status(500).json({ message: "Error logging in", error: error.message });
   }
 }
+
 
 // ✅ Logout function to clear cookie
 export async function logout(req, res) {

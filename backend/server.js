@@ -4,6 +4,8 @@ import morgan from "morgan";
 import cookieParser from "cookie-parser"; // ✅ Import cookie-parser
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
+import dotenv from 'dotenv';
+dotenv.config();
 
 const app = express();
 connectDB();
