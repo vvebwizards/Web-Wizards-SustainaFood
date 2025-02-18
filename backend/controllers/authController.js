@@ -98,4 +98,52 @@ export async function logout(req, res) {
   res.status(200).json({ message: "Logged out successfully" });
 }
 
+// ✅ update user information
+export async function updateUserInfo(req, res) {
+  try {
+    const { userId } = req.params; // Assuming the user ID is passed as a URL parameter
+    const { username, email, password } = req.body;
 
+    // Find the user by ID
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // Update username if provided
+    if (username) {
+      const existingUsername = await User.findOne({ username });
+      if (existingUsername && existingUsername._id.toString() !== userId) {
+        return res.status(400).json({ message: "Username is already taken." });
+      }
+      user.username = username;
+    }
+
+    // Update email if provided
+    if (email) {
+      const existingEmail = await User.findOne({ email });
+      if (existingEmail && existingEmail._id.toString() !== userId) {
+        return res.status(400).json({ message: "Email is already in use." });
+      }
+      user.email = email;
+    }
+
+    // Update password if provided
+    if (password) {
+      if (password.length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters long." });
+      }
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+      user.password = hashedPassword;
+    }
+
+    // Save the updated user information
+    await user.save();
+
+    res.status(200).json({ message: "User information updated successfully.", user });
+  } catch (error) {
+    console.error("Update User Info Error:", error);
+    res.status(500).json({ message: "Server error. Please try again later." });
+  }
+}
