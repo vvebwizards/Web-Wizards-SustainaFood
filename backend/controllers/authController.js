@@ -2,7 +2,9 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import User from "../models/User.js";
-
+import geoip from 'geoip-lite';
+import crypto from 'crypto';
+import {UAParser} from'ua-parser-js';
 dotenv.config(); 
 
 export async function signup(req, res) {
@@ -29,8 +31,12 @@ export async function signup(req, res) {
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-
+    const userAgent = req.headers['user-agent'];
+    const deviceFingerprint = crypto.createHash('sha256').update(userAgent).digest('hex');
+    const ip = req.ip || req.connection.remoteAddress;
     const newUser = new User({ username, email, password: hashedPassword, role });
+    newUser.registeredDevices.push(deviceFingerprint);
+    newUser.registeredLocations.push(ip);
     await newUser.save();
 
     res.status(201).json({ message: "User registered successfully." });
@@ -78,6 +84,38 @@ export async function login(req, res) {
     });
 
     const userData = { id: user._id, username: user.username, email: user.email, role: user.role };
+    const userAgent = req.headers['user-agent']; 
+    const deviceFingerprint = crypto.createHash('sha256').update(userAgent).digest('hex'); 
+    const ip = req.ip || req.connection.remoteAddress; 
+ // Parse device information
+        const parser = new UAParser(userAgent);
+        const deviceInfo = parser.getResult();
+        const deviceDetails = {
+            browser: deviceInfo.browser.name,
+            os: deviceInfo.os.name,
+            device: deviceInfo.device.type || 'Desktop', 
+        };
+
+        // Get location information
+        const location = geoip.lookup(ip);
+        const locationDetails = location
+            ? `${location.city}, ${location.region}, ${location.country}`
+            : 'Unknown Location';
+    const isRegisteredDevice = user.registeredDevices.includes(deviceFingerprint);
+    const isRegisteredLocation = user.registeredLocations.includes(ip);
+
+    if (!isRegisteredDevice ) {
+      return res.status(403).json({
+        success: false,
+        message: `Connexion à partir d'un appareil non enregistré ${deviceDetails.device} sur ${deviceDetails.browser} (${deviceDetails.os})`,
+      });
+    }
+    if (!isRegisteredLocation) {
+      return res.status(403).json({
+        success: false,
+        message: `Connexion à partir d'un emplacement non enregistré ${locationDetails.city} , ${locationDetails.region} ,${locationDetails.country}`,
+      });
+    }
     
     res.status(200).json({ message: "Login successful", user: userData });
   } catch (error) {

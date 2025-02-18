@@ -13,6 +13,8 @@ const userSchema = new mongoose.Schema({
     type: Boolean, 
     default: false,
   },
+  registeredDevices: { type: [String], default: [] },
+  registeredLocations: { type: [String], default: [] },
 }, { timestamps: true });
 
 export default mongoose.model("User", userSchema);
