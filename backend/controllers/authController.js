@@ -46,27 +46,56 @@ export async function login(req, res) {
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password are required" });
     }
+
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
+
     if (user.blocked) {
       return res.status(403).json({ message: "Your account has been blocked" });
     }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
+
     if (!process.env.JWT_SECRET) {
       return res.status(500).json({ message: "Server error: Missing JWT_SECRET" });
     }
+
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
+
+    // ✅ Set the token as an HTTP-only cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // Secure in production
+      sameSite: "Strict", // Protects against CSRF
+      maxAge: 60 * 60 * 1000, // 1 hour
+    });
+
     const userData = { id: user._id, username: user.username, email: user.email, role: user.role };
-    res.status(200).json({ message: "Login successful", token, user: userData });
+    
+    res.status(200).json({ message: "Login successful", user: userData });
   } catch (error) {
     console.error("Login Error:", error);
     res.status(500).json({ message: "Error logging in", error: error.message });
   }
 }
+
+// ✅ Logout function to clear cookie
+export async function logout(req, res) {
+  res.cookie("token", "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "Strict",
+    expires: new Date(0), // ✅ Forces cookie expiration
+  });
+
+  res.status(200).json({ message: "Logged out successfully" });
+}
+
+

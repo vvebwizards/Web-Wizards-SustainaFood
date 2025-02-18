@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import axios from "axios";
+import Cookies from "js-cookie"; // ✅ Import js-cookie
 
 interface User {
   id: string;
@@ -10,7 +11,6 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
   login: (email: string, password: string) => Promise<void>;
   signup: (username: string, email: string, password: string, role: string) => Promise<void>;
   logout: () => void;
@@ -23,21 +23,18 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem("token") || null);
 
   useEffect(() => {
-    if (token) {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
-      }
+    const storedUser = Cookies.get("user"); // ✅ Retrieve user from cookies
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
     }
-  }, [token]);
+  }, []);
 
   // ✅ LOGIN FUNCTION
   const login = async (email: string, password: string) => {
     try {
-      const response = await axios.post("http://localhost:5000/api/auth/login", { email, password });
+      const response = await axios.post("http://localhost:5000/api/auth/login", { email, password }, { withCredentials: true });
 
       console.log("✅ Login Success:", response.data);
 
@@ -46,11 +43,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      localStorage.setItem("user", JSON.stringify(response.data.user));
-      localStorage.setItem("token", response.data.token);
-
+      Cookies.set("user", JSON.stringify(response.data.user), { expires: 7 }); // ✅ Store user in cookies
       setUser(response.data.user);
-      setToken(response.data.token);
     } catch (error: any) {
       console.error("❌ Login Failed:", error.response?.data?.message || error.message);
       throw error;
@@ -76,13 +70,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // ✅ LOGOUT FUNCTION
-  const logout = () => {
-    console.log("👋 Logging Out");
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
+  const logout = async () => {
+    try {
+      await axios.post("http://localhost:5000/api/auth/logout", {}, { withCredentials: true });
+  
+      // ✅ Ensure user state is cleared
+      setUser(null);
+  
+      // ✅ Manually remove the user from cookies
+      Cookies.remove("token");
+      Cookies.remove("user");
+  
+      console.log("✅ Logout successful, user and token removed.");
+    } catch (error) {
+      console.error("❌ Logout Failed:", error);
+    }
   };
+  
+  
+  
 
   // ✅ PASSWORD RESET REQUEST
   const requestPasswordReset = async (email: string) => {
@@ -112,11 +118,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const response = await axios.post("http://localhost:5000/api/auth/verify-2fa", { code });
 
       console.log("✅ 2FA Verified:", response.data);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
-      localStorage.setItem("token", response.data.token);
-
+      Cookies.set("user", JSON.stringify(response.data.user), { expires: 7 });
       setUser(response.data.user);
-      setToken(response.data.token);
     } catch (error: any) {
       console.error("❌ 2FA Verification Failed:", error.response?.data || error.message);
       throw error;
@@ -124,7 +127,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, signup, logout, requestPasswordReset, resetPassword, verifyTwoFactor }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, requestPasswordReset, resetPassword, verifyTwoFactor }}>
       {children}
     </AuthContext.Provider>
   );
