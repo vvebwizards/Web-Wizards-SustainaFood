@@ -33,7 +33,7 @@ function App() {
       <Route path="/signup" element={<SignUp />} />
       <Route path="/signin" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} /> 
+      <Route path="/reset-password" element={<ResetPassword />} /> { /* bch tnjm testi page ----> http://localhost:5173/reset-password?token=valid-token*/ }
       <Route path="/2fa" element={<TwoFactorAuth />} />  
 
      

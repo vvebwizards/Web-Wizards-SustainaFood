@@ -48,7 +48,7 @@ function ForgotPassword() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <Link to="/login" className="flex items-center text-green-600 hover:text-green-700 mb-6 mx-4">
+        <Link to="/signin" className="flex items-center text-green-600 hover:text-green-700 mb-6 mx-4">
           <ArrowLeft className="w-5 h-5 mr-2" />
           Back to Login
         </Link>
