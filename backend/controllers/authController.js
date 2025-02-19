@@ -87,10 +87,8 @@ export async function login(req, res) {
 // ✅ Logout function to clear cookie
 export async function logout(req, res) {
   res.cookie("token", "", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "Strict",
-    expires: new Date(0), // ✅ Forces cookie expiration
+    httpOnly: false,
+    maxAge: 60 * 60 * 1000,
   });
 
   res.status(200).json({ message: "Logged out successfully" });
