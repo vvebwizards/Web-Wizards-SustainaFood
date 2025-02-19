@@ -29,32 +29,44 @@ function SignUp() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(""); // Reset previous errors
-  
+
     if (password !== confirmPassword) {
       setError(" Passwords do not match.");
       return;
     }
-  
+
     try {
-      console.log("📡 Sending signup request:", { name, email, password, role });
-  
+      console.log("📡 Sending signup request:", {
+        name,
+        email,
+        password,
+        role,
+      });
+
       await signup(name, email, password, role);
-      
+
       console.log("✅ Signup Successful. Redirecting to login...");
       navigate("/signin"); // ✅ Only navigate if signup succeeds
     } catch (err: any) {
-      console.error("❌ Signup Failed:", err.response?.data?.message || err.message);
-  
+      console.error(
+        "❌ Signup Failed:",
+        err.response?.data?.message || err.message
+      );
+
       // 🔥 Show error message in UI and stop navigation
-      setError(err.response?.data?.message || "⚠️ Signup failed. Please try again.");
+      setError(
+        err.response?.data?.message || "⚠️ Signup failed. Please try again."
+      );
     }
   };
-  
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <Link to="/" className="flex items-center text-green-600 hover:text-green-700 mb-6 mx-4">
+        <Link
+          to="/get-involved"
+          className="flex items-center text-green-600 hover:text-green-700 mb-6 mx-4"
+        >
           <ArrowLeft className="w-5 h-5 mr-2" />
           Back to Home
         </Link>
@@ -63,7 +75,10 @@ function SignUp() {
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
           Or{" "}
-          <Link to="/signin" className="font-medium text-green-600 hover:text-green-500">
+          <Link
+            to="/signin"
+            className="font-medium text-green-600 hover:text-green-500"
+          >
             sign in to your account
           </Link>
         </p>
@@ -71,20 +86,21 @@ function SignUp() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-         {/* 🛑 Show error message if exists */}
-{error && (
-  <div className="flex items-center bg-red-100 text-red-600 px-4 py-2 rounded-lg mb-4">
-    <AlertTriangle className="w-5 h-5 mr-2" />
-    <p className="text-sm">{error}</p>
-  </div>
-)}
-
+          {/* 🛑 Show error message if exists */}
+          {error && (
+            <div className="flex items-center bg-red-100 text-red-600 px-4 py-2 rounded-lg mb-4">
+              <AlertTriangle className="w-5 h-5 mr-2" />
+              <p className="text-sm">{error}</p>
+            </div>
+          )}
 
           <form className="space-y-6" onSubmit={handleSubmit}>
             <input type="hidden" value={role} />
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Name</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Name
+              </label>
               <div className="mt-1 relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <User className="h-5 w-5 text-gray-400" />
@@ -101,7 +117,9 @@ function SignUp() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Email</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Email
+              </label>
               <div className="mt-1 relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Mail className="h-5 w-5 text-gray-400" />
@@ -118,7 +136,9 @@ function SignUp() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Password</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Password
+              </label>
               <div className="mt-1 relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-gray-400" />
@@ -135,7 +155,9 @@ function SignUp() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Confirm Password</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Confirm Password
+              </label>
               <div className="mt-1 relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-gray-400" />

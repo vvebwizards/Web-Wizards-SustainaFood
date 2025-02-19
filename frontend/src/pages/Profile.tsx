@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
-import { Heart, Truck, Users, Camera } from 'lucide-react';
-import { Link } from 'react-router-dom';
-
+import React, { useState } from "react";
+import { Heart, Truck, Users, Camera } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 const Profile = () => {
-  const [profileImage, setProfileImage] = useState('https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80');
+  const { user } = useAuth(); // Retrieve the user from the AuthContext
+  const [profileImage, setProfileImage] = useState(
+    "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+  );
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -17,7 +20,6 @@ const Profile = () => {
       reader.readAsDataURL(file);
     }
   };
-  
 
   return (
     <div className="p-6">
@@ -31,8 +33,12 @@ const Profile = () => {
             className="h-24 w-24 rounded-full border-2 border-gray-300"
           />
           <div>
-            <h2 className="text-xl font-medium text-gray-900">John Doe</h2>
-            <p className="text-gray-500">john.doe@example.com</p>
+            <h2 className="text-xl font-medium text-gray-900">
+              {user?.username}
+            </h2>{" "}
+            {/* Use user's username */}
+            <p className="text-gray-500">{user?.email}</p>{" "}
+            {/* Use user's email */}
           </div>
         </div>
 
@@ -45,7 +51,10 @@ const Profile = () => {
             className="hidden"
             id="profile-photo-input"
           />
-          <label htmlFor="profile-photo-input" className="cursor-pointer flex items-center bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition-colors duration-300">
+          <label
+            htmlFor="profile-photo-input"
+            className="cursor-pointer flex items-center bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition-colors duration-300"
+          >
             <Camera className="mr-2 h-5 w-5" />
             Upload Profile Photo
           </label>
@@ -54,7 +63,7 @@ const Profile = () => {
         {/* Edit Profile Hyperlink */}
         <div className="mt-4">
           <Link
-            to="/dashboard/edit-profile"
+            to={`/dashboard/UpdateProfile/${user?.id}`} // Use the user's ID from the context
             className="text-blue-600 hover:underline"
           >
             Edit Profile
@@ -66,7 +75,9 @@ const Profile = () => {
             <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mb-4">
               <Heart className="h-6 w-6 text-green-600" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Total Donations</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Total Donations
+            </h3>
             <p className="text-2xl font-semibold text-green-600">2,450 lbs</p>
           </div>
 
@@ -74,7 +85,9 @@ const Profile = () => {
             <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mb-4">
               <Truck className="h-6 w-6 text-green-600" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Deliveries</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Deliveries
+            </h3>
             <p className="text-2xl font-semibold text-green-600">48</p>
           </div>
 
@@ -82,7 +95,9 @@ const Profile = () => {
             <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mb-4">
               <Users className="h-6 w-6 text-green-600" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">People Helped</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              People Helped
+            </h3>
             <p className="text-2xl font-semibold text-green-600">1,200+</p>
           </div>
         </div>
@@ -90,9 +105,10 @@ const Profile = () => {
         <div className="bg-white rounded-lg border p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4">About Me</h3>
           <p className="text-gray-600">
-            Passionate about reducing food waste and helping our community. Regular contributor
-            to local food banks and community kitchens. Committed to making a difference
-            through food rescue and redistribution efforts.
+            Passionate about reducing food waste and helping our community.
+            Regular contributor to local food banks and community kitchens.
+            Committed to making a difference through food rescue and
+            redistribution efforts.
           </p>
         </div>
       </div>

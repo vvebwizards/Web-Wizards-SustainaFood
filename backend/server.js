@@ -5,7 +5,10 @@ import cookieParser from "cookie-parser"; // ✅ Import cookie-parser
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import dotenv from 'dotenv';
+import { getMe } from "./controllers/authController.js"; 
 dotenv.config();
+
+
 
 const app = express();
 connectDB();
@@ -20,6 +23,7 @@ app.use(cors({
 
 app.use(morgan('dev'));
 app.use("/api/auth", authRoutes);
+app.get("/api/auth/me", getMe);
 
 app.get('/', (req, res) => {
     res.send('backend connected to front');
