@@ -1,16 +1,18 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { useAuth } from "./context/AuthContext";  
+import { useAuth } from "./context/AuthContext";
 import Home from "./pages/HomePage";
-import SignUp from "./pages/signup";  
+import SignUp from "./pages/signup";
 import GetInvolved from "./pages/GetInvolved";
 import Login from "./pages/SignIn";
-import ForgotPassword from "./pages/ForgotPassword"; 
-import ResetPassword from "./pages/ResetPassword";  
-import TwoFactorAuth from "./pages/TwoFactorAuth";  
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import TwoFactorAuth from "./pages/TwoFactorAuth";
 import Layout from "./components/Layout";
 import Profile from "./pages/Profile";
 import Statistics from "./pages/Statistics";
 import Settings from "./pages/Settings";
+import UpdateProfile from "./pages/UpdateProfile ";
+
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user } = useAuth();
@@ -46,6 +48,7 @@ function App() {
         <Route path="profile" element={<Profile />} />
         <Route path="statistics" element={<Statistics />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="UpdateProfile/:userId" element={<UpdateProfile />} />
       </Route>
     </Routes>
   );

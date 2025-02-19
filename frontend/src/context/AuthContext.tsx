@@ -68,7 +68,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // ✅ SIGNUP FUNCTION
-  const signup = async (username: string, email: string, password: string, role: string) => {
+  const signup = async (
+    username: string,
+    email: string,
+    password: string,
+    role: string
+  ) => {
     try {
       await axios.post(
         "http://localhost:5000/api/auth/signup",
@@ -97,6 +102,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        signup,
+        logout,
+        requestPasswordReset,
+        resetPassword,
+        verifyTwoFactor,
+        updateUserInfo,
+      }}
+    >
+      {children}
     <AuthContext.Provider value={{ user, login, signup, logout }}>
       {!loading && children} {/* ✅ Prevents rendering children until auth check is done */}
     </AuthContext.Provider>
