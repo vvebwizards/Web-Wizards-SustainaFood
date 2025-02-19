@@ -11,18 +11,20 @@ import Layout from "./components/Layout";
 import Profile from "./pages/Profile";
 import Statistics from "./pages/Statistics";
 import Settings from "./pages/Settings";
-  
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
 
-  if (!user && !token) {
+  if (user === undefined) {
+    return <div>Loading...</div>; // Prevent redirect until authentication is known
+  }
+
+  if (!user) {
     return <Navigate to="/signin" replace />;
   }
 
   return children;
 }
-
 
 function App() {
   return (
@@ -33,10 +35,9 @@ function App() {
       <Route path="/signup" element={<SignUp />} />
       <Route path="/signin" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} /> { /* bch tnjm testi page ----> http://localhost:5173/reset-password?token=valid-token*/ }
+      <Route path="/reset-password" element={<ResetPassword />} /> 
       <Route path="/2fa" element={<TwoFactorAuth />} />  
 
-     
       <Route 
         path="/dashboard" 
         element={<ProtectedRoute><Layout /></ProtectedRoute>}

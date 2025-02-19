@@ -71,9 +71,7 @@ export async function login(req, res) {
 
     // ✅ Set the token as an HTTP-only cookie
     res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // Secure in production
-      sameSite: "Strict", // Protects against CSRF
+      httpOnly: false,
       maxAge: 60 * 60 * 1000, // 1 hour
     });
 
@@ -96,6 +94,28 @@ export async function logout(req, res) {
   });
 
   res.status(200).json({ message: "Logged out successfully" });
+}
+
+export async function getMe(req, res) {
+  try {
+    // ✅ Extract token from cookies
+    const token = req.cookies.token;
+    if (!token) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    // ✅ Verify the JWT token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({ user });
+  } catch (error) {
+    res.status(401).json({ message: "Invalid or expired token" });
+  }
 }
 
 

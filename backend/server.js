@@ -4,7 +4,7 @@ import morgan from "morgan";
 import cookieParser from "cookie-parser"; // ✅ Import cookie-parser
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
-
+import { getMe } from "./controllers/authController.js"; 
 const app = express();
 connectDB();
 
@@ -18,6 +18,7 @@ app.use(cors({
 
 app.use(morgan('dev'));
 app.use("/api/auth", authRoutes);
+app.get("/api/auth/me", getMe);
 
 app.get('/', (req, res) => {
     res.send('backend connected to front');
