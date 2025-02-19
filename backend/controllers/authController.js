@@ -36,10 +36,8 @@ export async function signup(req, res) {
     const hashedPassword = await bcrypt.hash(password, salt);
     const userAgent = req.headers['user-agent'];
     const deviceFingerprint = crypto.createHash('sha256').update(userAgent).digest('hex');
-    const ip = req.ip || req.connection.remoteAddress;
     const newUser = new User({ username, email, password: hashedPassword, role });
     newUser.registeredDevices.push(deviceFingerprint);
-    newUser.registeredLocations.push(ip);
     await newUser.save();
 
     res.status(201).json({ message: "User registered successfully." });
@@ -88,7 +86,6 @@ export async function login(req, res) {
     const userData = { id: user._id, username: user.username, email: user.email, role: user.role };
     const userAgent = req.headers['user-agent']; 
     const deviceFingerprint = crypto.createHash('sha256').update(userAgent).digest('hex'); 
-    const ip = req.ip || req.connection.remoteAddress; 
 
     // Parse device information
     const parser = new UAParser(userAgent);
@@ -98,15 +95,8 @@ export async function login(req, res) {
         os: deviceInfo.os.name,
         device: deviceInfo.device.type || 'Desktop', 
     };
-
-    // Get location information
-    const location = geoip.lookup(ip);
-    const locationDetails = location
-        ? `${location.city}, ${location.region}, ${location.country}`
-        : 'Unknown Location';
     
     const isRegisteredDevice = user.registeredDevices.includes(deviceFingerprint);
-    const isRegisteredLocation = user.registeredLocations.includes(ip);
 
     if (!isRegisteredDevice) {
       const template = deviceLocationLoginAlert(
@@ -130,14 +120,7 @@ export async function login(req, res) {
         message: `Login from unregistered device: ${deviceDetails.device} on ${deviceDetails.browser} (${deviceDetails.os})`,
       });
     }
-    
-    if (!isRegisteredLocation) {
-      return res.status(403).json({
-        success: false,
-        message: `Login from unregistered location: ${locationDetails}`,
-      });
-    }
-    
+       
     res.status(200).json({ message: "Login successful", user: userData });
   } catch (error) {
     console.error("Login Error:", error);
@@ -152,7 +135,7 @@ export async function logout(req, res) {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "Strict",
-    expires: new Date(0), // ✅ Forces cookie expiration
+    expires: new Date(0), 
   });
 
   res.status(200).json({ message: "Logged out successfully" });
