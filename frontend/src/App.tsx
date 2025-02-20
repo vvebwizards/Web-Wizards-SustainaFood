@@ -12,6 +12,7 @@ import Profile from "./pages/Profile";
 import Statistics from "./pages/Statistics";
 import Settings from "./pages/Settings";
 import UpdateProfile from "./pages/UpdateProfile ";
+import { NotificationProvider } from "./context/NotificationContext";
 
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
@@ -42,7 +43,7 @@ function App() {
 
       <Route 
         path="/dashboard" 
-        element={<ProtectedRoute><Layout /></ProtectedRoute>}
+        element={<ProtectedRoute><NotificationProvider><Layout /></NotificationProvider></ProtectedRoute>}
       >
         <Route index element={<Profile />} />
         <Route path="profile" element={<Profile />} />

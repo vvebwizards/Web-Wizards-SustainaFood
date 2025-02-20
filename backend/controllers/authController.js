@@ -8,6 +8,10 @@ import deviceLocationLoginAlert from "../emailTemplates/deviceLocationLoginAlert
 import { sendEmail} from '../utils/helpers.js';
 import { sendPasswordResetEmail } from "../utils/helpers.js"; // ✅ Import de la nouvelle fonction
 import dotenv from 'dotenv';
+import { sendNotification } from "../socket/socket.js"
+import path from 'path';
+import { fileURLToPath } from 'url';
+
 dotenv.config();
 
 
@@ -99,26 +103,28 @@ export async function login(req, res) {
     const isRegisteredDevice = user.registeredDevices.includes(deviceFingerprint);
 
     if (!isRegisteredDevice) {
-      const template = deviceLocationLoginAlert(
+      await sendNotification(
+        user._id,
+        `New Login Alert: Your account was accessed from a new device : ${deviceDetails.device} on ${deviceDetails.browser} (${deviceDetails.os})`,
+        req.io, 
+        req.socketId 
+      );
+      const emailTemplate = deviceLocationLoginAlert(
         user.username,
         deviceDetails.device, 
         deviceDetails.browser,
         deviceDetails.os,
       );
 
-      const data = {
+      const mailOptions = {
         from: process.env.MAILER_EMAIL_ID,
         to: user.email, 
         subject: 'Login Alert',
-        html: template,
+        html: emailTemplate,
       };
       
-      await sendEmail(data);
+     await sendEmail(mailOptions);
       
-      return res.status(403).json({
-        success: false,
-        message: `Login from unregistered device: ${deviceDetails.device} on ${deviceDetails.browser} (${deviceDetails.os})`,
-      });
     }
        
     res.status(200).json({ message: "Login successful", user: userData });
@@ -163,10 +169,11 @@ export async function getMe(req, res) {
 }
 
 // ✅ update user information
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 export async function updateUserInfo(req, res) {
   try {
-    const { userId } = req.params; // Assuming the user ID is passed as a URL parameter
-    const { username, email, password } = req.body;
+    const { userId } = req.params;
 
     // Find the user by ID
     const user = await User.findById(userId);
@@ -175,40 +182,81 @@ export async function updateUserInfo(req, res) {
     }
 
     // Update username if provided
-    if (username) {
-      const existingUsername = await User.findOne({ username });
-      if (existingUsername && existingUsername._id.toString() !== userId) {
+    if (req.body.username) {
+      const existingUsername = await User.findOne({ 
+        username: req.body.username,
+        _id: { $ne: userId } // Exclude current user from check
+      });
+      
+      if (existingUsername) {
         return res.status(400).json({ message: "Username is already taken." });
       }
-      user.username = username;
+      user.username = req.body.username;
     }
 
     // Update email if provided
-    if (email) {
-      const existingEmail = await User.findOne({ email });
-      if (existingEmail && existingEmail._id.toString() !== userId) {
+    if (req.body.email) {
+      const existingEmail = await User.findOne({ 
+        email: req.body.email,
+        _id: { $ne: userId } // Exclude current user from check
+      });
+      
+      if (existingEmail) {
         return res.status(400).json({ message: "Email is already in use." });
       }
-      user.email = email;
+      user.email = req.body.email;
     }
 
     // Update password if provided
-    if (password) {
-      if (password.length < 6) {
+    if (req.body.password) {
+      if (req.body.password.length < 6) {
         return res.status(400).json({ message: "Password must be at least 6 characters long." });
       }
       const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
+      const hashedPassword = await bcrypt.hash(req.body.password, salt);
       user.password = hashedPassword;
     }
 
-    // Save the updated user information
-    await user.save();
+    // Update profile image if provided
+    if (req.file) {
+      // Delete old profile image if it exists
+      if (user.profileImage) {
+        const oldImagePath = path.join(__dirname, '..', user.profileImage);
+        try {
+          await fs.access(oldImagePath);
+          await fs.unlink(oldImagePath);
+        } catch (error) {
+          console.log('Old image not found or could not be deleted');
+        }
+      }
 
-    res.status(200).json({ message: "User information updated successfully.", user });
+      // Update with new image path
+      user.profileImage = `/uploads/${req.file.filename}`;
+    }
+
+    // Save the updated user information
+    const updatedUser = await user.save();
+
+    // Remove sensitive information before sending response
+    const userResponse = {
+      id: updatedUser._id,
+      username: updatedUser.username,
+      email: updatedUser.email,
+      profileImage: updatedUser.profileImage,
+      role: updatedUser.role
+    };
+
+    res.status(200).json({ 
+      message: "User information updated successfully.", 
+      user: userResponse 
+    });
+
   } catch (error) {
     console.error("Update User Info Error:", error);
-    res.status(500).json({ message: "Server error. Please try again later." });
+    res.status(500).json({ 
+      message: "Server error. Please try again later.",
+      error: error.message 
+    });
   }
 }
 
