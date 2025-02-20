@@ -1,5 +1,6 @@
 import express from "express";
-import { signup,login,logout,updateUserInfo, getMe} from "../controllers/authController.js";
+import { signup,login,logout,updateUserInfo, getMe, requestPasswordReset,
+    resetPassword,} from "../controllers/authController.js";
 
 
 const router = express.Router();
@@ -9,5 +10,18 @@ router.post("/login", login);
 router.post("/logout", logout);
 router.get("/me", getMe);
 router.put("/update/:userId", updateUserInfo);
+
+//reset password
+
+router.post("/request-reset", (req, res, next) => {
+    console.log("🟢 Route /request-reset appelée !");
+    next();
+  }, requestPasswordReset);
+  
+//router.post("/request-reset", requestPasswordReset);
+router.post("/reset-password", resetPassword);
+
+
+
 export default router;
 

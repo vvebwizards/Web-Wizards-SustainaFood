@@ -6,6 +6,7 @@ import crypto from 'crypto';
 import {UAParser} from'ua-parser-js';
 import deviceLocationLoginAlert from "../emailTemplates/deviceLocationLoginAlert.js";
 import { sendEmail} from '../utils/helpers.js';
+import { sendPasswordResetEmail } from "../utils/helpers.js"; // ✅ Import de la nouvelle fonction
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -208,5 +209,74 @@ export async function updateUserInfo(req, res) {
   } catch (error) {
     console.error("Update User Info Error:", error);
     res.status(500).json({ message: "Server error. Please try again later." });
+  }
+}
+
+
+//reset password
+
+
+export async function requestPasswordReset(req, res) {
+  try {
+    const { email } = req.body;
+    console.log("🔹 Email reçu pour reset:", email);
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      console.log("❌ Aucun utilisateur trouvé avec cet email.");
+      return res.status(404).json({ message: "No user found with this email." });
+    }
+    // Générer un token sécurisé
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 heure
+    await user.save();
+
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+    console.log("🔹 Lien de réinitialisation généré:", resetLink);
+
+    const emailData = {
+      from: process.env.MAILER_EMAIL_ID,
+      to: user.email,
+      subject: "Password Reset Request",
+      html: `<p>Click the link below to reset your password:</p>
+             <a href="${resetLink}">${resetLink}</a>
+             <p>If you did not request this, please ignore this email.</p>`,
+    };
+
+   
+   //await sendPasswordResetEmail(emailData);
+    await sendEmail(emailData);
+    console.log("✅ Email de réinitialisation envoyé avec succès !");
+    res.status(200).json({ message: "Reset link sent successfully!" });
+  } catch (error) {
+    console.error("❌ Erreur lors de la réinitialisation du mot de passe:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+}
+
+export async function resetPassword(req, res) {
+  try {
+    const { token, newPassword } = req.body;
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() }, // Vérifie si le token est encore valide
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired reset token." });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    user.resetPasswordToken = undefined; // Supprimer le token après usage
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.status(200).json({ message: "Password reset successful. You can now log in." });
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    res.status(500).json({ message: "Internal server error." });
   }
 }
