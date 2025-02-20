@@ -7,6 +7,8 @@ import {
 } from "react";
 import axios from "axios";
 import Cookies from "js-cookie"; // ✅ Import js-cookie
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 interface User {
   id: string;
@@ -131,6 +133,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.log("🔹 Envoi de la requête de reset pour:", email);
       const response =  await axios.post("http://localhost:5000/api/auth/request-reset", {  email, });
       alert("✅ Email envoyé ! Vérifiez votre boîte mail.");
+      
       console.log("📧 Password reset request sent.",response.data);
     } catch (error: any) {
       console.error(
@@ -151,8 +154,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
      // const response= await axios.post("http://localhost:5000/api/auth/request-reset",  { token, newPassword });
      
       console.log("🔑 Password reset successful.", response.data);
-     // window.location.href = "/signin"; // Redirect to 2FA if required
-
+      alert("Mot de passe changé avec succès ");
+     
+     
+      window.location.href = "/signin";  // Change l'URL actuelle du navigateur
       return response.data;
     
     } catch (error: any) {
