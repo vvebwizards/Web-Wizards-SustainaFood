@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState, useEffect } from "react"; // Add useEffect
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useNotifications } from "../context/NotificationContext"; // Import the notification context
 import {
   Heart,
   User,
@@ -16,10 +17,24 @@ import {
 const Layout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false); // State for dropdown visibility
+  const { notifications, fetchNotifications, markAsRead } = useNotifications(); // Add fetchNotifications
+  
+
+  // Fetch notifications when the user logs in
+  useEffect(() => {
+    if (user) {
+      fetchNotifications(); // Fetch notifications for the logged-in user
+    }
+  }, [user, fetchNotifications]);
 
   const handleLogout = () => {
-    logout(); 
-    navigate("/signin"); 
+    logout();
+    navigate("/signin");
+  };
+
+  const toggleNotifications = () => {
+    setIsNotificationOpen(!isNotificationOpen); // Toggle dropdown visibility
   };
 
   return (
@@ -33,16 +48,60 @@ const Layout = () => {
             <span className="text-xl font-semibold text-gray-900">Food Rescue</span>
           </div>
 
-          {/* User Info and Logout */}
+          {/* User Info, Notifications, and Logout */}
           <div className="flex items-center space-x-4">
             {user ? (
               <>
+                {/* Notifications Bell Icon */}
+                <div className="relative">
+                  <button
+                    onClick={toggleNotifications} // Toggle dropdown on click
+                    className="p-2 text-gray-600 hover:text-gray-900 focus:outline-none"
+                  >
+                    <Bell className="h-6 w-6" />
+                    {/* Add a badge for unread notifications */}
+                    {notifications.filter((notif) => !notif.isRead).length > 0 && (
+                      <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">
+                        {notifications.filter((notif) => !notif.isRead).length}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Notifications Dropdown */}
+                  {isNotificationOpen && (
+                    <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                      <div className="p-4">
+                        <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
+                      </div>
+                      <ul className="max-h-60 overflow-y-auto">
+                        {notifications.map((notif) => (
+                          <li
+                            key={notif._id}
+                            className={`px-4 py-2 hover:bg-gray-50 cursor-pointer ${
+                              notif.isRead ? "bg-gray-100" : "bg-white"
+                            }`}
+                            onClick={() => markAsRead(notif._id)} // Mark as read on click
+                          >
+                            <p className="text-sm text-gray-700">{notif.message}</p>
+                            <small className="text-xs text-gray-500">
+                              {new Date(notif.createdAt).toLocaleString()}
+                            </small>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                {/* Username and Profile Picture */}
                 <span className="text-gray-900 font-medium">Welcome, {user.username}</span>
                 <img
                   src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
                   alt="Profile"
                   className="h-8 w-8 rounded-full"
                 />
+
+                {/* Logout Button */}
                 <button
                   onClick={handleLogout}
                   className="flex items-center bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm"
@@ -72,7 +131,6 @@ const Layout = () => {
               { to: "/dashboard/profile", icon: <User />, label: "Profile" },
               { to: "/dashboard/donations", icon: <Heart />, label: "My Donations" },
               { to: "/dashboard/make-donation", icon: <Truck />, label: "Make Donation" },
-              { to: "/dashboard/notifications", icon: <Bell />, label: "Notifications" },
               { to: "/dashboard/activity-logs", icon: <FileText />, label: "Activity Logs" },
               { to: "/dashboard/statistics", icon: <BarChart />, label: "Statistics" },
               { to: "/dashboard/history", icon: <History />, label: "History" },

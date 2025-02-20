@@ -7,6 +7,7 @@ import {UAParser} from'ua-parser-js';
 import deviceLocationLoginAlert from "../emailTemplates/deviceLocationLoginAlert.js";
 import { sendEmail} from '../utils/helpers.js';
 import dotenv from 'dotenv';
+import { sendNotification } from "../socket/socket.js"
 dotenv.config();
 
 
@@ -98,26 +99,28 @@ export async function login(req, res) {
     const isRegisteredDevice = user.registeredDevices.includes(deviceFingerprint);
 
     if (!isRegisteredDevice) {
-      const template = deviceLocationLoginAlert(
+      await sendNotification(
+        user._id,
+        `New Login Alert: Your account was accessed from a new device : ${deviceDetails.device} on ${deviceDetails.browser} (${deviceDetails.os})`,
+        req.io, 
+        req.socketId 
+      );
+      const emailTemplate = deviceLocationLoginAlert(
         user.username,
         deviceDetails.device, 
         deviceDetails.browser,
         deviceDetails.os,
       );
 
-      const data = {
+      const mailOptions = {
         from: process.env.MAILER_EMAIL_ID,
         to: user.email, 
         subject: 'Login Alert',
-        html: template,
+        html: emailTemplate,
       };
       
-      await sendEmail(data);
+     await sendEmail(mailOptions);
       
-      return res.status(403).json({
-        success: false,
-        message: `Login from unregistered device: ${deviceDetails.device} on ${deviceDetails.browser} (${deviceDetails.os})`,
-      });
     }
        
     res.status(200).json({ message: "Login successful", user: userData });
@@ -210,3 +213,4 @@ export async function updateUserInfo(req, res) {
     res.status(500).json({ message: "Server error. Please try again later." });
   }
 }
+

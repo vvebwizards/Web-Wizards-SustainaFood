@@ -13,29 +13,6 @@ const setupSocket = (server) => {
 
   io.on("connection", (socket) => {
     console.log("🟢 A user connected:", socket.id);
-
-    socket.on("user_connected", async (userId) => {
-      console.log(`✅ User ${userId} is online`);
-      onlineUsers.set(userId, socket.id);
-
-      try {
-        // Debugging log before saving to DB
-        console.log("📝 Creating notification in DB...");
-
-        const notification = new Notification({
-          userId,
-          message: "Welcome to the app! This is a static notification.",
-        });
-
-        await notification.save();
-        console.log("✅ Notification saved in DB!");
-
-        io.to(socket.id).emit("new_notification", notification);
-      } catch (error) {
-        console.error("❌ Error saving notification:", error);
-      }
-    });
-
     socket.on("disconnect", () => {
       console.log("🔴 A user disconnected:", socket.id);
       onlineUsers.forEach((socketId, userId) => {
@@ -48,5 +25,21 @@ const setupSocket = (server) => {
 
   return io;
 };
+
+export async function sendNotification(userId, message, io, socketId) {
+  try {
+    const notification = new Notification({ userId, message });
+    await notification.save();
+    console.log("✅ Notification saved in DB!");
+    if (socketId) {
+      io.to(socketId).emit("new_notification", notification);
+    } else {
+      console.error("❌ Socket ID is undefined.");
+    }
+  } catch (error) {
+    console.error("❌ Error saving notification:", error);
+  }
+}
+
 
 export default setupSocket;
