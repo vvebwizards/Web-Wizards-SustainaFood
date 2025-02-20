@@ -306,6 +306,48 @@ export async function requestPasswordReset(req, res) {
 export async function resetPassword(req, res) {
   try {
     const { token, newPassword } = req.body;
+    
+    console.log("🟢 Reset Password Request Received:");
+    console.log("Token:", token);
+    console.log("New Password:", newPassword);
+
+    if (!token || !newPassword) {
+      return res.status(400).json({ message: "Token and new password are required." });
+    }
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() }, // Vérifie si le token est encore valide
+    });
+
+    if (!user) {
+      console.log("❌ Aucun utilisateur trouvé avec ce token dans la base.");
+      return res.status(400).json({ message: "Invalid or expired reset token." });
+    }
+
+    // Hash du mot de passe
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+
+    // Supprimer le token après usage
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    
+    await user.save();
+
+    console.log("✅ Mot de passe réinitialisé avec succès !");
+    res.status(200).json({ message: "Password reset successful. You can now log in." });
+
+  } catch (error) {
+    console.error("❌ Erreur lors de la réinitialisation du mot de passe:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+}
+
+/*
+export async function resetPassword(req, res) {
+  try {
+    const { token, newPassword } = req.body;
 
     const user = await User.findOne({
       resetPasswordToken: token,
@@ -328,3 +370,4 @@ export async function resetPassword(req, res) {
     res.status(500).json({ message: "Internal server error." });
   }
 }
+*/
