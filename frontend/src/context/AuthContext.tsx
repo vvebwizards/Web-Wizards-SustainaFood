@@ -1,4 +1,10 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import axios from "axios";
 import Cookies from "js-cookie"; // ✅ Import js-cookie
 
@@ -12,9 +18,19 @@ interface User {
 interface AuthContextType {
   user: User | null | undefined;
   login: (email: string, password: string) => Promise<void>;
-  signup: (username: string, email: string, password: string, role: string) => Promise<void>;
+  signup: (
+    username: string,
+    email: string,
+    password: string,
+    role: string
+  ) => Promise<void>;
   logout: () => Promise<void>;
-  updateUserInfo: (userId: string, username: string, email: string, password: string) => Promise<void>;
+  updateUserInfo: (
+    userId: string,
+    username: string,
+    email: string,
+    password: string
+  ) => Promise<void>;
   requestPasswordReset: (email: string) => Promise<void>;
   resetPassword: (token: string, newPassword: string) => Promise<void>;
   verifyTwoFactor: (code: string) => Promise<void>;
@@ -55,7 +71,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const signup = async (username: string, email: string, password: string, role: string) => {
+  const signup = async (
+    username: string,
+    email: string,
+    password: string,
+    role: string
+  ) => {
     try {
       await axios.post(
         "http://localhost:5000/api/auth/signup",
@@ -63,7 +84,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         { withCredentials: true }
       );
 
-      const response = await axios.get("http://localhost:5000/api/auth/me", { withCredentials: true });
+      const response = await axios.get("http://localhost:5000/api/auth/me", {
+        withCredentials: true,
+      });
       setUser(response.data.user);
       Cookies.set("user", JSON.stringify(response.data.user), { expires: 7 });
     } catch (error) {
@@ -74,7 +97,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     try {
-      await axios.post("http://localhost:5000/api/auth/logout", {}, { withCredentials: true });
+      await axios.post(
+        "http://localhost:5000/api/auth/logout",
+        {},
+        { withCredentials: true }
+      );
 
       setUser(null);
       Cookies.remove("user");
@@ -87,29 +114,53 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // ✅ UPDATE USER INFO FUNCTION
-  const updateUserInfo = async (userId: string, username: string, email: string, password: string) => {
+  const updateUserInfo = async (
+    userId: string,
+    username: string,
+    email: string,
+    password: string,
+    profileImage?: File
+  ) => {
     try {
+      const formData = new FormData();
+      formData.append("username", username);
+      formData.append("email", email);
+      if (password) {
+        formData.append("password", password);
+      }
+      if (profileImage) {
+        formData.append("profileImage", profileImage);
+      }
+
       const response = await axios.put(
         `http://localhost:5000/api/auth/update/${userId}`,
-        { username, email, password },
-        { withCredentials: true }
+        formData,
+        {
+          withCredentials: true,
+          headers: { "Content-Type": "multipart/form-data" },
+        }
       );
+
       console.log("✅ User info updated:", response.data);
 
-      // ✅ Store updated user in state and cookies
       if (response.data.user) {
-        setUser(response.data.user);
-        Cookies.set("user", JSON.stringify(response.data.user), { expires: 7 });
+        setUser(response.data.user); // ✅ Update user state
+        Cookies.set("user", JSON.stringify(response.data.user), { expires: 7 }); // ✅ Store updated user in cookies
       }
     } catch (error: any) {
-      console.error("❌ Update User Info Failed:", error.response?.data || error.message);
+      console.error(
+        "❌ Update User Info Failed:",
+        error.response?.data || error.message
+      );
       throw error;
     }
   };
 
   const requestPasswordReset = async (email: string) => {
     try {
-      await axios.post("http://localhost:5000/api/auth/request-reset", { email });
+      await axios.post("http://localhost:5000/api/auth/request-reset", {
+        email,
+      });
       console.log("📧 Password reset request sent.");
     } catch (error) {
       console.error("❌ Password Reset Request Failed:", error);
@@ -119,7 +170,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const resetPassword = async (token: string, newPassword: string) => {
     try {
-      await axios.post("http://localhost:5000/api/auth/reset-password", { token, newPassword });
+      await axios.post("http://localhost:5000/api/auth/reset-password", {
+        token,
+        newPassword,
+      });
       console.log("🔑 Password reset successful.");
     } catch (error) {
       console.error("❌ Password Reset Failed:", error);
@@ -144,17 +198,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      login, 
-      signup, 
-      logout, 
-      updateUserInfo,
-      requestPasswordReset, 
-      resetPassword, 
-      verifyTwoFactor 
-    }}>
-      {user !== undefined && children} {/* ✅ Ensures authentication check completes before rendering */}
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        signup,
+        logout,
+        updateUserInfo,
+        requestPasswordReset,
+        resetPassword,
+        verifyTwoFactor,
+      }}
+    >
+      {user !== undefined && children}{" "}
+      {/* ✅ Ensures authentication check completes before rendering */}
     </AuthContext.Provider>
   );
 };

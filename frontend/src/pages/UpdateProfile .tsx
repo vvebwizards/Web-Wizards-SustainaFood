@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext"; // Import useAuth
 import { Camera } from "lucide-react";
 import { motion } from "framer-motion";
+
 const UpdateProfile = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
@@ -13,57 +14,48 @@ const UpdateProfile = () => {
     email: user?.email || "",
     password: "",
   });
-  const [profileImage, setProfileImage] = useState(
-    "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-  );
+  const [profileImage, setProfileImage] = useState<File | null>(null); // State for the image file
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const handleImageChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result === "string") {
-          setProfileImage(reader.result);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setProfileImage(e.target.files[0]); // Store the selected file
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSuccess("");
 
     try {
       await updateUserInfo(
-        userId,
+        userId!,
         formData.username,
         formData.email,
-        formData.password
-      ); // Call updateUserInfo
+        formData.password,
+        profileImage // Pass the image file to updateUserInfo
+      );
       setSuccess("Profile updated successfully!");
       setTimeout(() => {
         navigate("/dashboard/profile");
       }, 2000);
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message || "An error occurred. Please try again.");
     }
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 3 }}
+      initial={{ opacity: 0, scale: 0.5 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
     >
       <div className="p-6">
         <h1 className="text-2xl font-semibold text-gray-900 mb-6">
@@ -74,7 +66,13 @@ const UpdateProfile = () => {
           {/* Profile Image Section */}
           <div className="flex items-center space-x-6">
             <img
-              src={profileImage}
+              src={
+                profileImage
+                  ? URL.createObjectURL(profileImage)
+                  : user?.profileImage
+                  ? `http://localhost:5000${user.profileImage}`
+                  : "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+              }
               alt="Profile"
               className="h-24 w-24 rounded-full border-2 border-gray-300"
             />
@@ -91,9 +89,9 @@ const UpdateProfile = () => {
             <input
               type="file"
               accept="image/*"
-              onChange={handleImageChange}
               className="hidden"
               id="profile-photo-input"
+              onChange={handleFileChange} // Handle file selection
             />
             <label
               htmlFor="profile-photo-input"

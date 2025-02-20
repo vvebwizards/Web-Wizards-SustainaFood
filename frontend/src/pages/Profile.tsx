@@ -1,25 +1,30 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Heart, Truck, Users, Camera } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+
 const Profile = () => {
-  const { user } = useAuth(); // Retrieve the user from the AuthContext
+  const { user } = useAuth();
+  const defaultImage =
+    "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80";
+
+  // Function to get the complete image URL
+  const getImageUrl = (profileImage: string | undefined) => {
+    if (!profileImage) return defaultImage;
+    // Check if the profileImage is a full URL
+    if (profileImage.startsWith("http")) return profileImage;
+    // Otherwise, construct the full URL
+    return `http://localhost:5000${profileImage}`;
+  };
+
   const [profileImage, setProfileImage] = useState(
-    "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+    getImageUrl(user?.profileImage)
   );
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result === "string") {
-          setProfileImage(reader.result); // ✅ Safe assignment
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  // Update profileImage when the user object changes
+  useEffect(() => {
+    setProfileImage(getImageUrl(user?.profileImage));
+  }, [user]);
 
   return (
     <div className="p-6">
@@ -31,39 +36,20 @@ const Profile = () => {
             src={profileImage}
             alt="Profile"
             className="h-24 w-24 rounded-full border-2 border-gray-300"
+            onError={(e) => {
+              // Fallback to default image if the profile image fails to load
+              const target = e.target as HTMLImageElement;
+              target.src = defaultImage;
+            }}
           />
           <div>
             <h2 className="text-xl font-medium text-gray-900">
               {user?.username}
-            </h2>{" "}
-            {/* Use user's username */}
-            <p className="text-gray-500">{user?.email}</p>{" "}
-            {/* Use user's email */}
+            </h2>
+            <p className="text-gray-500">{user?.email}</p>
           </div>
-        </div>
-
-        {/* Upload Profile Photo Section */}
-        <div className="flex items-center mt-2">
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="hidden"
-            id="profile-photo-input"
-          />
-          <label
-            htmlFor="profile-photo-input"
-            className="cursor-pointer flex items-center bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition-colors duration-300"
-          >
-            <Camera className="mr-2 h-5 w-5" />
-            Upload Profile Photo
-          </label>
-        </div>
-
-        {/* Edit Profile Hyperlink */}
-        <div className="mt-4">
           <Link
-            to={`/dashboard/UpdateProfile/${user?.id}`} // Use the user's ID from the context
+            to={`/dashboard/UpdateProfile/${user?.id}`}
             className="text-blue-600 hover:underline"
           >
             Edit Profile
