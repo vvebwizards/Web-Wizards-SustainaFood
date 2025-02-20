@@ -1,10 +1,33 @@
 import React from 'react';
 
 const Settings = () => {
+  function enable2FA() {
+    console.log("Work to do here");
+  }
+  
   return (
     <div className="p-6">
       <h1 className="text-2xl font-semibold text-gray-900 mb-6">Settings</h1>
       <div className="space-y-6">
+      <div>
+          <h2 className="text-lg font-medium text-gray-900 mb-4">
+            Security Features
+          </h2>
+          <div className="space-y-4">
+            {[
+              'Two Factor Authentication (2FA)'
+            ].map((setting) => (
+              <div key={setting} className="flex items-center">
+                <input
+                  type="checkbox"
+                  onClick={enable2FA}
+                  className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                />
+                <label className="ml-3 text-sm text-gray-700">{setting}</label>
+              </div>
+            ))}
+          </div>
+        </div>
         <div>
           <h2 className="text-lg font-medium text-gray-900 mb-4">
             Notification Preferences
