@@ -87,7 +87,7 @@ export async function login(req, res) {
 
     });
 
-    const userData = { id: user._id, username: user.username, email: user.email, role: user.role };
+    const userData = { id: user._id, username: user.username, email: user.email, role: user.role, phoneNumber: user.phoneNumber };
     const userAgent = req.headers['user-agent']; 
     const deviceFingerprint = crypto.createHash('sha256').update(userAgent).digest('hex'); 
 
@@ -343,6 +343,64 @@ export async function resetPassword(req, res) {
     res.status(500).json({ message: "Internal server error." });
   }
 }
+
+export const updatePhoneNumber = async (req, res) => {
+  const { userId } = req.params;
+  const { phone } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    user.phoneNumber = phone;
+    await user.save();
+    res.json({ user });
+  } catch (error) {
+    console.error('Error updating phone number:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+const generateOTP = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+export const sendOtp = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const otp = generateOTP();
+
+    const emailData = {
+      from: process.env.MAILER_EMAIL_ID,
+      to: user.email,
+      subject: "Your OTP Code",
+      html: `<p>Your OTP code is: <strong>${otp}</strong></p>
+             <p>If you did not request this, please ignore this email.</p>`,
+    };
+
+    try {
+      await sendEmail(emailData);
+      console.log("✅ OTP email sent!");
+      res.json({ message: 'OTP sent successfully' });
+    } catch (error) {
+      console.error("❌ Error sending OTP email:", error);
+      res.status(500).json({ message: 'Failed to send OTP email' });
+    }
+  } catch (error) {
+    console.error('Error sending OTP:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
 
 /*
 export async function resetPassword(req, res) {

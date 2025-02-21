@@ -15,6 +15,7 @@ interface User {
   username: string;
   email: string;
   role: string;
+  phoneNumber: string;
 }
 
 interface AuthContextType {
@@ -36,6 +37,8 @@ interface AuthContextType {
     email: string,
     password: string
   ) => Promise<void>;
+  updatePhoneNumber: (userId: string, phone: string) => Promise<void>;
+  sendOtp: (userId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -219,6 +222,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const updatePhoneNumber = async (userId: string, phone: string) => {
+    try {
+      const response = await axios.put(
+        `http://localhost:5000/api/auth/update-phone/${userId}`,
+        { phone },
+        { withCredentials: true }
+      );
+  
+      console.log("Phone number updated:", response.data);
+  
+      // Update the user in the context and cookies
+      if (response.data.user) {
+        setUser(response.data.user);
+        Cookies.set("user", JSON.stringify(response.data.user), { expires: 7 });
+      }
+  
+    } catch (error: any) {
+      console.error(
+        "Update Phone Number Failed:",
+        error.response?.data || error.message
+      );
+      throw error;
+    }
+  };
+
+  const sendOtp = async (userId: string) => {
+    try {
+      await axios.post(`http://localhost:5000/api/auth/send-otp/${userId}`);
+      console.log('OTP sent successfully');
+    } catch (error: any) {
+      console.error('Error sending OTP:', error.response?.data || error.message);
+      throw error;
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -230,6 +268,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         resetPassword,
         verifyTwoFactor,
         updateUserInfo,
+        updatePhoneNumber,
+        sendOtp,
       }}
     >
       {children}
