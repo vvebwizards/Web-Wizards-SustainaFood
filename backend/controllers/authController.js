@@ -287,11 +287,34 @@ export async function requestPasswordReset(req, res) {
       from: process.env.MAILER_EMAIL_ID,
       to: user.email,
       subject: "Password Reset Request",
-      html: `<p>Click the link below to reset your password:</p>
+      html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background-color: #f9f9f9;">
+        <h2 style="color: #2C3E50;"> Hi ${user.username},
+        We've received a request to reset you password. Click the link below to reset your password:</h2>
+        <div style="text-align: center; margin: 20px 0;">
+          <a href="${resetLink}" 
+             style="display: inline-block; padding: 12px 24px; font-size: 16px; color: #fff; background-color: #3498db; text-decoration: none; border-radius: 5px;">
+            🔄Reset my password
+          </a>
+                  <p style="font-size: 14px; color: #999;">If you ignore this message, your password will not be changed.</p>
+
+        </div>
+ 
+      </div>
+    `,
+  };
+     /* html: ` <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background-color: #f9f9f9;">
+      <p>Click the link below to reset your password:</p>
              <a href="${resetLink}">${resetLink}</a>
              <p>If you did not request this, please ignore this email.</p>`,
     };
-
+*/
+/* /*
+        <p style="font-size: 14px; color: #777;">Ou copiez et collez ce lien dans votre navigateur :</p>
+        <p style="word-wrap: break-word; color: #3498db;"><a href="${resetLink}">${resetLink}</a></p>
+  
+        
+*/
    
    //await sendPasswordResetEmail(emailData);
     await sendEmail(emailData);

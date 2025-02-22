@@ -13,7 +13,8 @@ import Statistics from "./pages/Statistics";
 import Settings from "./pages/Settings";
 import UpdateProfile from "./pages/UpdateProfile ";
 import { NotificationProvider } from "./context/NotificationContext";
-
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user } = useAuth();
@@ -28,11 +29,12 @@ function ProtectedRoute({ children }: { children: JSX.Element }) {
 
   return children;
 }
-
 function App() {
   return (
-    <Routes>
-      {/* Public Routes */}
+    <>
+      {}
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
+      <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/get-involved" element={<GetInvolved />} />
       <Route path="/signup" element={<SignUp />} />
@@ -52,6 +54,7 @@ function App() {
         <Route path="UpdateProfile/:userId" element={<UpdateProfile />} />
       </Route>
     </Routes>
+    </>
   );
 }
 

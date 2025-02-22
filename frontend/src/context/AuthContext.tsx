@@ -7,8 +7,10 @@ import {
 } from "react";
 import axios from "axios";
 import Cookies from "js-cookie"; // ✅ Import js-cookie
-import { toast } from "react-toastify";
+//import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
+
 
 interface User {
   id: string;
@@ -130,19 +132,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // ✅ PASSWORD RESET REQUEST
+  //  PASSWORD RESET REQUEST
   const requestPasswordReset = async (email: string) => {
     try {
       console.log("🔹 Envoi de la requête de reset pour:", email);
       const response =  await axios.post("http://localhost:5000/api/auth/request-reset", {  email, });
-      alert("✅ Email envoyé ! Vérifiez votre boîte mail.");
-      
-      console.log("📧 Password reset request sent.",response.data);
-    } catch (error: any) {
+    
+       console.log("📧 Password reset request sent.", response.data);
+      //  Notification de succès
+      console.log("✅ Avant notification de succès !");
+      toast.success("✅ Email envoyé ! Vérifiez votre boîte mail.");
+      console.log("✅ Après notification de succès !");     } catch (error: any) {
       console.error(
         "❌ Password Reset Request Failed:",
         error.response?.data || error.message
       );
+      toast.error("❌ Échec de l'envoi de l'email. Veuillez réessayer.");
+
       throw error;
     }
   };
@@ -157,7 +163,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
      // const response= await axios.post("http://localhost:5000/api/auth/request-reset",  { token, newPassword });
      
       console.log("🔑 Password reset successful.", response.data);
-      alert("Mot de passe changé avec succès ");
+      toast.success("✅ Mot de passe changé avec succès !");
+
+      alert("password changed ");
      
      
       window.location.href = "/signin";  // Change l'URL actuelle du navigateur
@@ -168,6 +176,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         "❌ Password Reset Failed:",
         error.response?.data || error.message
       );
+      toast.error("❌ Échec de la réinitialisation. Veuillez réessayer.");
+
       throw error;
     }
   };
