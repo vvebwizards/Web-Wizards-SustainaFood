@@ -3,7 +3,7 @@ import { markAsRead, getUserNotifications } from "../controllers/notificationCon
 
 const router = express.Router();
 
-router.get("/:userId", getUserNotifications);
+//router.get("/:userId", getUserNotifications);
 router.put("/:notificationId/read", markAsRead);
 
 export default router;

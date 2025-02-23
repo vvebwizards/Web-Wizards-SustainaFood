@@ -15,6 +15,10 @@ const userSchema = new mongoose.Schema({
   },
   profileImage: { type: String, default: "" }, 
   registeredDevices: { type: [String], default: [] },
+  resetPasswordToken: { type: String, default: null },
+  resetPasswordExpires: { type: Date, default: null },
+  phoneNumber: { type: String, default: "" },
+
 }, { timestamps: true });
 
 export default mongoose.model("User", userSchema);
