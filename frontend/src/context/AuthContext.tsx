@@ -9,6 +9,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+axios.defaults.withCredentials = true;
 
 interface User {
   id: string;
@@ -37,11 +38,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const storedUser = Cookies.get("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+    const checkSession = async () => {
+      try {
+        console.log("🔍 Checking session...");
+  
+        const response = await axios.get("http://localhost:5000/api/auth/me", {
+          withCredentials: true,
+        });
+  
+        console.log("✅ Session restored:", response.data);
+        setUser(response.data.user);
+      } catch (error) {
+        console.warn("⚠️ No active session found:", error.response?.data || error.message);
+        setUser(null); // Make sure user state is explicitly set to null on failure
+      }
+    };
+  
+    checkSession();
   }, []);
+  
+  
+  
+  
 
   // ✅ LOGIN FUNCTION (Added Captcha Token)
   const login = async (email: string, password: string, captchaToken: string) => {

@@ -97,7 +97,7 @@ export async function login(req, res) {
     res.cookie("token", token, {
       httpOnly: true, // ✅ More secure, prevents XSS attacks
       maxAge: 60 * 60 * 1000, // 1 hour
-      sameSite: "Lax",
+      sameSite: "Strict",
     });
 
     const userData = {
@@ -192,25 +192,29 @@ export async function logout(req, res) {
 
 export async function getMe(req, res) {
   try {
-    // ✅ Extract token from cookies
-    const token = req.cookies.token;
+    const token = req.cookies.token; // ✅ Get token from cookies
     if (!token) {
+      console.log("🚨 No token found in cookies");
       return res.status(401).json({ message: "Not authenticated" });
     }
 
-    // ✅ Verify the JWT token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select("-password");
+    const user = await User.findById(decoded.id).select("-password"); // Exclude password
 
     if (!user) {
+      console.log("🚨 User not found");
       return res.status(404).json({ message: "User not found" });
     }
 
+    console.log("✅ User session found:", user.email);
     res.status(200).json({ user });
   } catch (error) {
+    console.log("🚨 Token expired or invalid:", error.message);
     res.status(401).json({ message: "Invalid or expired token" });
   }
 }
+
+
 
 // ✅ update user information
 const __filename = fileURLToPath(import.meta.url);

@@ -19,8 +19,8 @@ import "react-toastify/dist/ReactToastify.css";
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user } = useAuth();
 
-  if (user === undefined) {
-    return <div>Loading...</div>; // Prevent redirect until authentication is known
+  if (user === null) {
+    return <div>Loading...</div>; // Prevent redirect until session is checked
   }
 
   if (!user) {
@@ -29,6 +29,7 @@ function ProtectedRoute({ children }: { children: JSX.Element }) {
 
   return children;
 }
+
 function App() {
   return (
     <>
