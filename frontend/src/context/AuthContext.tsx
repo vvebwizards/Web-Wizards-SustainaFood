@@ -11,7 +11,6 @@ import Cookies from "js-cookie"; // ✅ Import js-cookie
 import "react-toastify/dist/ReactToastify.css";
 import { toast } from "react-toastify";
 
-
 interface User {
   id: string;
   username: string;
@@ -50,7 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const storedUser = Cookies.get("user"); // ✅ Retrieve user from cookies
-   // console.log("🔹 Checking user in cookies after reload:", storedUser);
+    // console.log("🔹 Checking user in cookies after reload:", storedUser);
 
     if (storedUser) {
       setUser(JSON.parse(storedUser));
@@ -136,13 +135,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const requestPasswordReset = async (email: string) => {
     try {
       console.log("🔹 Envoi de la requête de reset pour:", email);
-      const response =  await axios.post("http://localhost:5000/api/auth/request-reset", {  email, });
-    
-       console.log("📧 Password reset request sent.", response.data);
+      const response = await axios.post(
+        "http://localhost:5000/api/auth/request-reset",
+        { email }
+      );
+
+      console.log("📧 Password reset request sent.", response.data);
       //  Notification de succès
       console.log("✅ Avant notification de succès !");
       toast.success("✅ Email envoyé ! Vérifiez votre boîte mail.");
-      console.log("✅ Après notification de succès !");     } catch (error: any) {
+      console.log("✅ Après notification de succès !");
+    } catch (error: any) {
       console.error(
         "❌ Password Reset Request Failed:",
         error.response?.data || error.message
@@ -153,24 +156,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  
   const resetPassword = async (token: string, newPassword: string) => {
     try {
-      
-      console.log("📡 Sending request to reset password:", { token, newPassword });
-      const response = await axios.post("http://localhost:5000/api/auth/reset-password",  { token, newPassword });
+      console.log("📡 Sending request to reset password:", {
+        token,
+        newPassword,
+      });
+      const response = await axios.post(
+        "http://localhost:5000/api/auth/reset-password",
+        { token, newPassword }
+      );
 
-     // const response= await axios.post("http://localhost:5000/api/auth/request-reset",  { token, newPassword });
-     
+      // const response= await axios.post("http://localhost:5000/api/auth/request-reset",  { token, newPassword });
+
       console.log("🔑 Password reset successful.", response.data);
       toast.success("✅ Mot de passe changé avec succès !");
 
       alert("password changed ");
-     
-     
-      window.location.href = "/signin";  // Change l'URL actuelle du navigateur
+
+      window.location.href = "/signin"; // Change l'URL actuelle du navigateur
       return response.data;
-    
     } catch (error: any) {
       console.error(
         "❌ Password Reset Failed:",
@@ -206,21 +211,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     userId: string,
     username: string,
     email: string,
-    password: string
+    password: string,
+    profileImage?: File
   ) => {
     try {
+      const formData = new FormData();
+      formData.append("username", username);
+      formData.append("email", email);
+      if (password) {
+        formData.append("password", password);
+      }
+      if (profileImage) {
+        formData.append("profileImage", profileImage);
+      }
+
       const response = await axios.put(
         `http://localhost:5000/api/auth/update/${userId}`,
-        { username, email, password },
-        { withCredentials: true }
+        formData,
+        {
+          withCredentials: true,
+          headers: { "Content-Type": "multipart/form-data" },
+        }
       );
 
       console.log("✅ User info updated:", response.data);
 
-      // Update the user in the context and cookies
       if (response.data.user) {
-        setUser(response.data.user);
-        Cookies.set("user", JSON.stringify(response.data.user), { expires: 7 });
+        setUser(response.data.user); // ✅ Update user state
+        Cookies.set("user", JSON.stringify(response.data.user), { expires: 7 }); // ✅ Store updated user in cookies
       }
     } catch (error: any) {
       console.error(
@@ -238,15 +256,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         { phone },
         { withCredentials: true }
       );
-  
+
       console.log("Phone number updated:", response.data);
-  
+
       // Update the user in the context and cookies
       if (response.data.user) {
         setUser(response.data.user);
         Cookies.set("user", JSON.stringify(response.data.user), { expires: 7 });
       }
-  
     } catch (error: any) {
       console.error(
         "Update Phone Number Failed:",
@@ -259,9 +276,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const sendOtp = async (userId: string) => {
     try {
       await axios.post(`http://localhost:5000/api/auth/send-otp/${userId}`);
-      console.log('OTP sent successfully');
+      console.log("OTP sent successfully");
     } catch (error: any) {
-      console.error('Error sending OTP:', error.response?.data || error.message);
+      console.error(
+        "Error sending OTP:",
+        error.response?.data || error.message
+      );
       throw error;
     }
   };
