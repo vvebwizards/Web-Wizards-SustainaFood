@@ -1,6 +1,7 @@
 import { Server } from "socket.io";
 import Notification from "../models/Notification.js";
-import { sendEmail } from "../utils/helpers.js"; // Ensure you are using this correctly
+import User from "../models/User.js"; // Import User model to fetch email
+import { sendEmail } from "../utils/helpers.js";
 
 let onlineUsers = new Map(); // Store { userId: socketId }
 
@@ -63,20 +64,35 @@ export async function sendNotification(userId, message, io) {
       console.warn(`⚠️ User ${userId} is offline. Notification stored in DB.`);
     }
 
-    // ✅ **Send Email Notification**
-    console.log("📧 Preparing email alert...");
+    // ✅ **Fetch User's Email from Database**
+    const user = await User.findById(userId).select("email username");
 
+    if (!user) {
+      console.error("❌ User not found in database, email not sent.");
+      return;
+    }
+
+    console.log(`📧 Preparing email alert for ${user.email} (${user.username})`);
+
+    // ✅ **Send Email Notification to the User's Registered Email**
     const mailOptions = {
       from: process.env.MAILER_EMAIL_ID,
-      to: "soufien.baka2002@gmail.com", // Ensure recipient email is correct
+      to: user.email, // **Use the actual user email**
       subject: "New Login Alert",
-      html: `<p>Your account was accessed from a new device. If this wasn't you, please take action immediately.</p>`,
+      html: `
+        <p>Hi <strong>${user.username}</strong>,</p>
+        <p>Your account was accessed from a new device.</p>
+        <p>If this wasn't you, please take action immediately.</p>
+        <br>
+        <p>Best Regards,</p>
+        <p><strong>Security Team</strong></p>
+      `,
     };
 
     try {
       console.log("📧 Sending email to:", mailOptions.to);
       await sendEmail(mailOptions);
-      console.log("✅ Email successfully sent!");
+      console.log("✅ Email successfully sent to", mailOptions.to);
     } catch (emailError) {
       console.error("❌ Failed to send email:", emailError);
     }
