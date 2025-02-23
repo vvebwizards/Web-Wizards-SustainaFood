@@ -9,5 +9,7 @@ router.post("/login", login);
 router.post("/logout", logout);
 router.get("/me", getMe);
 router.put("/update/:userId", upload, updateUserInfo);
+
+
 export default router;
 
