@@ -11,6 +11,7 @@ function Login() {
   const [captchaToken, setCaptchaToken] = useState(""); // ✅ Captcha token state
   const navigate = useNavigate();
   const { login } = useAuth();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -23,7 +24,7 @@ function Login() {
     try {
       console.log("📡 Sending login request:", { email, password, captchaToken });
 
-      await login(email, password); 
+      await login(email, password, captchaToken); // ✅ Pass captchaToken to login function
 
       console.log("✅ Login successful, redirecting...");
       navigate("/dashboard");
@@ -117,34 +118,31 @@ function Login() {
                 </a>
               </div>
               </div>
-            {/* ✅ Google reCAPTCHA Component */}
             <div className="flex justify-center">
               <ReCAPTCHA
-                sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || ""}// Replace with your actual site key
+                sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || ""}
                 onChange={(token) => setCaptchaToken(token)}
               />
             </div>
 
             <div>
-            <button
-              type="submit"
-              disabled={!captchaToken || !email || !password} // ✅ Button is disabled if any of these are missing
-              className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
-                captchaToken && email && password
-                  ? "bg-green-600 hover:bg-green-700"
-                  : "bg-gray-400 cursor-not-allowed"
-              }`}
-            >
-              Sign in
-            </button>
-
-
+              <button
+                type="submit"
+                disabled={!captchaToken || !email || !password}
+                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
+                  captchaToken && email && password
+                    ? "bg-green-600 hover:bg-green-700"
+                    : "bg-gray-400 cursor-not-allowed"
+                }`}
+              >
+                Sign in
+              </button>
             </div>
           </form>
         </div>
       </div>
     </div>
-  );    
+  );
 }
 
 export default Login;

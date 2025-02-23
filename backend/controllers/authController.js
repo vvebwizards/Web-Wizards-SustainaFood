@@ -54,86 +54,129 @@ export async function signup(req, res) {
 }
 
 export async function login(req, res) {
+  console.log("🔹 Login request received:", req.body);
+
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ message: "Email and password are required" });
+    const { email, password, captchaToken } = req.body;
+
+    if (!email || !password || !captchaToken) {
+      console.log("❌ Missing credentials or captchaToken");
+      return res.status(400).json({ message: "Email, password, and captcha are required" });
     }
 
     const user = await User.findOne({ email });
+
     if (!user) {
+      console.log("❌ User not found for email:", email);
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
     if (user.blocked) {
+      console.log("❌ Account is blocked for:", email);
       return res.status(403).json({ message: "Your account has been blocked" });
     }
 
+    console.log("🔹 Checking password...");
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
+      console.log("❌ Password incorrect for:", email);
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
     if (!process.env.JWT_SECRET) {
+      console.log("❌ Missing JWT_SECRET in environment variables");
       return res.status(500).json({ message: "Server error: Missing JWT_SECRET" });
     }
 
+    console.log("🔹 Generating JWT token...");
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
 
+    console.log("🔹 Setting cookie...");
     res.cookie("token", token, {
-      httpOnly: false,
+      httpOnly: true, // ✅ More secure, prevents XSS attacks
       maxAge: 60 * 60 * 1000, // 1 hour
-
+      sameSite: "Lax",
     });
 
-    const userData = { id: user._id, username: user.username, email: user.email, role: user.role, phoneNumber: user.phoneNumber };
-    const userAgent = req.headers['user-agent']; 
-    const deviceFingerprint = crypto.createHash('sha256').update(userAgent).digest('hex'); 
+    const userData = {
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      phoneNumber: user.phoneNumber
+    };
 
-    // Parse device information
+    console.log("🔹 Checking registered devices...");
+    const userAgent = req.headers['user-agent'];
+    const deviceFingerprint = crypto.createHash('sha256').update(userAgent).digest('hex');
+
     const parser = new UAParser(userAgent);
     const deviceInfo = parser.getResult();
     const deviceDetails = {
-        browser: deviceInfo.browser.name,
-        os: deviceInfo.os.name,
-        device: deviceInfo.device.type || 'Desktop', 
+      browser: deviceInfo.browser.name,
+      os: deviceInfo.os.name,
+      device: deviceInfo.device.type || 'Desktop',
     };
-    
+
     const isRegisteredDevice = user.registeredDevices.includes(deviceFingerprint);
 
+    // ✅ Handle notifications separately so login is NOT blocked
     if (!isRegisteredDevice) {
-      await sendNotification(
-        user._id,
-        `New Login Alert: Your account was accessed from a new device : ${deviceDetails.device} on ${deviceDetails.browser} (${deviceDetails.os})`,
-        req.io, 
-        req.socketId 
-      );
-      const emailTemplate = deviceLocationLoginAlert(
-        user.username,
-        deviceDetails.device, 
-        deviceDetails.browser,
-        deviceDetails.os,
-      );
+      console.log("🚨 New device detected! Sending notification...");
 
-      const mailOptions = {
-        from: process.env.MAILER_EMAIL_ID,
-        to: user.email, 
-        subject: 'Login Alert',
-        html: emailTemplate,
-      };
-      
-     await sendEmail(mailOptions);
-      
+      // **Run notification logic asynchronously**
+      (async () => {
+        try {
+          if (req.io && req.socketId) {
+            console.log("🔹 Sending Socket.io notification...");
+            await sendNotification(
+              user._id,
+              `New Login Alert: Your account was accessed from a new device: ${deviceDetails.device} on ${deviceDetails.browser} (${deviceDetails.os})`,
+              req.io,
+              req.socketId
+            );
+          } else {
+            console.warn("⚠️ Socket ID or IO instance is missing, skipping notification.");
+          }
+        } catch (notifError) {
+          console.error("❌ Failed to send notification:", notifError);
+        }
+
+        try {
+          console.log("📧 Preparing email alert...");
+          const emailTemplate = deviceLocationLoginAlert(
+            user.username,
+            deviceDetails.device,
+            deviceDetails.browser,
+            deviceDetails.os
+          );
+
+          const mailOptions = {
+            from: process.env.MAILER_EMAIL_ID,
+            to: user.email,
+            subject: "Login Alert",
+            html: emailTemplate,
+          };
+
+          console.log("📧 Sending email to:", user.email);
+          await sendEmail(mailOptions);
+        } catch (emailError) {
+          console.error("❌ Failed to send email:", emailError);
+        }
+      })();
     }
-       
+
+    console.log("✅ Login successful for:", email);
     res.status(200).json({ message: "Login successful", user: userData });
+
   } catch (error) {
-    console.error("Login Error:", error);
+    console.error("❌ Login Error:", error);
     res.status(500).json({ message: "Error logging in", error: error.message });
   }
 }
+
 
 
 // ✅ Logout function to clear cookie

@@ -6,10 +6,9 @@ import {
   ReactNode,
 } from "react";
 import axios from "axios";
-import Cookies from "js-cookie"; // ✅ Import js-cookie
-//import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import Cookies from "js-cookie";
 import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 interface User {
   id: string;
@@ -21,23 +20,13 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (
-    username: string,
-    email: string,
-    password: string,
-    role: string
-  ) => Promise<void>;
+  login: (email: string, password: string, captchaToken: string) => Promise<void>;
+  signup: (username: string, email: string, password: string, role: string) => Promise<void>;
   logout: () => void;
   requestPasswordReset: (email: string) => Promise<void>;
   resetPassword: (token: string, newPassword: string) => Promise<void>;
   verifyTwoFactor: (code: string) => Promise<void>;
-  updateUserInfo: (
-    userId: string,
-    username: string,
-    email: string,
-    password: string
-  ) => Promise<void>;
+  updateUserInfo: (userId: string, username: string, email: string, password: string) => Promise<void>;
   updatePhoneNumber: (userId: string, phone: string) => Promise<void>;
   sendOtp: (userId: string) => Promise<void>;
 }
@@ -48,58 +37,56 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const storedUser = Cookies.get("user"); // ✅ Retrieve user from cookies
-    // console.log("🔹 Checking user in cookies after reload:", storedUser);
-
+    const storedUser = Cookies.get("user");
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
   }, []);
 
-  // ✅ LOGIN FUNCTION
-  const login = async (email: string, password: string) => {
+  // ✅ LOGIN FUNCTION (Added Captcha Token)
+  const login = async (email: string, password: string, captchaToken: string) => {
     try {
+      console.log("📡 Sending login request:", { email, password, captchaToken });
+
       const response = await axios.post(
         "http://localhost:5000/api/auth/login",
-        { email, password },
+        { email, password, captchaToken },
         { withCredentials: true }
       );
 
       console.log("✅ Login Success:", response.data);
 
       if (response.data.requiresTwoFactor) {
-        window.location.href = "/2fa"; // Redirect to 2FA if required
+        window.location.href = "/2fa";
         return;
       }
 
-      Cookies.set("user", JSON.stringify(response.data.user), { expires: 7 }); // ✅ Store user in cookies
+      Cookies.set("user", JSON.stringify(response.data.user), { expires: 7 });
       setUser(response.data.user);
     } catch (error: any) {
-      console.error(
-        "❌ Login Failed:",
-        error.response?.data?.message || error.message
-      );
+      console.error("❌ Login Failed:", error);
+
+      if (error.response) {
+        console.error("📡 Server Response:", error.response.status, error.response.data);
+      } else if (error.request) {
+        console.error("❌ No Response from Server", error.request);
+      } else {
+        console.error("🛑 Request Error", error.message);
+      }
+
       throw error;
     }
   };
 
   // ✅ SIGNUP FUNCTION
-  const signup = async (
-    username: string,
-    email: string,
-    password: string,
-    role: string
-  ) => {
+  const signup = async (username: string, email: string, password: string, role: string) => {
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/auth/signup",
-        {
-          username,
-          email,
-          password,
-          role,
-        }
-      );
+      const response = await axios.post("http://localhost:5000/api/auth/signup", {
+        username,
+        email,
+        password,
+        role,
+      });
 
       console.log("✅ Signup Success:", response.data);
       return response.data;
@@ -112,143 +99,95 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // ✅ LOGOUT FUNCTION
   const logout = async () => {
     try {
-      await axios.post(
-        "http://localhost:5000/api/auth/logout",
-        {},
-        { withCredentials: true }
-      );
+      await axios.post("http://localhost:5000/api/auth/logout", {}, { withCredentials: true });
 
-      // ✅ Ensure user state is cleared
       setUser(null);
-
-      // ✅ Manually remove the user from cookies
-      Cookies.remove("token");
       Cookies.remove("user");
 
-      console.log("✅ Logout successful, user and token removed.");
+      console.log("✅ Logout successful");
     } catch (error) {
       console.error("❌ Logout Failed:", error);
     }
   };
 
-  //  PASSWORD RESET REQUEST
+  // ✅ REQUEST PASSWORD RESET FUNCTION
   const requestPasswordReset = async (email: string) => {
     try {
-      console.log("🔹 Envoi de la requête de reset pour:", email);
-      const response = await axios.post(
-        "http://localhost:5000/api/auth/request-reset",
-        { email }
-      );
+      console.log("🔹 Sending password reset request for:", email);
+      const response = await axios.post("http://localhost:5000/api/auth/request-reset", { email });
 
       console.log("📧 Password reset request sent.", response.data);
-      //  Notification de succès
-      console.log("✅ Avant notification de succès !");
-      toast.success("✅ Email envoyé ! Vérifiez votre boîte mail.");
-      console.log("✅ Après notification de succès !");
+      toast.success("✅ Password reset email sent! Check your inbox.");
     } catch (error: any) {
-      console.error(
-        "❌ Password Reset Request Failed:",
-        error.response?.data || error.message
-      );
-      toast.error("❌ Échec de l'envoi de l'email. Veuillez réessayer.");
-
+      console.error("❌ Password Reset Request Failed:", error.response?.data || error.message);
+      toast.error("❌ Failed to send password reset email. Please try again.");
       throw error;
     }
   };
 
+  // ✅ RESET PASSWORD FUNCTION
   const resetPassword = async (token: string, newPassword: string) => {
     try {
-      console.log("📡 Sending request to reset password:", {
+      console.log("📡 Sending request to reset password:", { token, newPassword });
+
+      const response = await axios.post("http://localhost:5000/api/auth/reset-password", {
         token,
         newPassword,
       });
-      const response = await axios.post(
-        "http://localhost:5000/api/auth/reset-password",
-        { token, newPassword }
-      );
-
-      // const response= await axios.post("http://localhost:5000/api/auth/request-reset",  { token, newPassword });
 
       console.log("🔑 Password reset successful.", response.data);
-      toast.success("✅ Mot de passe changé avec succès !");
+      toast.success("✅ Password successfully changed!");
 
-      alert("password changed ");
-
-      window.location.href = "/signin"; // Change l'URL actuelle du navigateur
+      window.location.href = "/signin";
       return response.data;
     } catch (error: any) {
-      console.error(
-        "❌ Password Reset Failed:",
-        error.response?.data || error.message
-      );
-      toast.error("❌ Échec de la réinitialisation. Veuillez réessayer.");
-
+      console.error("❌ Password Reset Failed:", error.response?.data || error.message);
+      toast.error("❌ Failed to reset password. Please try again.");
       throw error;
     }
   };
 
-  // ✅ VERIFY TWO-FACTOR AUTHENTICATION CODE
+  // ✅ VERIFY TWO-FACTOR AUTHENTICATION FUNCTION
   const verifyTwoFactor = async (code: string) => {
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/auth/verify-2fa",
-        { code }
-      );
+      const response = await axios.post("http://localhost:5000/api/auth/verify-2fa", { code });
 
       console.log("✅ 2FA Verified:", response.data);
       Cookies.set("user", JSON.stringify(response.data.user), { expires: 7 });
       setUser(response.data.user);
     } catch (error: any) {
-      console.error(
-        "❌ 2FA Verification Failed:",
-        error.response?.data || error.message
-      );
+      console.error("❌ 2FA Verification Failed:", error.response?.data || error.message);
       throw error;
     }
   };
+
   // ✅ UPDATE USER INFO FUNCTION
-  const updateUserInfo = async (
-    userId: string,
-    username: string,
-    email: string,
-    password: string,
-    profileImage?: File
-  ) => {
+  const updateUserInfo = async (userId: string, username: string, email: string, password: string, profileImage?: File) => {
     try {
       const formData = new FormData();
       formData.append("username", username);
       formData.append("email", email);
-      if (password) {
-        formData.append("password", password);
-      }
-      if (profileImage) {
-        formData.append("profileImage", profileImage);
-      }
+      if (password) formData.append("password", password);
+      if (profileImage) formData.append("profileImage", profileImage);
 
-      const response = await axios.put(
-        `http://localhost:5000/api/auth/update/${userId}`,
-        formData,
-        {
-          withCredentials: true,
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
+      const response = await axios.put(`http://localhost:5000/api/auth/update/${userId}`, formData, {
+        withCredentials: true,
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
       console.log("✅ User info updated:", response.data);
 
       if (response.data.user) {
-        setUser(response.data.user); // ✅ Update user state
-        Cookies.set("user", JSON.stringify(response.data.user), { expires: 7 }); // ✅ Store updated user in cookies
+        setUser(response.data.user);
+        Cookies.set("user", JSON.stringify(response.data.user), { expires: 7 });
       }
     } catch (error: any) {
-      console.error(
-        "❌ Update User Info Failed:",
-        error.response?.data || error.message
-      );
+      console.error("❌ Update User Info Failed:", error.response?.data || error.message);
       throw error;
     }
   };
 
+  // ✅ UPDATE PHONE NUMBER FUNCTION
   const updatePhoneNumber = async (userId: string, phone: string) => {
     try {
       const response = await axios.put(
@@ -257,31 +196,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         { withCredentials: true }
       );
 
-      console.log("Phone number updated:", response.data);
+      console.log("✅ Phone number updated:", response.data);
 
-      // Update the user in the context and cookies
       if (response.data.user) {
         setUser(response.data.user);
         Cookies.set("user", JSON.stringify(response.data.user), { expires: 7 });
       }
     } catch (error: any) {
-      console.error(
-        "Update Phone Number Failed:",
-        error.response?.data || error.message
-      );
+      console.error("❌ Update Phone Number Failed:", error.response?.data || error.message);
       throw error;
     }
   };
 
+  // ✅ SEND OTP FUNCTION
   const sendOtp = async (userId: string) => {
     try {
       await axios.post(`http://localhost:5000/api/auth/send-otp/${userId}`);
-      console.log("OTP sent successfully");
+      console.log("✅ OTP sent successfully");
     } catch (error: any) {
-      console.error(
-        "Error sending OTP:",
-        error.response?.data || error.message
-      );
+      console.error("❌ Error sending OTP:", error.response?.data || error.message);
       throw error;
     }
   };
