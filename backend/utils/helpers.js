@@ -33,21 +33,28 @@ const smtpTransport = nodemailer.createTransport({
   },
 });
 
-export const sendEmail = (data) => {
-  return new Promise((resolve, reject) => {
-    console.log(`📨 Tentative d'envoi d'email à: ${data.to}`);
 
-    smtpTransport.sendMail(data, (err) => {
-      if (err)
-      { console.error("❌ Erreur lors de l'envoi de l'email:", err);
 
-      reject(err); 
- } else{         console.log("✅ Email envoyé avec succès !", info.response);
+export const sendEmail = async (mailOptions) => {
+  try {
+    console.log("📨 Preparing to send email with options:", mailOptions);
 
-  resolve(); }
+    const transporter = nodemailer.createTransport({
+      service: "gmail", // Ensure this matches your provider
+      auth: {
+        user: process.env.MAILER_EMAIL_ID, // Check if correctly set in .env
+        pass: process.env.MAILER_PASSWORD, // Check if correctly set in .env
+      },
     });
-  });
+
+    console.log("📡 Attempting to send email...");
+    const info = await transporter.sendMail(mailOptions);
+    console.log("✅ Email sent successfully!", info.response);
+  } catch (error) {
+    console.error("❌ Error sending email:", error);
+  }
 };
+
 
 //reset
 export const sendPasswordResetEmail = async (email, resetToken) => {

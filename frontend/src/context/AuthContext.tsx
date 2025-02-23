@@ -36,7 +36,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-
+  const [loading, setLoading] = useState(true); // ✅ Ensure state for loading
+  
   useEffect(() => {
     const checkSession = async () => {
       try {
@@ -50,12 +51,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(response.data.user);
       } catch (error) {
         console.warn("⚠️ No active session found:", error.response?.data || error.message);
-        setUser(null); // Make sure user state is explicitly set to null on failure
+        setUser(null);
+      } finally {
+        setLoading(false); // ✅ Ensure loading state is set
       }
     };
   
     checkSession();
   }, []);
+  
   
   
   
@@ -180,21 +184,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // ✅ UPDATE USER INFO FUNCTION
-  const updateUserInfo = async (userId: string, username: string, email: string, password: string, profileImage?: File) => {
+  const updateUserInfo = async (
+    userId: string | undefined,
+    username: string,
+    email: string,
+    password: string,
+    profileImage?: File
+  ) => {
     try {
+      if (!userId) {
+        console.error("❌ Error: User ID is undefined. Cannot update user info.");
+        return; // Prevents API call if userId is missing
+      }
+  
       const formData = new FormData();
       formData.append("username", username);
       formData.append("email", email);
       if (password) formData.append("password", password);
       if (profileImage) formData.append("profileImage", profileImage);
-
+  
       const response = await axios.put(`http://localhost:5000/api/auth/update/${userId}`, formData, {
         withCredentials: true,
         headers: { "Content-Type": "multipart/form-data" },
       });
-
+  
       console.log("✅ User info updated:", response.data);
-
+  
       if (response.data.user) {
         setUser(response.data.user);
         Cookies.set("user", JSON.stringify(response.data.user), { expires: 7 });
@@ -204,6 +219,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       throw error;
     }
   };
+  
 
   // ✅ UPDATE PHONE NUMBER FUNCTION
   const updatePhoneNumber = async (userId: string, phone: string) => {

@@ -83,11 +83,6 @@ export async function login(req, res) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    if (!process.env.JWT_SECRET) {
-      console.log("❌ Missing JWT_SECRET in environment variables");
-      return res.status(500).json({ message: "Server error: Missing JWT_SECRET" });
-    }
-
     console.log("🔹 Generating JWT token...");
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
       expiresIn: "1h",
@@ -95,9 +90,8 @@ export async function login(req, res) {
 
     console.log("🔹 Setting cookie...");
     res.cookie("token", token, {
-      httpOnly: true, // ✅ More secure, prevents XSS attacks
-      maxAge: 60 * 60 * 1000, // 1 hour
-      sameSite: "Strict",
+      httpOnly: false,
+      maxAge: 60 * 60 * 1000,
     });
 
     const userData = {
@@ -108,74 +102,30 @@ export async function login(req, res) {
       phoneNumber: user.phoneNumber
     };
 
-    console.log("🔹 Checking registered devices...");
-    const userAgent = req.headers['user-agent'];
-    const deviceFingerprint = crypto.createHash('sha256').update(userAgent).digest('hex');
-
-    const parser = new UAParser(userAgent);
-    const deviceInfo = parser.getResult();
-    const deviceDetails = {
-      browser: deviceInfo.browser.name,
-      os: deviceInfo.os.name,
-      device: deviceInfo.device.type || 'Desktop',
-    };
-
-    const isRegisteredDevice = user.registeredDevices.includes(deviceFingerprint);
-
-    // ✅ Handle notifications separately so login is NOT blocked
-    if (!isRegisteredDevice) {
-      console.log("🚨 New device detected! Sending notification...");
-
-      // **Run notification logic asynchronously**
-      (async () => {
-        try {
-          if (req.io && req.socketId) {
-            console.log("🔹 Sending Socket.io notification...");
-            await sendNotification(
-              user._id,
-              `New Login Alert: Your account was accessed from a new device: ${deviceDetails.device} on ${deviceDetails.browser} (${deviceDetails.os})`,
-              req.io,
-              req.socketId
-            );
-          } else {
-            console.warn("⚠️ Socket ID or IO instance is missing, skipping notification.");
-          }
-        } catch (notifError) {
-          console.error("❌ Failed to send notification:", notifError);
-        }
-
-        try {
-          console.log("📧 Preparing email alert...");
-          const emailTemplate = deviceLocationLoginAlert(
-            user.username,
-            deviceDetails.device,
-            deviceDetails.browser,
-            deviceDetails.os
-          );
-
-          const mailOptions = {
-            from: process.env.MAILER_EMAIL_ID,
-            to: user.email,
-            subject: "Login Alert",
-            html: emailTemplate,
-          };
-
-          console.log("📧 Sending email to:", user.email);
-          await sendEmail(mailOptions);
-        } catch (emailError) {
-          console.error("❌ Failed to send email:", emailError);
-        }
-      })();
-    }
-
     console.log("✅ Login successful for:", email);
     res.status(200).json({ message: "Login successful", user: userData });
 
+    // ⏳ **Wait before sending notification**
+    setTimeout(async () => {
+      console.log("🚨 New device detected! Sending notification...");
+
+      try {
+        await sendNotification(
+          user._id,
+          `New Login Alert: Your account was accessed from a new device.`,
+          req.io
+        );
+      } catch (notifError) {
+        console.error("❌ Failed to send notification:", notifError);
+      }
+    }, 3000); // ⏳ **Give time for WebSocket to register user**
+    
   } catch (error) {
     console.error("❌ Login Error:", error);
     res.status(500).json({ message: "Error logging in", error: error.message });
   }
 }
+
 
 
 
