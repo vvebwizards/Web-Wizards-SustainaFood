@@ -2,33 +2,37 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Mail, Lock } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import ReCAPTCHA from "react-google-recaptcha";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(""); // 🔥 Error state to display messages
+  const [error, setError] = useState("");
+  const [captchaToken, setCaptchaToken] = useState(""); // ✅ Captcha token state
   const navigate = useNavigate();
   const { login } = useAuth();
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(""); // Reset previous errors
-  
+    setError("");
+
+    if (!captchaToken) {
+      setError("⚠️ Please complete the CAPTCHA.");
+      return;
+    }
+
     try {
-      console.log("📡 Sending login request:", { email, password });
-  
-      await login(email, password);
-  
+      console.log("📡 Sending login request:", { email, password, captchaToken });
+
+      await login(email, password); 
+
       console.log("✅ Login successful, redirecting...");
-      navigate("/dashboard"); // ✅ Only navigate if login succeeds
+      navigate("/dashboard");
     } catch (err: any) {
       console.error("❌ Login Failed:", err.response?.data?.message || err.message);
-  
-      // 🔥 Show error message in UI
       setError(err.response?.data?.message || "⚠️ Invalid email or password.");
     }
   };
-  
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -49,7 +53,6 @@ function Login() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          {/* 🔥 Display Error Messages */}
           {error && (
             <div className="flex items-center bg-red-100 text-red-600 px-4 py-2 rounded-lg mb-4">
               <Lock className="w-5 h-5 mr-2" />
@@ -95,7 +98,6 @@ function Login() {
                 />
               </div>
             </div>
-
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <input
@@ -114,22 +116,35 @@ function Login() {
                   Forgot your password?
                 </a>
               </div>
+              </div>
+            {/* ✅ Google reCAPTCHA Component */}
+            <div className="flex justify-center">
+              <ReCAPTCHA
+                sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || ""}// Replace with your actual site key
+                onChange={(token) => setCaptchaToken(token)}
+              />
             </div>
 
             <div>
-              <button
-                type="submit"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-              >
-                Sign in
-              </button>
-              
+            <button
+              type="submit"
+              disabled={!captchaToken || !email || !password} // ✅ Button is disabled if any of these are missing
+              className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
+                captchaToken && email && password
+                  ? "bg-green-600 hover:bg-green-700"
+                  : "bg-gray-400 cursor-not-allowed"
+              }`}
+            >
+              Sign in
+            </button>
+
+
             </div>
           </form>
         </div>
       </div>
     </div>
-  );
+  );    
 }
 
 export default Login;

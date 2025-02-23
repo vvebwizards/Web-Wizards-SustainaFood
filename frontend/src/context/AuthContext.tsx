@@ -147,6 +147,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(response.data.user); // ✅ Update user state
         Cookies.set("user", JSON.stringify(response.data.user), { expires: 7 }); // ✅ Store updated user in cookies
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error(
         "❌ Update User Info Failed:",
