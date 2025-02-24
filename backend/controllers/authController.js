@@ -99,8 +99,10 @@ export async function login(req, res) {
       username: user.username,
       email: user.email,
       role: user.role,
-      phoneNumber: user.phoneNumber
+      phoneNumber: user.phoneNumber,
+      profileImage: user.profileImage 
     };
+    
 
     console.log("✅ Login successful for:", email);
     res.status(200).json({ message: "Login successful", user: userData });
