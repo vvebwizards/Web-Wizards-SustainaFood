@@ -30,14 +30,26 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
 
  
   const fetchNotifications = async () => {
-    if (!user) return; 
+    if (!user || !user.id) {
+      console.warn("⚠️ No user found, skipping notifications fetch.");
+      return;
+    }
+  
     try {
+      console.log(`📡 Fetching notifications for user ${user.id}`);
       const response = await axios.get(`${API_BASE_URL}/${user.id}`);
       setNotifications(response.data);
     } catch (error) {
-      console.error("Error fetching notifications:", error);
+      console.error("❌ Error fetching notifications:", error);
     }
   };
+  
+  useEffect(() => {
+    if (user?.id) {
+      fetchNotifications();
+    }
+  }, [user]);
+  
 
  
   const markAsRead = async (notificationId: string) => {
@@ -55,7 +67,10 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
 
 
   useEffect(() => {
-    if (!socket || !user) return;
+    if (!socket || !user) {
+      console.warn("⚠️ No user found, skipping notifications fetch.");
+      return;
+    }
 
     socket.on("new_notification", (notification: Notification) => {
       setNotifications((prev) => [notification, ...prev]); 
@@ -67,8 +82,14 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
   }, [socket, user]);
 
   useEffect(() => {
+    if (!user || !user.id) {
+      console.warn("⚠️ No user found, skipping notifications fetch.");
+      return;
+    }
+  
     fetchNotifications();
   }, [user]);
+  
 
   return (
     <NotificationContext.Provider value={{ notifications, fetchNotifications, markAsRead }}>

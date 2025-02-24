@@ -169,8 +169,13 @@ export async function getMe(req, res) {
 
 
 // ✅ update user information
+
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+
+
 export async function updateUserInfo(req, res) {
   try {
     const { userId } = req.params;
