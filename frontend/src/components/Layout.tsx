@@ -31,7 +31,7 @@ const roleConfigs = {
     },
     navigation: [
       { to: "/dashboard/overview", icon: Gauge, label: "System Overview" },
-      { to: "/dashboard/users", icon: UserCog, label: "User Management" },
+      { to: "/dashboard/UsersManagement", icon: UserCog, label: "User Management" },
       { to: "/dashboard/organizations", icon: Building2, label: "Organizations" },
       { to: "/dashboard/donations", icon: Package, label: "Donations" },
       { to: "/dashboard/deliveries", icon: Truck, label: "Deliveries" },
