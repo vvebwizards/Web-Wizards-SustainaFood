@@ -13,6 +13,7 @@ import Statistics from "./pages/Statistics";
 import Settings from "./pages/Settings";
 import Users from "./pages/UserManagement";
 import UpdateProfile from "./pages/UpdateProfile ";
+import WelcomePage from "./pages/WelcomePage";
 import { NotificationProvider } from "./context/NotificationContext";
 import { AdminProvider } from "./context/AdminContext";
 import { ToastContainer } from "react-toastify";
@@ -55,7 +56,7 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<Profile />} />
+          <Route index element={<WelcomePage />} />
           <Route path="profile" element={<Profile />} />
           
           <Route 
