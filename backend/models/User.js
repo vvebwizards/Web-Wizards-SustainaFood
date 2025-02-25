@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: { 
     type: String, 
-    enum: ["donor", "recipient", "volunteer"], 
+    enum: ["donor", "recipient", "volunteer", "admin"], 
     required: true
   },
   blocked: { 
@@ -18,7 +18,9 @@ const userSchema = new mongoose.Schema({
   resetPasswordToken: { type: String, default: null },
   resetPasswordExpires: { type: Date, default: null },
   phoneNumber: { type: String, default: "" },
-
+  twofa: { type: Boolean, default: false },
+  otpCode: { type: String, default: null },
+  otpExpires: { type: Date, default: null },
 }, { timestamps: true });
 
 export default mongoose.model("User", userSchema);

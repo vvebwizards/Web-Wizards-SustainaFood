@@ -100,7 +100,8 @@ export async function login(req, res) {
       email: user.email,
       role: user.role,
       phoneNumber: user.phoneNumber,
-      profileImage: user.profileImage 
+      profileImage: user.profileImage,
+      twofa: user.twofa,
     };
     
 
@@ -392,6 +393,8 @@ export const updatePhoneNumber = async (req, res) => {
   }
 };
 
+
+
 const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
@@ -407,13 +410,29 @@ export const sendOtp = async (req, res) => {
     }
 
     const otp = generateOTP();
+    user.otpCode = otp;
+    user.otpExpires = Date.now() + 3600000;
+    await user.save();
 
     const emailData = {
       from: process.env.MAILER_EMAIL_ID,
       to: user.email,
       subject: "Your OTP Code",
-      html: `<p>Your OTP code is: <strong>${otp}</strong></p>
-             <p>If you did not request this, please ignore this email.</p>`,
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background-color: #f9f9f9;">
+          <h2 style="color: #2C3E50;">Hello ${user.username},</h2>
+          <p>We received a request to access your account. Use the OTP code below to complete the process:</p>
+          <div style="text-align: center; margin: 20px 0;">
+            <span style="display: inline-block; padding: 12px 24px; font-size: 24px; color: #fff; background-color: #3498db; border-radius: 5px;">
+              ${otp}
+            </span>
+          </div>
+          <p style="font-size: 14px; color: #999;">If you did not request this, please ignore this email.</p>
+          <p style="font-size: 14px; color: #999;">This OTP code will expire in 1 hour.</p>
+          <p style="font-size: 14px; color: #999;">Thank you,</p>
+          <p style="font-size: 14px; color: #999;">The Web Wizards Team</p>
+        </div>
+      `,
     };
 
     try {
@@ -427,6 +446,37 @@ export const sendOtp = async (req, res) => {
   } catch (error) {
     console.error('Error sending OTP:', error);
     res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const updateTwoFaStatus = async (req, res) => {
+  const { userId } = req.params;
+  const { twofa, code } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (twofa) {
+      if (user.otpCode === code) {
+        user.twofa = true;
+        user.otpCode = undefined;
+        user.otpExpires = undefined;
+      } else {
+        return res.status(400).json({ message: 'Invalid OTP code' });
+      }
+    } else {
+      user.twofa = false;
+    }
+
+    await user.save();
+
+    res.status(200).json(user);
+  } catch (error) {
+    console.error('Error updating 2FA status:', error);
+    res.status(500).json({ message: 'Failed to update 2FA status' });
   }
 };
 

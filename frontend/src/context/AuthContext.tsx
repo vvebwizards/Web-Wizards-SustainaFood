@@ -9,6 +9,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { code } from "framer-motion/client";
 axios.defaults.withCredentials = true;
 
 interface User {
@@ -18,6 +19,7 @@ interface User {
   role: string;
   phoneNumber: string;
   profileImage: string;
+  twofa: boolean;
 }
 
 interface AuthContextType {
@@ -31,6 +33,8 @@ interface AuthContextType {
   updateUserInfo: (userId: string, username: string, email: string, password: string, profileImage: File) => Promise<void>;
   updatePhoneNumber: (userId: string, phone: string) => Promise<void>;
   sendOtp: (userId: string) => Promise<void>;
+  updateTwoFaStatus: (userId: string, status: boolean, code: string) => Promise<void>;
+  getTwoFaStatus: (userId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -193,12 +197,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
   
-
-  
-  
-
-
-
   return (
     <AuthContext.Provider
       value={{
@@ -227,6 +225,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         },
         sendOtp: async (userId) => {
           await axios.post(`http://localhost:5000/api/auth/send-otp/${userId}`);
+        },
+        updateTwoFaStatus: async (userId, status, otp) => {
+          await axios.post(`http://localhost:5000/api/auth/updatetwofa/${userId}`, { twofa: status, code : otp });  
         },
       }}
     >

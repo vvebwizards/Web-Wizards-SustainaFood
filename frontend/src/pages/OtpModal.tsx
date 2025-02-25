@@ -15,7 +15,7 @@ const OtpModal: React.FC<OtpModalProps> = ({ isOpen, onClose, onSubmit }) => {
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-white p-6 rounded-md shadow-md">
         <h2 className="text-lg font-medium text-gray-900 mb-4">Enter OTP</h2>
-        <p className="mb-4">Check your email and type the OTP message you received.</p>
+        <p className="mb-4">Please check your email inbox and enter the verification code.</p>
         <input
           type="text"
           value={otp}

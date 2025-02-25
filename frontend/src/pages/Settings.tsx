@@ -1,25 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from "../context/AuthContext";
 import OtpModal from './OtpModal';
+import { useNavigate } from "react-router-dom";
 
 const Settings = () => {
-  const { user, updatePhoneNumber, sendOtp } = useAuth();
-  const [is2FAEnabled, setIs2FAEnabled] = useState(false);
+  const { user, updatePhoneNumber, sendOtp, updateTwoFaStatus } = useAuth();
+  const [is2FAEnabled, setIs2FAEnabled] = useState(user?.twofa);
   const [isEditingPhone, setIsEditingPhone] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || '');
   const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    setIs2FAEnabled(user?.twofa || false);
+  }, [user]);
 
   async function enable2FA() {
-    try {
-      setIsOtpModalOpen(true);
-      if (user?.id) {
-        await sendOtp(user.id);
-      } else {
-        throw new Error('User ID is undefined');
+    if (is2FAEnabled) {
+      const confirmDeactivation = window.confirm('Are you sure you want to deactivate 2FA?');
+      if (confirmDeactivation && user?.id) {
+        try {
+          await updateTwoFaStatus(user.id, false, '');
+          setIs2FAEnabled(false);
+        } catch (error) {
+          console.error('Error deactivating 2FA:', error);
+          alert('Failed to deactivate 2FA');
+        }
       }
-    } catch (error) {
-      console.error('Error sending OTP:', error);
-      alert('Failed to send OTP');
+    } else {
+      try {
+        setIsOtpModalOpen(true);
+        if (user?.id) {
+          await sendOtp(user.id);
+        } else {
+          throw new Error('User ID is undefined');
+        }
+      } catch (error) {
+        console.error('Error sending OTP:', error);
+        alert('Failed to send OTP');
+      }
     }
   }
 
@@ -41,10 +60,21 @@ const Settings = () => {
   }
 
   async function handleOtpSubmit(otp: string) {
-    console.log('OTP submitted:', otp);
-    setIsOtpModalOpen(false);
-    setIs2FAEnabled(true);
-    alert('2FA enabled');
+    if (user?.id) {
+      try {
+        await updateTwoFaStatus(user.id, true, otp);
+        setIsOtpModalOpen(false);
+        setIs2FAEnabled(true);
+        setTimeout(() => {
+          navigate("/dashboard/profile");
+        }, 2000);
+      } catch (error) {
+        console.error('Error enabling 2FA:', error);
+        alert('Failed to enable 2FA');
+      }
+    } else {
+      throw new Error('User ID is undefined');
+    }
   }
 
   return (
