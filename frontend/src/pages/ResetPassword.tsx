@@ -25,7 +25,7 @@ function ResetPassword() {
     try {
       await resetPassword(token!, password);
       setSuccess(true);
-      setTimeout(() => navigate("/login", { state: { message: "Password reset successful!" } }), 2000);
+      setTimeout(() => navigate("/signin", { state: { message: "Password reset successful!" } }), 2000);
     } catch (err: any) {
       setError("❌ Failed to reset password. Please try again.");
     }
