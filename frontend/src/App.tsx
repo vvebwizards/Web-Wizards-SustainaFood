@@ -18,20 +18,21 @@ import { NotificationProvider } from "./context/NotificationContext";
 import { AdminProvider } from "./context/AdminContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import PublicRoute from "./components/PublicRoute"; // Import the PublicRoute component
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user } = useAuth();
-
-  if (user === null) {
-    return <div>Loading...</div>; // Prevent redirect until session is checked
+  if (user === undefined) {
+    return <div>Loading...</div>;
   }
 
-  if (!user) {
+  if (user === null) {
     return <Navigate to="/signin" replace />;
   }
 
   return children;
 }
+
 
 function App() {
   return (
@@ -40,8 +41,24 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/get-involved" element={<GetInvolved />} />
-        <Route path="/signup" element={<SignUp />} />
-        <Route path="/signin" element={<Login />} />
+
+        {/* Wrap public routes with PublicRoute */}
+        <Route
+          path="/signup"
+          element={
+            <PublicRoute>
+              <SignUp />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/signin"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/2fa" element={<TwoFactorAuth />} />
@@ -58,7 +75,6 @@ function App() {
         >
           <Route index element={<WelcomePage />} />
           <Route path="profile" element={<Profile />} />
-          
           <Route 
             path="UsersManagement" 
             element={
