@@ -1,31 +1,46 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext"; // Import useAuth
+import { useAuth } from "../context/AuthContext";
 import { Camera } from "lucide-react";
 import { motion } from "framer-motion";
 
 const UpdateProfile = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
-  const { user, updateUserInfo } = useAuth(); // Destructure updateUserInfo from useAuth
+  const { user, updateUserInfo } = useAuth();
 
   const [formData, setFormData] = useState({
     username: user?.username || "",
     email: user?.email || "",
     password: "",
   });
-  const [profileImage, setProfileImage] = useState<File | null>(null); // State for the image file
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string>("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  const defaultImage =
+    "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80";
+
+  // Set the preview URL based on the selected file or user's image
+  useEffect(() => {
+    if (!profileImage) {
+      setPreview(user?.profileImage ? `http://localhost:5000${user.profileImage}` : defaultImage);
+      return;
+    }
+    const objectUrl = URL.createObjectURL(profileImage);
+    setPreview(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [profileImage, user]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setProfileImage(e.target.files[0]); // Store the selected file
+      setProfileImage(e.target.files[0]);
     }
   };
 
@@ -33,14 +48,14 @@ const UpdateProfile = () => {
     e.preventDefault();
     setError("");
     setSuccess("");
-
     try {
+      // Calling the updateUserInfo function with 5 arguments as required:
       await updateUserInfo(
         userId!,
         formData.username,
         formData.email,
         formData.password,
-        profileImage // Pass the image file to updateUserInfo
+        profileImage!
       );
       setSuccess("Profile updated successfully!");
       setTimeout(() => {
@@ -53,62 +68,47 @@ const UpdateProfile = () => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.5 }}
+      initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.1 }}
+      className="min-h-screen bg-gray-50 py-8"
     >
-      <div className="p-6">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-6">
-          Update Profile
-        </h1>
-
-        <div className="space-y-6">
-          {/* Profile Image Section */}
-          <div className="flex items-center space-x-6">
-            <img
-              src={
-                profileImage
-                  ? URL.createObjectURL(profileImage)
-                  : user?.profileImage
-                  ? `http://localhost:5000${user.profileImage}`
-                  : "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-              }
-              alt="Profile"
-              className="h-24 w-24 rounded-full border-2 border-gray-300"
-            />
-            <div>
-              <h2 className="text-xl font-medium text-gray-900">
-                Update Your Profile
-              </h2>
-              <p className="text-gray-500">Make changes to your account.</p>
+      <div className="max-w-4xl mx-auto bg-white shadow rounded-lg p-6">
+        <h1 className="text-3xl font-semibold text-gray-900 mb-6">Update Profile</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Left Column: Profile Photo */}
+          <div className="flex flex-col items-center">
+            <div className="relative w-32 h-32">
+              <img
+                src={preview}
+                alt="Profile"
+                className="w-full h-full rounded-full border-2 border-gray-300 object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = defaultImage;
+                }}
+              />
+              <input
+                type="file"
+                accept="image/*"
+                id="profile-photo-input"
+                className="hidden"
+                onChange={handleFileChange}
+              />
+              <label
+                htmlFor="profile-photo-input"
+                className="absolute bottom-0 right-0 bg-blue-600 p-2 rounded-full text-white shadow-lg hover:bg-blue-700 cursor-pointer transition-colors"
+                title="Upload Profile Photo"
+              >
+                <Camera className="h-5 w-5" />
+              </label>
             </div>
+            <p className="mt-4 text-lg font-medium text-gray-800">{user?.username}</p>
           </div>
-
-          {/* Upload Profile Photo Section */}
-          <div className="flex items-center mt-2">
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              id="profile-photo-input"
-              onChange={handleFileChange} // Handle file selection
-            />
-            <label
-              htmlFor="profile-photo-input"
-              className="cursor-pointer flex items-center bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition-colors duration-300"
-            >
-              <Camera className="mr-2 h-5 w-5" />
-              Upload Profile Photo
-            </label>
-          </div>
-
-          {/* Update Profile Form */}
+          {/* Right Column: Update Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label
-                htmlFor="username"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
                 Username
               </label>
               <input
@@ -117,16 +117,12 @@ const UpdateProfile = () => {
                 id="username"
                 value={formData.username}
                 onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Enter new username"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-
             <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email
               </label>
               <input
@@ -135,16 +131,12 @@ const UpdateProfile = () => {
                 id="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Enter new email"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-
             <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
               </label>
               <input
@@ -153,22 +145,18 @@ const UpdateProfile = () => {
                 id="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Enter new password"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-
             {error && <p className="text-red-500 text-sm">{error}</p>}
             {success && <p className="text-green-500 text-sm">{success}</p>}
-
-            <div>
-              <button
-                type="submit"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Update Profile
-              </button>
-            </div>
+            <button
+              type="submit"
+              className="w-full py-3 px-4 rounded-md bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition"
+            >
+              Update Profile
+            </button>
           </form>
         </div>
       </div>
