@@ -1,6 +1,12 @@
 import React from "react";
 import { useAuth } from "../context/AuthContext";
-import { UserCog, Heart, Users, Truck } from "lucide-react";
+import Lottie from "lottie-react";
+
+// Example animations
+import adminAnimation from "../animations/admin.json";
+import deliveryAnimation from "../animations/delivery.json";
+import donorAnimation from "../animations/donor.json";
+import recipientAnimation from "../animations/recipient.json";
 
 const WelcomePage: React.FC = () => {
   const { user } = useAuth();
@@ -11,60 +17,67 @@ const WelcomePage: React.FC = () => {
 
   let welcomeMessage: string;
   let additionalContent: JSX.Element;
-  let IconComponent: React.ElementType = () => null;
+  let animationData: any = null;
 
   switch (user.role) {
     case "admin":
       welcomeMessage = "Welcome, Administrator!";
       additionalContent = (
-        <>
-          <p>Here's an overview of system metrics and user management tools.</p>
-        </>
+        <p>
+          Manage your system, view reports, and monitor user activity.
+        </p>
       );
-      IconComponent = UserCog;
-      break;
-    case "donor":
-      welcomeMessage = "Welcome, Food Donor!";
-      additionalContent = (
-        <>
-          <p>Thank you for your generous contributions. Check your donation history and upcoming events.</p>
-        </>
-      );
-      IconComponent = Heart;
-      break;
-    case "recipient":
-      welcomeMessage = "Welcome, Food Recipient!";
-      additionalContent = (
-        <>
-          <p>Discover available food items and manage your requests right here.</p>
-        </>
-      );
-      IconComponent = Users;
+      animationData = adminAnimation;
       break;
     case "volunteer":
       welcomeMessage = "Welcome, Delivery Volunteer!";
       additionalContent = (
-        <>
-          <p>Check your delivery schedule and active assignments.</p>
-        </>
+        <p>
+          View your delivery schedule and active assignments.
+        </p>
       );
-      IconComponent = Truck;
+      animationData = deliveryAnimation;
+      break;
+    case "donor":
+      welcomeMessage = "Welcome, Food Donor!";
+      additionalContent = (
+        <p>
+          Thank you for your generosity. Check your donation history and upcoming events.
+        </p>
+      );
+      animationData = donorAnimation;
+      break;
+    case "recipient":
+      welcomeMessage = "Welcome, Food Recipient!";
+      additionalContent = (
+        <p>
+          Discover available food items and manage your requests easily.
+        </p>
+      );
+      animationData = recipientAnimation;
       break;
     default:
       welcomeMessage = "Welcome!";
-      additionalContent = <p>Navigate the dashboard using the menu.</p>;
+      additionalContent = (
+        <p>
+          Navigate the dashboard using the menu.
+        </p>
+      );
+      break;
   }
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      <div className="max-w-3xl mx-auto bg-white shadow rounded-lg p-6 text-center">
-        <div className="flex justify-center mb-4">
-          <div className="p-4 bg-blue-100 rounded-full inline-flex">
-            <IconComponent className="h-12 w-12 text-blue-600" />
+    <div className="p-16 bg-gray-50 min-h-screen flex items-center justify-center">
+      <div className="max-w-5xl mx-auto bg-white shadow-lg rounded-lg p-10 text-center">
+        {animationData && (
+          <div className="w-72 h-72 mx-auto mb-8">
+            <Lottie animationData={animationData} loop={true} />
           </div>
+        )}
+        <h1 className="text-5xl font-bold mb-8">{welcomeMessage}</h1>
+        <div className="text-2xl text-gray-700 space-y-4">
+          {additionalContent}
         </div>
-        <h1 className="text-3xl font-bold mb-4">{welcomeMessage}</h1>
-        <div className="text-lg text-gray-700">{additionalContent}</div>
       </div>
     </div>
   );
