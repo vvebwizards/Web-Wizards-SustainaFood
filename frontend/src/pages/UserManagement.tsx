@@ -1,15 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import { Ban, Eye, Trash2 } from "lucide-react";
 import { useAdmin } from "../context/AdminContext";
-// If you have a UserDetailsModal or other components, import them
-// import { UserDetailsModal } from "../components/UserDetailsModal";
+import { UserDetailsModal } from "../components/UserDetailsModal";
 
 export function UserManagement() {
-  const { users, blockUser, deleteUser } = useAdmin(); // get from context
+  const { users, blockUser, deleteUser } = useAdmin();
 
-  // For viewing details (you can manage modal state here if needed)
-  const [selectedUser, setSelectedUser] = React.useState<any>(null);
-  const [showDetails, setShowDetails] = React.useState(false);
+  // State for modal: selected user and modal open/close
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [showDetails, setShowDetails] = useState(false);
 
   const handleViewDetails = (user: any) => {
     setSelectedUser(user);
@@ -26,21 +25,11 @@ export function UserManagement() {
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                User
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Role
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Last Active
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Active</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -48,15 +37,9 @@ export function UserManagement() {
               <tr key={user.id}>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
-                    <img
-                      className="h-10 w-10 rounded-full"
-                      src={user.avatar}
-                      alt={user.name}
-                    />
+                    <img className="h-10 w-10 rounded-full" src={user.avatar} alt={user.name} />
                     <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">
-                        {user.name}
-                      </div>
+                      <div className="text-sm font-medium text-gray-900">{user.name}</div>
                       <div className="text-sm text-gray-500">{user.email}</div>
                     </div>
                   </div>
@@ -82,26 +65,16 @@ export function UserManagement() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex justify-end space-x-2">
-                    <button
-                      onClick={() => handleViewDetails(user)}
-                      className="text-gray-600 hover:text-gray-900"
-                    >
+                    <button onClick={() => handleViewDetails(user)} className="text-gray-600 hover:text-gray-900">
                       <Eye size={18} />
                     </button>
                     <button
                       onClick={() => blockUser(user.id)}
-                      className={`${
-                        user.status === "Active"
-                          ? "text-red-600 hover:text-red-900"
-                          : "text-green-600 hover:text-green-900"
-                      }`}
+                      className={`${user.status === "Active" ? "text-red-600 hover:text-red-900" : "text-green-600 hover:text-green-900"}`}
                     >
                       <Ban size={18} />
                     </button>
-                    <button
-                      onClick={() => deleteUser(user.id)}
-                      className="text-red-600 hover:text-red-900"
-                    >
+                    <button onClick={() => deleteUser(user.id)} className="text-red-600 hover:text-red-900">
                       <Trash2 size={18} />
                     </button>
                   </div>
@@ -112,13 +85,18 @@ export function UserManagement() {
         </table>
       </div>
 
-      {/* If you have a UserDetailsModal, pass selectedUser here */}
-      {/* <UserDetailsModal
-        user={selectedUser}
-        isOpen={showDetails}
-        onClose={() => setShowDetails(false)}
-        onBlock={(id) => blockUser(id)}
-      /> */}
+      {/* Render the modal when showDetails is true */}
+      {showDetails && selectedUser && (
+        <UserDetailsModal
+          user={selectedUser}
+          isOpen={showDetails}
+          onClose={() => setShowDetails(false)}
+          onBlock={(id) => {
+            blockUser(id);
+            setShowDetails(false);
+          }}
+        />
+      )}
     </div>
   );
 }
