@@ -6,10 +6,11 @@ import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
-import notificationRoutes from "./routes/notificationRoutes.js"; 
+import notificationRoutes from "./routes/notificationRoutes.js";
+ 
 import { getMe } from "./controllers/authController.js";
 import setupSocket from "./socket/socket.js";
-
+import userRoutes from "./routes/userRoutes.js";
 dotenv.config();
 
 import path from 'path';
@@ -52,7 +53,7 @@ app.use(morgan("dev"));
 app.use("/api/auth", authRoutes);
 app.use("/api/auth/me", getMe);
 app.use("/api/notifications", notificationRoutes);
-
+app.use("/api/users", userRoutes);
 app.get("/", (req, res) => {
   res.send("Backend connected to frontend");
 });
