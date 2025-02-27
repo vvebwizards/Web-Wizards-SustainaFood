@@ -8,21 +8,22 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
   const [socket, setSocket] = useState<Socket | null>(null);
 
+  // Create the socket connection only once on mount
   useEffect(() => {
     const newSocket = io("http://localhost:5000");
     setSocket(newSocket);
-
-    if (user) {
-      setTimeout(() => {
-        newSocket.emit("registerUser", user.id);
-        console.log(`📡 Registered user ${user.id} with WebSocket.`);
-      }, 1000); // ⏳ **Give time for backend**
-    }
-
     return () => {
       newSocket.disconnect();
     };
-  }, [user]);
+  }, []);
+
+  // When both the socket and the user are available, register the user
+  useEffect(() => {
+    if (socket && user) {
+      socket.emit("registerUser", user.id);
+      console.log(`📡 Registered user ${user.id} with WebSocket.`);
+    }
+  }, [socket, user]);
 
   return <SocketContext.Provider value={socket}>{children}</SocketContext.Provider>;
 };

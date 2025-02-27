@@ -45,10 +45,13 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
   };
   
   useEffect(() => {
-    if (user?.id) {
-      fetchNotifications();
+    if (!user) {
+      console.warn("No user available, skipping notifications fetch.");
+      return;
     }
+    fetchNotifications();
   }, [user]);
+  
   
 
  

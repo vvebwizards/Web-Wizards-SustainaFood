@@ -7,14 +7,18 @@ import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
- 
+import userRoutes from "./routes/userRoutes.js";
 import { getMe } from "./controllers/authController.js";
 import setupSocket from "./socket/socket.js";
-import userRoutes from "./routes/userRoutes.js";
-dotenv.config();
 
-import path from 'path';
-import { fileURLToPath } from 'url';
+import path from "path";
+import { fileURLToPath } from "url";
+
+// Import and initialize Passport for Google Auth
+import passport from "passport";
+import "./passport.js"; // This file contains your Passport Google strategy configuration
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,7 +28,8 @@ const server = http.createServer(app);
 
 connectDB();
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Serve static files from the uploads directory
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use(express.json());
 app.use(cookieParser());
@@ -50,10 +55,15 @@ app.options("*", (req, res) => {
 
 app.use(morgan("dev"));
 
+// Initialize Passport middleware for Google OAuth
+app.use(passport.initialize());
+
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/auth/me", getMe);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/users", userRoutes);
+
 app.get("/", (req, res) => {
   res.send("Backend connected to frontend");
 });

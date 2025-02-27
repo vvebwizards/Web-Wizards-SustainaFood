@@ -133,18 +133,23 @@ const Layout = () => {
 
   // Fix Profile Image Not Updating on Login
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-    const storedImage = localStorage.getItem("profileImage");
-
-    if (storedUser?.profileImage) {
-      const imageUrl = `http://localhost:5000${storedUser.profileImage}?t=${new Date().getTime()}`;
-      setProfileImage(imageUrl);
-    } else if (storedImage) {
-      setProfileImage(storedImage);
+    if (user && user.profileImage) {
+      console.log("User profileImage from context:", user.profileImage);
+      // Check if the profileImage is already an absolute URL
+      const isAbsolute = user.profileImage.startsWith("http");
+      const imageUrl = isAbsolute
+        ? user.profileImage
+        : `http://localhost:5000${user.profileImage}`;
+      // Append a timestamp to bypass caching issues
+      const finalUrl = `${imageUrl}?t=${Date.now()}`;
+      console.log("Final profile image URL:", finalUrl);
+      setProfileImage(finalUrl);
     } else {
+      console.log("No profile image found, using placeholder");
       setProfileImage("https://via.placeholder.com/40");
     }
-  }, [user?.profileImage]);
+  }, [user]);
+  
 
   // Fix Notifications Not Loading After Refresh
   useEffect(() => {

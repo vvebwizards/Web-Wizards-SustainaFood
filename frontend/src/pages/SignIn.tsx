@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Mail, Lock } from "lucide-react";
+import { FcGoogle } from "react-icons/fc"; // Import the Google icon
 import { useAuth } from "../context/AuthContext";
 import ReCAPTCHA from "react-google-recaptcha";
 
@@ -8,11 +9,11 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [captchaToken, setCaptchaToken] = useState(""); // ✅ Captcha token state
+  const [captchaToken, setCaptchaToken] = useState("");
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -22,16 +23,17 @@ function Login() {
     }
 
     try {
-      console.log("📡 Sending login request:", { email, password, captchaToken });
-
-      await login(email, password, captchaToken); // ✅ Pass captchaToken to login function
-
-      console.log("✅ Login successful, redirecting...");
+      await login(email, password, captchaToken);
       navigate("/dashboard");
-    } catch (err: any) {
-      console.error("❌ Login Failed:", err.response?.data?.message || err.message);
+    } catch (err) {
+      console.error("Login Failed:", err.response?.data?.message || err.message);
       setError(err.response?.data?.message || "⚠️ Invalid email or password.");
     }
+  };
+
+  const handleGoogleSignIn = () => {
+    // Redirect to your backend's Google auth route to initiate the OAuth flow
+    window.location.href = "http://localhost:5000/api/auth/google";
   };
 
   return (
@@ -61,18 +63,17 @@ function Login() {
             </div>
           )}
 
+          {/* Email/Password Sign-in Form */}
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Email address
-              </label>
+              <label className="block text-sm font-medium text-gray-700">Email address</label>
               <div className="mt-1 relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Mail className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
                   type="email"
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md bg-white placeholder-gray-500 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -82,16 +83,14 @@ function Login() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
+              <label className="block text-sm font-medium text-gray-700">Password</label>
               <div className="mt-1 relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
                   type="password"
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md bg-white placeholder-gray-500 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -99,6 +98,7 @@ function Login() {
                 />
               </div>
             </div>
+
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <input
@@ -111,13 +111,13 @@ function Login() {
                   Remember me
                 </label>
               </div>
-
               <div className="text-sm">
                 <a href="/forgot-password" className="font-medium text-green-600 hover:text-green-500">
                   Forgot your password?
                 </a>
               </div>
-              </div>
+            </div>
+
             <div className="flex justify-center">
               <ReCAPTCHA
                 sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || ""}
@@ -139,6 +139,27 @@ function Login() {
               </button>
             </div>
           </form>
+
+          {/* Divider */}
+          <div className="mt-6 relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">Or continue with</span>
+            </div>
+          </div>
+
+          {/* Sign in with Google Button */}
+          <div className="mt-6">
+            <button
+              onClick={handleGoogleSignIn}
+              className="w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              <FcGoogle className="w-6 h-6 mr-2" />
+              Sign in with Google
+            </button>
+          </div>
         </div>
       </div>
     </div>

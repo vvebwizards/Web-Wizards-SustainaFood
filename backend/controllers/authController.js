@@ -134,14 +134,14 @@ export async function login(req, res) {
 
 // ✅ Logout function to clear cookie
 export async function logout(req, res) {
-  res.cookie("token", "", {
-    httpOnly: false,
-    maxAge: 60 * 60 * 1000,
-
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
   });
-
   res.status(200).json({ message: "Logged out successfully" });
 }
+
 
 export async function getMe(req, res) {
   try {

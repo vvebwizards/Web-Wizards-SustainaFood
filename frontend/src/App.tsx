@@ -26,6 +26,9 @@ function ProtectedRoute({ children }: { children: JSX.Element }) {
     return <div>Loading...</div>;
   }
 
+
+
+
   if (user === null) {
     return <Navigate to="/signin" replace />;
   }
