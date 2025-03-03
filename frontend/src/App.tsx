@@ -19,6 +19,7 @@ import { AdminProvider } from "./context/AdminContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import PublicRoute from "./components/PublicRoute"; // Import the PublicRoute component
+import Inventory from "./pages/Inventory";
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user } = useAuth();
@@ -89,6 +90,17 @@ function App() {
           <Route path="statistics" element={<Statistics />} />
           <Route path="settings" element={<Settings />} />
           <Route path="UpdateProfile/:userId" element={<UpdateProfile />} />
+          <Route
+              path="inventory"
+              element={
+                <Inventory
+                  inventory={[]} // Pass your inventory state here
+                  onAddItem={(item) => console.log('Add item:', item)} // Replace with your logic
+                  onUpdateItem={(id, item) => console.log('Update item:', id, item)} // Replace with your logic
+                  onDeleteItem={(id) => console.log('Delete item:', id)} // Replace with your logic
+                />
+              }
+            />
         </Route>
       </Routes>
     </>
