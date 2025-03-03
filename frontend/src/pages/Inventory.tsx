@@ -1,63 +1,30 @@
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Filter, Search, AlertCircle, Calendar } from 'lucide-react';
+import { Plus, Edit, Trash2, Filter, Search, Calendar } from 'lucide-react';
 import { FoodItem } from '../components/FoodItemModal';
+import { useInventory } from '../context/InventoryContext';
 
-
-
-interface InventoryProps {
-  inventory: FoodItem[];
-  onAddItem: (item: Omit<FoodItem, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  onUpdateItem: (id: string, item: Partial<FoodItem>) => void;
-  onDeleteItem: (id: string) => void;
-}
-
-// Test item for demonstration
-const testItem: FoodItem = {
-  id: "1",
-  name: "Peanut Butter",
-  category: "pantry",
-  quantity: 5,
-  unit: "jars",
-  expirationDate: "2025-12-31",
-  nutritionalInfo: "Calories: 190, Protein: 7g, Fat: 16g, Carbs: 7g per 2 tbsp",
-  allergens: ["peanuts"],
-  storageRequirements: "room-temperature",
-  notes: "High-quality brand, donated by Community Drive",
-  status: "Available",
-  imageUrl: "https://example.com/peanut-butter.jpg",
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-};
-
-const Inventory: React.FC<InventoryProps> = ({ 
-  inventory = [testItem], // Default to test item if no inventory provided
-  onAddItem, 
-  onUpdateItem, 
-  onDeleteItem 
-}) => {
+const Inventory: React.FC = () => {
+  const { inventory, addFoodItem, error } = useInventory();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('');
   const [showAddModal, setShowAddModal] = useState(false);
-  const [editingItem, setEditingItem] = useState<FoodItem | null>(null);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [categories, setCategories] = useState<string[]>([
     'produce', 'dairy', 'bakery', 'meat', 'pantry', 'prepared', 'other'
   ]);
-  const [showPickupModal, setShowPickupModal] = useState(false);
-  const [selectedItemForPickup, setSelectedItemForPickup] = useState<FoodItem | null>(null);
-  
-  const [formData, setFormData] = useState<Omit<FoodItem, 'id' | 'createdAt' | 'updatedAt'>>({
-    name: '',
+
+  const [formData, setFormData] = useState<Omit<FoodItem, '_id' | 'createdAt' | 'updatedAt'>>({
+    title: '',
     category: 'produce',
     quantity: 0,
     unit: 'kg',
     expirationDate: '',
     nutritionalInfo: '',
-    allergens: [],
+   
     storageRequirements: 'room-temperature',
     notes: '',
     imageUrl: '',
-    status: 'Available'
+    status: 'In Stock'
   });
 
   const handleAddCategory = (newCategory: string) => {
@@ -67,7 +34,7 @@ const Inventory: React.FC<InventoryProps> = ({
   };
 
   const filteredInventory = inventory.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = item.title ? item.title.toLowerCase().includes(searchTerm.toLowerCase()) : false;
     const matchesCategory = filterCategory ? item.category === filterCategory : true;
     return matchesSearch && matchesCategory;
   });
@@ -84,68 +51,53 @@ const Inventory: React.FC<InventoryProps> = ({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingItem) {
-      onUpdateItem(editingItem.id, formData);
-    } else {
-      onAddItem(formData);
+    try {
+      await addFoodItem(formData);
+      setFormData({
+        title: '',
+        category: 'produce',
+        quantity: 0,
+        unit: 'kg',
+        expirationDate: '',
+        nutritionalInfo: '',
+      
+        storageRequirements: 'room-temperature',
+        notes: '',
+        imageUrl: '',
+        status: 'In Stock'
+      });
+      setShowAddModal(false);
+    } catch (err) {
+      console.error('Error adding item:', err);
     }
-    setFormData({
-      name: '',
-      category: 'produce',
-      quantity: 0,
-      unit: 'kg',
-      expirationDate: '',
-      nutritionalInfo: '',
-      allergens: [],
-      storageRequirements: 'room-temperature',
-      notes: '',
-      imageUrl: '',
-      status: 'Available'
-    });
-    setShowAddModal(false);
-    setEditingItem(null);
-  };
-
-  const handleEdit = (item: FoodItem) => {
-    setEditingItem(item);
-    setFormData({
-      name: item.name,
-      category: item.category,
-      quantity: item.quantity,
-      unit: item.unit,
-      expirationDate: item.expirationDate,
-      nutritionalInfo: item.nutritionalInfo || '',
-      allergens: item.allergens || [],
-      storageRequirements: item.storageRequirements || 'room-temperature',
-      notes: item.notes || '',
-      imageUrl: item.imageUrl || '',
-      status: item.status || 'Available'
-    });
-    setShowAddModal(true);
-  };
-
-  const handleSchedulePickup = (item: FoodItem) => {
-    setSelectedItemForPickup(item);
-    setShowPickupModal(true);
   };
 
   const formatCategory = (category: string) => {
     return category.charAt(0).toUpperCase() + category.slice(1);
   };
 
-  const isExpiringSoon = (expirationDate: string) => {
-    const today = new Date();
-    const expDate = new Date(expirationDate);
-    const diffTime = expDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= 7 && diffDays >= 0;
+  const handleRowClick = (id: string) => {
+    setExpandedRow(expandedRow === id ? null : id);
+  };
+
+  // Placeholder handlers for Edit, Delete, and Schedule
+  const handleEdit = (item: FoodItem) => {
+    console.log('Edit item:', item);
+  };
+
+  const handleDelete = (id: string) => {
+    console.log('Delete item:', id);
+  };
+
+  const handleSchedule = (item: FoodItem) => {
+    console.log('Schedule pickup for:', item);
   };
 
   return (
     <div className="p-6">
-      {/* Inventory Header */}
+      {}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 space-y-4 md:space-y-0">
         <h2 className="text-xl font-semibold text-gray-800">Inventory Management</h2>
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
@@ -176,19 +128,18 @@ const Inventory: React.FC<InventoryProps> = ({
           </div>
           <button
             onClick={() => {
-              setEditingItem(null);
               setFormData({
-                name: '',
+                title: '',
                 category: 'produce',
                 quantity: 0,
                 unit: 'kg',
                 expirationDate: '',
                 nutritionalInfo: '',
-                allergens: [],
+              
                 storageRequirements: 'room-temperature',
                 notes: '',
                 imageUrl: '',
-                status: 'Available'
+                status: 'In Stock'
               });
               setShowAddModal(true);
             }}
@@ -199,31 +150,38 @@ const Inventory: React.FC<InventoryProps> = ({
           </button>
         </div>
       </div>
-      
-      {/* Inventory Table */}
+
+      {}
+      {error && (
+        <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
+          {error}
+        </div>
+      )}
+
+      {}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expiration Date</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredInventory.length > 0 ? (
                 filteredInventory.map((item) => (
-                  <React.Fragment key={item.id}>
-                    <tr>
+                  <React.Fragment key={item._id}>
+                    <tr onClick={() => handleRowClick(item._id)} className="cursor-pointer hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         {item.imageUrl ? (
                           <img 
                             src={item.imageUrl} 
-                            alt={item.name} 
+                            alt={item.title || 'No Title'} 
                             className="h-8 w-8 object-cover rounded"
                             onError={(e) => (e.currentTarget.src = '/placeholder-image.jpg')}
                           />
@@ -234,20 +192,13 @@ const Inventory: React.FC<InventoryProps> = ({
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {item.name}
+                        {item.title || 'Untitled'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {item.quantity} {item.unit}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          {isExpiringSoon(item.expirationDate) && (
-                            <AlertCircle size={16} className="text-amber-500 mr-1" />
-                          )}
-                          <span className={`text-sm ${isExpiringSoon(item.expirationDate) ? 'text-amber-600' : 'text-gray-500'}`}>
-                            {new Date(item.expirationDate).toLocaleDateString()}
-                          </span>
-                        </div>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {item.expirationDate ? new Date(item.expirationDate).toLocaleDateString() : 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <span
@@ -256,22 +207,45 @@ const Inventory: React.FC<InventoryProps> = ({
                               ? 'bg-green-100 text-green-800'
                               : item.status === 'Expired'
                               ? 'bg-red-100 text-red-800'
-                              : 'bg-gray-100 text-gray-800'
+                              : item.status === 'Scheduled'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : item.status === 'Damaged'
+                              ? 'bg-orange-100 text-orange-800'
+                              : item.status === 'ToDonation'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-gray-100 text-gray-800' // In Stock
                           }`}
                         >
-                          {item.status || 'Available'}
+                          {item.status || 'In Stock'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <button
-                          onClick={() => setExpandedRow(expandedRow === item.id ? null : item.id)}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          {expandedRow === item.id ? '-' : '+'}
-                        </button>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleEdit(item); }}
+                            className="text-indigo-600 hover:text-indigo-900"
+                            title="Edit"
+                          >
+                            <Edit size={18} />
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDelete(item._id); }}
+                            className="text-red-600 hover:text-red-900"
+                            title="Delete"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleSchedule(item); }}
+                            className="text-green-600 hover:text-green-900"
+                            title="Schedule Pickup"
+                          >
+                            <Calendar size={18} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
-                    {expandedRow === item.id && (
+                    {expandedRow === item._id && (
                       <tr>
                         <td colSpan={6} className="px-6 py-4 bg-gray-50">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -283,12 +257,7 @@ const Inventory: React.FC<InventoryProps> = ({
                               <p className="text-sm font-medium text-gray-700">Storage:</p>
                               <p className="text-gray-900">{item.storageRequirements ? formatCategory(item.storageRequirements) : 'N/A'}</p>
                             </div>
-                            {item.allergens && item.allergens.length > 0 && (
-                              <div className="md:col-span-2">
-                                <p className="text-sm font-medium text-gray-700">Allergens:</p>
-                                <p className="text-gray-900">{item.allergens.join(', ')}</p>
-                              </div>
-                            )}
+                          
                             {item.nutritionalInfo && (
                               <div className="md:col-span-2">
                                 <p className="text-sm font-medium text-gray-700">Nutritional Info:</p>
@@ -301,29 +270,6 @@ const Inventory: React.FC<InventoryProps> = ({
                                 <p className="text-gray-900">{item.notes}</p>
                               </div>
                             )}
-                            <div className="md:col-span-2 flex space-x-2 mt-2">
-                              <button
-                                onClick={() => handleEdit(item)}
-                                className="text-indigo-600 hover:text-indigo-900"
-                                title="Edit"
-                              >
-                                <Edit size={18} />
-                              </button>
-                              <button
-                                onClick={() => onDeleteItem(item.id)}
-                                className="text-red-600 hover:text-red-900"
-                                title="Delete"
-                              >
-                                <Trash2 size={18} />
-                              </button>
-                              <button
-                                onClick={() => handleSchedulePickup(item)}
-                                className="text-green-600 hover:text-green-900"
-                                title="Schedule Pickup"
-                              >
-                                <Calendar size={18} />
-                              </button>
-                            </div>
                           </div>
                         </td>
                       </tr>
@@ -341,22 +287,20 @@ const Inventory: React.FC<InventoryProps> = ({
           </table>
         </div>
       </div>
-      
-      {/* Add/Edit Modal */}
+
+      {}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              {editingItem ? 'Edit Inventory Item' : 'Add New Inventory Item'}
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Add New Inventory Item</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Item Name*</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Item Title*</label>
                   <input
                     type="text"
-                    name="name"
-                    value={formData.name}
+                    name="title"
+                    value={formData.title}
                     onChange={handleInputChange}
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -449,17 +393,7 @@ const Inventory: React.FC<InventoryProps> = ({
                     <option value="frozen">Frozen</option>
                   </select>
                 </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Allergens (comma separated)</label>
-                  <input
-                    type="text"
-                    name="allergens"
-                    value={formData.allergens?.join(', ') || ''}
-                    onChange={handleInputChange}
-                    placeholder="e.g., milk, nuts, wheat"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                  />
-                </div>
+          
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Nutritional Information</label>
                   <textarea
@@ -493,49 +427,7 @@ const Inventory: React.FC<InventoryProps> = ({
                   type="submit"
                   className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
                 >
-                  {editingItem ? 'Update Item' : 'Add Item'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Pickup Modal */}
-      {showPickupModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              Schedule Pickup for {selectedItemForPickup?.name}
-            </h3>
-            <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Date*</label>
-                <input
-                  type="date"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Time*</label>
-                <input
-                  type="time"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                />
-              </div>
-              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={() => setShowPickupModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                >
-                  Schedule Pickup
+                  Add Item
                 </button>
               </div>
             </form>

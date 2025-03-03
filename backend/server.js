@@ -10,7 +10,7 @@ import notificationRoutes from "./routes/notificationRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import { getMe } from "./controllers/authController.js";
 import setupSocket from "./socket/socket.js";
-
+import FoodItemRoutes from "./routes/foodItemRoutes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -50,12 +50,12 @@ app.options("*", (req, res) => {
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
   res.header("Access-Control-Allow-Credentials", "true");
-  res.sendStatus(204); // No Content (Preflight OK)
+  res.sendStatus(204); 
 });
 
 app.use(morgan("dev"));
 
-// Initialize Passport middleware for Google OAuth
+
 app.use(passport.initialize());
 
 // Routes
@@ -63,7 +63,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/auth/me", getMe);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/users", userRoutes);
-
+app.use("/api/foodItem",FoodItemRoutes)
 app.get("/", (req, res) => {
   res.send("Backend connected to frontend");
 });
