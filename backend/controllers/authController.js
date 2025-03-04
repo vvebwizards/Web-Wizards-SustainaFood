@@ -102,6 +102,7 @@ export async function login(req, res) {
       phoneNumber: user.phoneNumber,
       profileImage: user.profileImage,
       twofa: user.twofa,
+      token:token
     };
     
 

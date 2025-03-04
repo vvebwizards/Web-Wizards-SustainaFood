@@ -1,5 +1,5 @@
 import FoodItem from "../models/FoodItem.js";
-
+import { getAuthenticatedUser } from "../utils/helpers.js";
 export async function addFoodItem (req,res) {
     try {
         const {
@@ -13,7 +13,7 @@ export async function addFoodItem (req,res) {
           notes,
           status,
         } = req.body;
-    
+       const donor = await getAuthenticatedUser(req);
         const newFoodItem = new FoodItem({
           title,
           category,
@@ -24,7 +24,7 @@ export async function addFoodItem (req,res) {
           storageRequirements,
           notes,
           status: status || 'In Stock', 
-        
+          donorId :donor._id        
         });
         const savedFoodItem = await newFoodItem.save();
         res.status(201).json({
@@ -39,12 +39,52 @@ export async function addFoodItem (req,res) {
 
 export async function getAll (req,res){
     try {
-        const foodItems = await FoodItem.find();
+        const user = await getAuthenticatedUser(req); 
+        const donorId = user._id;
+        const foodItems = await FoodItem.find({donorId:donorId});
         
         res.status(200).json(foodItems);
       } catch (error) {
         console.error('Error fetching food items:', error);
         res.status(500).json({ error: 'Error fetching food items' });
       }
+      
 }
-   
+
+export async function deleteOne (req,res) {
+    try {
+        const { id } = req.params; 
+        const user = await getAuthenticatedUser(req); 
+        const donorId = user._id;
+        const deletedItem = await FoodItem.findOneAndDelete({ _id: id, donorId: donorId });
+
+        if (!deletedItem) {
+          return res.status(404).json({ error: 'Food item not found' });
+        }
+        res.status(200).json({ message: 'Food item deleted successfully' });
+      } catch (error) {
+        console.error('Error deleting food item:', error);
+        res.status(500).json({ error: 'Error deleting food item' });
+      }
+}
+
+export async function updateOne (req,res) {
+    try {
+        const { id } = req.params; 
+        const updateData = req.body; 
+        const user = await getAuthenticatedUser(req); 
+        const donorId = user._id;
+        const updatedItem = await FoodItem.findByIdAndUpdate(
+           { _id: id, donorId: donorId },
+          updateData,
+          { new: true, runValidators: true }
+        );
+        if (!updatedItem) {
+          return res.status(404).json({ error: 'Food item not found' });
+        }
+        res.status(200).json({ message: 'Food item updated successfully', foodItem: updatedItem });
+      } catch (error) {
+        console.error('Error updating food item:', error);
+        res.status(500).json({ error: 'Error updating food item' });
+      }
+}

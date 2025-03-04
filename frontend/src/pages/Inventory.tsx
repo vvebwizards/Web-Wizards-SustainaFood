@@ -1,37 +1,25 @@
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Filter, Search, Calendar } from 'lucide-react';
+import { Plus, Edit, Trash2, Filter, Search, Calendar, Settings } from 'lucide-react';
 import { FoodItem } from '../components/FoodItemModal';
 import { useInventory } from '../context/InventoryContext';
+import { toast } from 'react-toastify';
+import { Category } from '../components/CategoryModal'; // Ensure this path is correct
+
+interface Category {
+  _id: string;
+  name: string;
+}
 
 const Inventory: React.FC = () => {
-  const { inventory, addFoodItem, error } = useInventory();
+  const { inventory, categories, addFoodItem, updateFoodItem, deleteFoodItem, addCategory, deleteCategory, error } = useInventory();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingItem, setEditingItem] = useState<FoodItem | null>(null);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
-  const [categories, setCategories] = useState<string[]>([
-    'produce', 'dairy', 'bakery', 'meat', 'pantry', 'prepared', 'other'
-  ]);
-
-  const [formData, setFormData] = useState<Omit<FoodItem, '_id' | 'createdAt' | 'updatedAt'>>({
-    title: '',
-    category: 'produce',
-    quantity: 0,
-    unit: 'kg',
-    expirationDate: '',
-    nutritionalInfo: '',
-   
-    storageRequirements: 'room-temperature',
-    notes: '',
-    imageUrl: '',
-    status: 'In Stock'
-  });
-
-  const handleAddCategory = (newCategory: string) => {
-    if (newCategory && !categories.includes(newCategory)) {
-      setCategories((prev) => [...prev, newCategory]);
-    }
-  };
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [newCategory, setNewCategory] = useState('');
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
 
   const filteredInventory = inventory.filter(item => {
     const matchesSearch = item.title ? item.title.toLowerCase().includes(searchTerm.toLowerCase()) : false;
@@ -51,26 +39,110 @@ const Inventory: React.FC = () => {
     }
   };
 
+  const [formData, setFormData] = useState<Omit<FoodItem, '_id' | 'createdAt' | 'updatedAt'>>({
+    title: '',
+    category: categories[0]?.name || 'produce',
+    quantity: 0,
+    unit: 'kg',
+    expirationDate: '',
+    nutritionalInfo: '',
+    storageRequirements: 'room-temperature',
+    notes: '',
+    imageUrl: '',
+    status: 'In Stock'
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await addFoodItem(formData);
+      if (editingItem) {
+        await updateFoodItem(editingItem._id, formData);
+        toast.success('Item updated successfully');
+      } else {
+        await addFoodItem(formData);
+        toast.success('Item added successfully');
+      }
       setFormData({
         title: '',
-        category: 'produce',
+        category: categories[0]?.name || 'produce',
         quantity: 0,
         unit: 'kg',
         expirationDate: '',
         nutritionalInfo: '',
-      
         storageRequirements: 'room-temperature',
         notes: '',
         imageUrl: '',
         status: 'In Stock'
       });
       setShowAddModal(false);
+      setEditingItem(null);
     } catch (err) {
-      console.error('Error adding item:', err);
+      console.error('Error:', err);
+    }
+  };
+
+  const handleEdit = (item: FoodItem) => {
+    setEditingItem(item);
+    setFormData({
+      title: item.title || '',
+      category: item.category || categories[0]?.name || 'produce',
+      quantity: item.quantity || 0,
+      unit: item.unit || 'kg',
+      expirationDate: item.expirationDate || '',
+      nutritionalInfo: item.nutritionalInfo || '',
+      storageRequirements: item.storageRequirements || 'room-temperature',
+      notes: item.notes || '',
+      imageUrl: item.imageUrl || '',
+      status: item.status || 'In Stock'
+    });
+    setShowAddModal(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteFoodItem(id);
+      toast.success('Item deleted successfully');
+    } catch (err) {
+      console.error('Error deleting item:', err);
+    }
+  };
+
+  const handleSchedule = (item: FoodItem) => {
+    console.log('Schedule pickup for:', item); // Placeholder
+  };
+
+  const handleAddCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCategory.trim()) return;
+    if (categories.map(c => c.name.toLowerCase()).includes(newCategory.toLowerCase())) {
+      toast.error('Category already exists');
+      return;
+    }
+    setIsAddingCategory(true);
+    try {
+      await addCategory({ name: newCategory }); // Pass as Category object with name
+      toast.success('Category added successfully');
+      setNewCategory('');
+      setShowCategoryModal(false);
+    } catch (err) {
+      console.error('Error adding category:', err);
+      if (err.message.includes('Failed to add category')) {
+        toast.error('Failed to add category. Please check your connection or authentication.');
+      }
+    } finally {
+      setIsAddingCategory(false);
+    }
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    try {
+      await deleteCategory(id);
+      toast.success('Category deleted successfully');
+    } catch (err) {
+      console.error('Error deleting category:', err);
+      if (err.message.includes('Failed to delete category')) {
+        toast.error('Failed to delete category. Please check your connection or authentication.');
+      }
     }
   };
 
@@ -82,22 +154,8 @@ const Inventory: React.FC = () => {
     setExpandedRow(expandedRow === id ? null : id);
   };
 
-  // Placeholder handlers for Edit, Delete, and Schedule
-  const handleEdit = (item: FoodItem) => {
-    console.log('Edit item:', item);
-  };
-
-  const handleDelete = (id: string) => {
-    console.log('Delete item:', id);
-  };
-
-  const handleSchedule = (item: FoodItem) => {
-    console.log('Schedule pickup for:', item);
-  };
-
   return (
     <div className="p-6">
-      {}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 space-y-4 md:space-y-0">
         <h2 className="text-xl font-semibold text-gray-800">Inventory Management</h2>
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
@@ -119,8 +177,8 @@ const Inventory: React.FC = () => {
             >
               <option value="">All Categories</option>
               {categories.map((category) => (
-                <option key={category} value={category}>
-                  {formatCategory(category)}
+                <option key={category._id} value={category.name}>
+                  {formatCategory(category.name)}
                 </option>
               ))}
             </select>
@@ -128,14 +186,14 @@ const Inventory: React.FC = () => {
           </div>
           <button
             onClick={() => {
+              setEditingItem(null);
               setFormData({
                 title: '',
-                category: 'produce',
+                category: categories[0]?.name || 'produce',
                 quantity: 0,
                 unit: 'kg',
                 expirationDate: '',
                 nutritionalInfo: '',
-              
                 storageRequirements: 'room-temperature',
                 notes: '',
                 imageUrl: '',
@@ -148,17 +206,22 @@ const Inventory: React.FC = () => {
             <Plus size={18} />
             <span>Add Item</span>
           </button>
+          <button
+            onClick={() => setShowCategoryModal(true)}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            <Settings size={18} />
+            <span>Manage Categories</span>
+          </button>
         </div>
       </div>
 
-      {}
       {error && (
         <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
           {error}
         </div>
       )}
 
-      {}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
@@ -179,9 +242,9 @@ const Inventory: React.FC = () => {
                     <tr onClick={() => handleRowClick(item._id)} className="cursor-pointer hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         {item.imageUrl ? (
-                          <img 
-                            src={item.imageUrl} 
-                            alt={item.title || 'No Title'} 
+                          <img
+                            src={item.imageUrl}
+                            alt={item.title || 'No Title'}
                             className="h-8 w-8 object-cover rounded"
                             onError={(e) => (e.currentTarget.src = '/placeholder-image.jpg')}
                           />
@@ -213,7 +276,7 @@ const Inventory: React.FC = () => {
                               ? 'bg-orange-100 text-orange-800'
                               : item.status === 'ToDonation'
                               ? 'bg-blue-100 text-blue-800'
-                              : 'bg-gray-100 text-gray-800' // In Stock
+                              : 'bg-gray-100 text-gray-800'
                           }`}
                         >
                           {item.status || 'In Stock'}
@@ -257,7 +320,6 @@ const Inventory: React.FC = () => {
                               <p className="text-sm font-medium text-gray-700">Storage:</p>
                               <p className="text-gray-900">{item.storageRequirements ? formatCategory(item.storageRequirements) : 'N/A'}</p>
                             </div>
-                          
                             {item.nutritionalInfo && (
                               <div className="md:col-span-2">
                                 <p className="text-sm font-medium text-gray-700">Nutritional Info:</p>
@@ -288,11 +350,12 @@ const Inventory: React.FC = () => {
         </div>
       </div>
 
-      {}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Add New Inventory Item</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              {editingItem ? 'Edit Inventory Item' : 'Add New Inventory Item'}
+            </h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -326,20 +389,13 @@ const Inventory: React.FC = () => {
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                   >
+                    <option value="">Select Category</option>
                     {categories.map((category) => (
-                      <option key={category} value={category}>
-                        {formatCategory(category)}
+                      <option key={category._id} value={category.name}>
+                        {formatCategory(category.name)}
                       </option>
                     ))}
                   </select>
-                  <div className="mt-2">
-                    <input
-                      type="text"
-                      placeholder="Add a new category..."
-                      onBlur={(e) => handleAddCategory(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                    />
-                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Quantity*</label>
@@ -393,7 +449,6 @@ const Inventory: React.FC = () => {
                     <option value="frozen">Frozen</option>
                   </select>
                 </div>
-          
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Nutritional Information</label>
                   <textarea
@@ -427,10 +482,66 @@ const Inventory: React.FC = () => {
                   type="submit"
                   className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
                 >
-                  Add Item
+                  {editingItem ? 'Update Item' : 'Add Item'}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Category Management Modal */}
+      {showCategoryModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Manage Categories</h3>
+            <form onSubmit={handleAddCategory} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">New Category*</label>
+                <input
+                  type="text"
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  required
+                  disabled={isAddingCategory}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                />
+              </div>
+              <div className="flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setShowCategoryModal(false)}
+                  disabled={isAddingCategory}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isAddingCategory}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-400"
+                >
+                  {isAddingCategory ? 'Adding...' : 'Add Category'}
+                </button>
+              </div>
+            </form>
+            <div className="mt-4">
+              <h4 className="text-sm font-medium text-gray-700">Current Categories:</h4>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {categories.map((category) => (
+                  <div key={category._id} className="flex items-center px-2 py-1 bg-gray-100 text-gray-800 text-sm rounded-full border border-gray-300">
+                    {formatCategory(category.name)}
+                    <button
+                      onClick={() => handleDeleteCategory(category._id)}
+                      className="ml-2 text-red-600 hover:text-red-800"
+                      title="Delete Category"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}

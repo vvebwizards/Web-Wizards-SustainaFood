@@ -13,6 +13,7 @@ import setupSocket from "./socket/socket.js";
 import FoodItemRoutes from "./routes/foodItemRoutes.js";
 import path from "path";
 import { fileURLToPath } from "url";
+import CategoryRoutes from "./routes/CategoryRoutes.js"
 
 // Import and initialize Passport for Google Auth
 import passport from "passport";
@@ -55,7 +56,6 @@ app.options("*", (req, res) => {
 
 app.use(morgan("dev"));
 
-
 app.use(passport.initialize());
 
 // Routes
@@ -63,7 +63,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/auth/me", getMe);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/users", userRoutes);
-app.use("/api/foodItem",FoodItemRoutes)
+app.use("/api/foodItem",FoodItemRoutes);
+app.use("/api/category",CategoryRoutes);
 app.get("/", (req, res) => {
   res.send("Backend connected to frontend");
 });

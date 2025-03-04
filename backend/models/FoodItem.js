@@ -15,6 +15,7 @@ const FoodItemSchema = new mongoose.Schema({
    enum: ['In Stock', 'ToDonation', 'Scheduled', 'Donated', 'Expired', 'Damaged'],
     default: 'In Stock'
   },
+   donorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, 
   imageUrl: { type: String, required: false },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
