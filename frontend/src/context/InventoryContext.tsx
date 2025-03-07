@@ -1,17 +1,18 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { FoodItem } from '../components/FoodItemModal';
-import { Category } from '../components/CategoryModal'; // Ensure this path is correct
+import { Category } from '../components/CategoryModal'; 
 
 const FOOD_ITEM_API_URL = "http://localhost:5000/api/foodItem";
-const CATEGORY_API_URL = "http://localhost:5000/api/category"; // Corrected from /api/category
+const CATEGORY_API_URL = "http://localhost:5000/api/category"; 
 
 interface InventoryContextType {
   inventory: FoodItem[];
   categories: Category[];
   addFoodItem: (item: Omit<FoodItem, '_id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
-  addCategory: (category: Omit<Category, '_id' | 'createdAt' | 'updatedAt'>) => Promise<void>; // Updated to accept Category object
+  addCategory: (category: Omit<Category, '_id' | 'createdAt' | 'updatedAt'>) => Promise<void>; 
   updateFoodItem: (id: string, item: Partial<Omit<FoodItem, '_id' | 'createdAt' | 'updatedAt'>>) => Promise<void>;
   deleteFoodItem: (id: string) => Promise<void>;
+  deleteCategory:(id:string)=>Promise<void>;
   error: string | null;
 }
 
@@ -22,7 +23,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch all food items and categories on mount
+
   useEffect(() => {
     const fetchInventory = async () => {
       try {
@@ -31,7 +32,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             method: 'GET',
             credentials: 'include',
           }),
-          fetch(`${CATEGORY_API_URL}/getAll`, { // Fetch all categories
+          fetch(`${CATEGORY_API_URL}/getAll`, {
             method: 'GET',
             credentials: 'include',
           })
@@ -44,7 +45,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         const categoryData = await categoryResponse.json();
 
         setInventory(foodItemData);
-        setCategories(categoryData); // Store full Category objects
+        setCategories(categoryData); 
       } catch (err) {
         setError(err.message || 'Error fetching data');
         console.error('Error:', err);
@@ -73,19 +74,19 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const addCategory = async (category: Omit<Category, '_id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      console.log('Adding category:', category); // Debug log
+      console.log('Adding category:', category); 
       const response = await fetch(`${CATEGORY_API_URL}/add`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(category), // Send the full category object (only name is used in backend)
+        body: JSON.stringify(category), 
         credentials: 'include',
       });
       if (!response.ok) {
-        const errorText = await response.text(); // Get error details
+        const errorText = await response.text(); 
         throw new Error(`Failed to add category: ${response.status} ${response.statusText} - ${errorText}`);
       }
       const data = await response.json();
-      setCategories(prev => [...prev, data.category]); // Add the new category object
+      setCategories(prev => [...prev, data.category]); 
     } catch (err) {
       setError(err.message || 'Error adding category');
       console.warn('Error:', err);
@@ -126,8 +127,24 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
+  const deleteCategory = async (id:string)=>{
+    try{
+      const response = await fetch(`${CATEGORY_API_URL}/deleteOne/${id}`,{
+        method:'DELETE',
+        credentials : 'include',
+      });
+      if(!response.ok)throw new Error (`Failed to delete category : ${response.status} ${response.statusText}`);
+      setCategories(prev=> prev.filter(item=>item._id !=id));
+    }catch(err) {
+      setError(err.message || 'Error deleting category');
+      console.warn('Error:', err);
+      throw err;
+    }
+   
+  }
+
   return (
-    <InventoryContext.Provider value={{ inventory, categories, addFoodItem, addCategory, updateFoodItem, deleteFoodItem, error }}>
+    <InventoryContext.Provider value={{ inventory, categories, addFoodItem, addCategory, updateFoodItem, deleteFoodItem, deleteCategory,error }}>
       {children}
     </InventoryContext.Provider>
   );

@@ -3,7 +3,7 @@ import { Plus, Edit, Trash2, Filter, Search, Calendar, Settings } from 'lucide-r
 import { FoodItem } from '../components/FoodItemModal';
 import { useInventory } from '../context/InventoryContext';
 import { toast } from 'react-toastify';
-import { Category } from '../components/CategoryModal'; // Ensure this path is correct
+import { Category } from '../components/CategoryModal'; 
 
 interface Category {
   _id: string;
@@ -108,7 +108,7 @@ const Inventory: React.FC = () => {
   };
 
   const handleSchedule = (item: FoodItem) => {
-    console.log('Schedule pickup for:', item); // Placeholder
+    console.log('Schedule pickup for:', item); 
   };
 
   const handleAddCategory = async (e: React.FormEvent) => {
@@ -120,7 +120,7 @@ const Inventory: React.FC = () => {
     }
     setIsAddingCategory(true);
     try {
-      await addCategory({ name: newCategory }); // Pass as Category object with name
+      await addCategory({ name: newCategory }); 
       toast.success('Category added successfully');
       setNewCategory('');
       setShowCategoryModal(false);
