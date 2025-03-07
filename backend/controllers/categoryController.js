@@ -26,7 +26,7 @@ export async function addCategory(req, res) {
     if (existingCategory) {
       return res.status(400).json({ error: "Category already exists for this donor" });
     }
-
+    
     const category = new Category({ name, donorId });
     await category.save();
 

@@ -1,40 +1,60 @@
 import FoodItem from "../models/FoodItem.js";
 import { getAuthenticatedUser } from "../utils/helpers.js";
-export async function addFoodItem (req,res) {
+
+import upload from "../middleware/multerConfig.js"; // Adjust the import path as needed
+
+export async function addFoodItem(req, res) {
+  upload(req, res, async (err) => {
+    if (err) {
+      return res.status(400).json({ error: err });
+    }
+
     try {
-        const {
-          title,
-          category,
-          quantity,
-          unit,
-          expirationDate,
-          nutritionalInfo,
-          storageRequirements,
-          notes,
-          status,
-        } = req.body;
-       const donor = await getAuthenticatedUser(req);
-        const newFoodItem = new FoodItem({
-          title,
-          category,
-          quantity,
-          unit,
-          expirationDate,
-          nutritionalInfo,
-          storageRequirements,
-          notes,
-          status: status || 'In Stock', 
-          donorId :donor._id        
-        });
-        const savedFoodItem = await newFoodItem.save();
-        res.status(201).json({
-          message: 'Food item added successfully',
-          foodItem: savedFoodItem
-        });
-      } catch (error) {
-        console.error('Error adding food item:', error);
-        res.status(500).json({ error: 'Error adding food item' });
-      }
+      const {
+        title,
+        category,
+        quantity,
+        unit,
+        expirationDate,
+        nutritionalInfo,
+        storageRequirements,
+        notes,
+        status,
+      } = req.body;
+
+
+      const donor = await getAuthenticatedUser(req);
+
+    
+      const uploadedFile = req.files?.profileImage?.[0] || req.files?.imageUrl?.[0];
+
+    
+      const newFoodItem = new FoodItem({
+        title,
+        category,
+        quantity,
+        unit,
+        expirationDate,
+        nutritionalInfo,
+        storageRequirements,
+        notes,
+        status: status || 'In Stock',
+        donorId: donor._id,
+        imageUrl: uploadedFile ? `/uploads/${uploadedFile.filename}` : null, d
+      });
+
+
+      const savedFoodItem = await newFoodItem.save();
+
+      res.status(201).json({
+        message: 'Food item added successfully',
+        foodItem: savedFoodItem,
+      });
+    } catch (error) {
+      console.error('Error adding food item:', error);
+      res.status(500).json({ error: 'Error adding food item' });
+    }
+  });
 }
 
 export async function getAll (req,res){

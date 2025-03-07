@@ -3,7 +3,7 @@ import { Plus, Edit, Trash2, Filter, Search, Calendar, Settings } from 'lucide-r
 import { FoodItem } from '../components/FoodItemModal';
 import { useInventory } from '../context/InventoryContext';
 import { toast } from 'react-toastify';
-import { Category } from '../components/CategoryModal'; 
+
 
 interface Category {
   _id: string;
@@ -54,14 +54,33 @@ const Inventory: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+  
+   
+    if (formData.quantity <= 0) {
+      toast.error('The quantity must be greater than 0');
+      return; 
+    }
+  
+   
+    const currentDate = new Date();
+    const expirationDate = new Date(formData.expirationDate);
+    if (expirationDate <= currentDate) {
+      toast.error('The expiration date must be later than the current date.');
+      return; 
+    }
+  
     try {
       if (editingItem) {
+      
         await updateFoodItem(editingItem._id, formData);
-        toast.success('Item updated successfully');
+        toast.success('Article mis à jour avec succès.');
       } else {
+       
         await addFoodItem(formData);
-        toast.success('Item added successfully');
+        toast.success('Article ajouté avec succès.');
       }
+  
+     
       setFormData({
         title: '',
         category: categories[0]?.name || 'produce',
@@ -74,10 +93,13 @@ const Inventory: React.FC = () => {
         imageUrl: '',
         status: 'In Stock'
       });
+  
+      // Fermer la modal
       setShowAddModal(false);
       setEditingItem(null);
     } catch (err) {
-      console.error('Error:', err);
+      console.error('Erreur :', err);
+      toast.error('Une erreur s\'est produite. Veuillez réessayer.');
     }
   };
 
@@ -243,7 +265,7 @@ const Inventory: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         {item.imageUrl ? (
                           <img
-                            src={item.imageUrl}
+                            src={`http://localhost:5000${item.imageUrl}`}
                             alt={item.title || 'No Title'}
                             className="h-8 w-8 object-cover rounded"
                             onError={(e) => (e.currentTarget.src = '/placeholder-image.jpg')}
@@ -371,14 +393,31 @@ const Inventory: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
-                  <input
-                    type="url"
-                    name="imageUrl"
-                    value={formData.imageUrl || ''}
-                    onChange={handleInputChange}
-                    placeholder="https://example.com/image.jpg"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                  />
+                  <div className="relative">
+                
+                <input
+                  type="file"
+                  name="image"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      setFormData((prev) => ({ ...prev, imageFile: e.target.files[0] }));
+                    }
+                  }}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+  
+        
+              <div className="flex items-center space-x-2">
+                <div className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500  bg-gray-600  text-white hover:bg-gray-50">
+                  Choisir un fichier
+                </div>
+                {formData.imageFile && (
+                  <span className="text-sm text-gray-600">
+                    {formData.imageFile.name}
+                  </span>
+                )}
+              </div>
+            </div> 
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Category*</label>
