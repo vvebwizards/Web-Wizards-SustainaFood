@@ -8,11 +8,11 @@ const CATEGORY_API_URL = "http://localhost:5000/api/category";
 interface InventoryContextType {
   inventory: FoodItem[];
   categories: Category[];
-  addFoodItem: (item: Omit<FoodItem, '_id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  addFoodItem: (item: Omit<FoodItem, '_id' | 'createdAt' | 'updatedAt'> & { imageFile?: File }) => Promise<void>;
   addCategory: (category: Omit<Category, '_id' | 'createdAt' | 'updatedAt'>) => Promise<void>; 
-  updateFoodItem: (id: string, item: Partial<Omit<FoodItem, '_id' | 'createdAt' | 'updatedAt'>>) => Promise<void>;
+  updateFoodItem: (id: string, item: Partial<Omit<FoodItem, '_id' | 'createdAt' | 'updatedAt'>> & { imageFile?: File }) => Promise<void>;
   deleteFoodItem: (id: string) => Promise<void>;
-  deleteCategory:(id:string)=>Promise<void>;
+  deleteCategory: (id: string) => Promise<void>;
   error: string | null;
 }
 
@@ -23,23 +23,16 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-
   useEffect(() => {
     const fetchInventory = async () => {
       try {
         const [foodItemResponse, categoryResponse] = await Promise.all([
-          fetch(`${FOOD_ITEM_API_URL}/getAll`, {
-            method: 'GET',
-            credentials: 'include',
-          }),
-          fetch(`${CATEGORY_API_URL}/getAll`, {
-            method: 'GET',
-            credentials: 'include',
-          })
+          fetch(`${FOOD_ITEM_API_URL}/getAll`, { method: 'GET', credentials: 'include' }),
+          fetch(`${CATEGORY_API_URL}/getAll`, { method: 'GET', credentials: 'include' }),
         ]);
 
-        if (!foodItemResponse.ok) throw new Error(`Failed to fetch inventory: ${foodItemResponse.status} ${foodItemResponse.statusText}`);
-        if (!categoryResponse.ok) throw new Error(`Failed to fetch categories: ${categoryResponse.status} ${categoryResponse.statusText}`);
+        if (!foodItemResponse.ok) throw new Error(`Failed to fetch inventory: ${foodItemResponse.status}`);
+        if (!categoryResponse.ok) throw new Error(`Failed to fetch categories: ${categoryResponse.status}`);
 
         const foodItemData = await foodItemResponse.json();
         const categoryData = await categoryResponse.json();
@@ -54,15 +47,31 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     fetchInventory();
   }, []);
 
-  const addFoodItem = async (item: Omit<FoodItem, '_id' | 'createdAt' | 'updatedAt'>) => {
+  const addFoodItem = async (item: Omit<FoodItem, '_id' | 'createdAt' | 'updatedAt'> & { imageFile?: File }) => {
     try {
+      const formData = new FormData();
+      formData.append('title', item.title);
+      formData.append('category', item.category);
+      formData.append('quantity', item.quantity.toString());
+      formData.append('unit', item.unit);
+      formData.append('expirationDate', item.expirationDate);
+      if (item.nutritionalInfo) formData.append('nutritionalInfo', item.nutritionalInfo);
+      if (item.storageRequirements) formData.append('storageRequirements', item.storageRequirements);
+      if (item.notes) formData.append('notes', item.notes);
+      formData.append('status', item.status || 'In Stock');
+      if (item.imageFile) formData.append('imageUrl', item.imageFile); // Matches backend Multer config
+
       const response = await fetch(`${FOOD_ITEM_API_URL}/add`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(item),
+        body: formData,
         credentials: 'include',
       });
-      if (!response.ok) throw new Error(`Failed to add food item: ${response.status} ${response.statusText}`);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to add food item: ${response.status} - ${errorText}`);
+      }
+
       const data = await response.json();
       setInventory(prev => [...prev, data.foodItem]);
     } catch (err) {
@@ -72,9 +81,44 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
+  const updateFoodItem = async (id: string, item: Partial<Omit<FoodItem, '_id' | 'createdAt' | 'updatedAt'>> & { imageFile?: File }) => {
+    try {
+      const formData = new FormData();
+
+      // Append only the fields that are provided (partial update)
+      if (item.title !== undefined) formData.append('title', item.title);
+      if (item.category !== undefined) formData.append('category', item.category);
+      if (item.quantity !== undefined) formData.append('quantity', item.quantity.toString());
+      if (item.unit !== undefined) formData.append('unit', item.unit);
+      if (item.expirationDate !== undefined) formData.append('expirationDate', item.expirationDate);
+      if (item.nutritionalInfo !== undefined) formData.append('nutritionalInfo', item.nutritionalInfo);
+      if (item.storageRequirements !== undefined) formData.append('storageRequirements', item.storageRequirements);
+      if (item.notes !== undefined) formData.append('notes', item.notes);
+      if (item.status !== undefined) formData.append('status', item.status);
+      if (item.imageFile) formData.append('imageUrl', item.imageFile); // Matches backend Multer config
+
+      const response = await fetch(`${FOOD_ITEM_API_URL}/updateOne/${id}`, {
+        method: 'PUT',
+        body: formData, // Use FormData instead of JSON
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to update food item: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      setInventory(prev => prev.map(i => (i._id === id ? data.foodItem : i)));
+    } catch (err) {
+      setError(err.message || 'Error updating food item');
+      console.warn('Error:', err);
+      throw err;
+    }
+  };
+
   const addCategory = async (category: Omit<Category, '_id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      console.log('Adding category:', category); 
       const response = await fetch(`${CATEGORY_API_URL}/add`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -83,30 +127,12 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       });
       if (!response.ok) {
         const errorText = await response.text(); 
-        throw new Error(`Failed to add category: ${response.status} ${response.statusText} - ${errorText}`);
+        throw new Error(`Failed to add category: ${response.status} - ${errorText}`);
       }
       const data = await response.json();
       setCategories(prev => [...prev, data.category]); 
     } catch (err) {
       setError(err.message || 'Error adding category');
-      console.warn('Error:', err);
-      throw err;
-    }
-  };
-
-  const updateFoodItem = async (id: string, item: Partial<Omit<FoodItem, '_id' | 'createdAt' | 'updatedAt'>>) => {
-    try {
-      const response = await fetch(`${FOOD_ITEM_API_URL}/updateOne/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(item),
-        credentials: 'include',
-      });
-      if (!response.ok) throw new Error(`Failed to update food item: ${response.status} ${response.statusText}`);
-      const data = await response.json();
-      setInventory(prev => prev.map(i => (i._id === id ? data.foodItem : i)));
-    } catch (err) {
-      setError(err.message || 'Error updating food item');
       console.warn('Error:', err);
       throw err;
     }
@@ -118,7 +144,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         method: 'DELETE',
         credentials: 'include',
       });
-      if (!response.ok) throw new Error(`Failed to delete food item: ${response.status} ${response.statusText}`);
+      if (!response.ok) throw new Error(`Failed to delete food item: ${response.status}`);
       setInventory(prev => prev.filter(item => item._id !== id));
     } catch (err) {
       setError(err.message || 'Error deleting food item');
@@ -127,24 +153,23 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
-  const deleteCategory = async (id:string)=>{
-    try{
-      const response = await fetch(`${CATEGORY_API_URL}/deleteOne/${id}`,{
-        method:'DELETE',
-        credentials : 'include',
+  const deleteCategory = async (id: string) => {
+    try {
+      const response = await fetch(`${CATEGORY_API_URL}/deleteOne/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
       });
-      if(!response.ok)throw new Error (`Failed to delete category : ${response.status} ${response.statusText}`);
-      setCategories(prev=> prev.filter(item=>item._id !=id));
-    }catch(err) {
+      if (!response.ok) throw new Error(`Failed to delete category: ${response.status}`);
+      setCategories(prev => prev.filter(item => item._id !== id));
+    } catch (err) {
       setError(err.message || 'Error deleting category');
       console.warn('Error:', err);
       throw err;
     }
-   
-  }
+  };
 
   return (
-    <InventoryContext.Provider value={{ inventory, categories, addFoodItem, addCategory, updateFoodItem, deleteFoodItem, deleteCategory,error }}>
+    <InventoryContext.Provider value={{ inventory, categories, addFoodItem, addCategory, updateFoodItem, deleteFoodItem, deleteCategory, error }}>
       {children}
     </InventoryContext.Provider>
   );

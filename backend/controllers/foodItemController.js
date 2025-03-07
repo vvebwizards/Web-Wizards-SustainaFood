@@ -40,7 +40,7 @@ export async function addFoodItem(req, res) {
         notes,
         status: status || 'In Stock',
         donorId: donor._id,
-        imageUrl: uploadedFile ? `/uploads/${uploadedFile.filename}` : null, d
+        imageUrl: uploadedFile ? `/uploads/${uploadedFile.filename}` : null, 
       });
 
 
@@ -88,23 +88,43 @@ export async function deleteOne (req,res) {
       }
 }
 
-export async function updateOne (req,res) {
+export async function updateOne(req, res) {
+  upload(req, res, async (err) => {
+    if (err) {
+      return res.status(400).json({ error: err });
+    }
+
     try {
-        const { id } = req.params; 
-        const updateData = req.body; 
-        const user = await getAuthenticatedUser(req); 
-        const donorId = user._id;
-        const updatedItem = await FoodItem.findByIdAndUpdate(
-           { _id: id, donorId: donorId },
-          updateData,
-          { new: true, runValidators: true }
-        );
-        if (!updatedItem) {
-          return res.status(404).json({ error: 'Food item not found' });
-        }
-        res.status(200).json({ message: 'Food item updated successfully', foodItem: updatedItem });
-      } catch (error) {
-        console.error('Error updating food item:', error);
-        res.status(500).json({ error: 'Error updating food item' });
+      const { id } = req.params;
+      const updateData = req.body; // Text fields from the request body
+      const user = await getAuthenticatedUser(req);
+      const donorId = user._id;
+
+      // Check for an uploaded file (either profileImage or imageUrl)
+      const uploadedFile = req.files?.profileImage?.[0] || req.files?.imageUrl?.[0];
+
+      // If a new file is uploaded, add or update the imageUrl in updateData
+      if (uploadedFile) {
+        updateData.imageUrl = `/uploads/${uploadedFile.filename}`;
       }
+
+      const updatedItem = await FoodItem.findOneAndUpdate(
+        { _id: id, donorId: donorId }, // Match by ID and donorId
+        updateData,                    // Update with text fields and possibly imageUrl
+        { new: true, runValidators: true } // Return the updated document and run validators
+      );
+
+      if (!updatedItem) {
+        return res.status(404).json({ error: 'Food item not found' });
+      }
+
+      res.status(200).json({
+        message: 'Food item updated successfully',
+        foodItem: updatedItem,
+      });
+    } catch (error) {
+      console.error('Error updating food item:', error);
+      res.status(500).json({ error: 'Error updating food item' });
+    }
+  });
 }
