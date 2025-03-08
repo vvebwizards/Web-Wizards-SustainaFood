@@ -12,4 +12,7 @@ export interface FoodItem {
     imageUrl?: string; 
     createdAt?: string;
     updatedAt?: string;
+    price?: number;
+    donor?: string;
+    type: 'free' | 'reduced';
   }
