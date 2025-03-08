@@ -96,22 +96,22 @@ export async function updateOne(req, res) {
 
     try {
       const { id } = req.params;
-      const updateData = req.body; // Text fields from the request body
+      const updateData = req.body;
       const user = await getAuthenticatedUser(req);
       const donorId = user._id;
 
-      // Check for an uploaded file (either profileImage or imageUrl)
+    
       const uploadedFile = req.files?.profileImage?.[0] || req.files?.imageUrl?.[0];
 
-      // If a new file is uploaded, add or update the imageUrl in updateData
+
       if (uploadedFile) {
         updateData.imageUrl = `/uploads/${uploadedFile.filename}`;
       }
 
       const updatedItem = await FoodItem.findOneAndUpdate(
-        { _id: id, donorId: donorId }, // Match by ID and donorId
-        updateData,                    // Update with text fields and possibly imageUrl
-        { new: true, runValidators: true } // Return the updated document and run validators
+        { _id: id, donorId: donorId }, 
+        updateData,                   
+        { new: true, runValidators: true } 
       );
 
       if (!updatedItem) {
@@ -127,4 +127,15 @@ export async function updateOne(req, res) {
       res.status(500).json({ error: 'Error updating food item' });
     }
   });
+}
+
+export async function getToDonationFood (req,res) {
+  try {
+    
+    const toDonationFood = await FoodItem.find({status:'ToDonation'});
+    res.status(200).json(toDonationFood);
+  } catch (error) {
+    console.error('Error fetching food items:', error);
+    res.status(500).json({ error: 'Error fetching food items' });
+  }
 }

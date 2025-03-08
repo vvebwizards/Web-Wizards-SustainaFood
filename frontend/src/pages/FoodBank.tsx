@@ -1,62 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Filter } from 'lucide-react';
 import { FoodCard } from '../components/FoodCard';
 import { FoodItem } from '../components/FoodItemModal';
-
-// Sample data - in a real app, this would come from an API
-const sampleFoodItems: FoodItem[] = [
-  {
-    id: '1',
-    name: 'Fresh Organic Apples',
-    description: 'Locally sourced organic apples, perfect for healthy snacking',
-    imageUrl: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6',
-    expirationDate: '2024-03-25',
-    type: 'reduced',
-    price: 1.99,
-    donor: 
-     'Local Organic Farm',
-    quantity: 50,
-    category: 'fruits',
-    allergens: [],
-    storageInstructions: 'Store in a cool, dry place'
-  },
-  {
-    id: '2',
-    name: 'Whole Grain Bread',
-    description: 'Freshly baked whole grain bread, rich in fiber',
-    imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff',
-    expirationDate: '2024-03-20',
-    type: 'free',
-    donor: 'Community Bakery',
-    quantity: 10,
-    category: 'grains',
-    allergens: ['wheat', 'gluten'],
-    storageInstructions: 'Best consumed within 3 days'
-  }
-];
+import { useFoodBank } from '../context/FoodBankContext';
 
 function FoodBank() {
+  const { toDonationFood, fetchToDonationFood, error } = useFoodBank();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
 
-  const filteredItems = sampleFoodItems.filter(item => {
-    // const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    //                      item.notes.toLowerCase().includes(searchTerm.toLowerCase());
+  useEffect(() => {
+    fetchToDonationFood(); // Fetch on mount
+  }, [fetchToDonationFood]);
+
+  const filteredItems = toDonationFood.filter(item => {
+    const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (item.notes && item.notes.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
     const matchesType = selectedType === 'all' || item.type === selectedType;
     
-    return   matchesCategory && matchesType;
+    return matchesSearch && matchesCategory && matchesType;
   });
 
   const handleOrder = (item: FoodItem) => {
-    // In a real app, this would handle the ordering process
     alert(`Ordered: ${item.title}`);
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="container mx-auto px-4 py-8">
+        {error && <div className="text-red-600 mb-4">{error}</div>}
         <div className="mb-8 space-y-4">
           <div className="flex gap-4 flex-wrap">
             <div className="flex-1 min-w-[300px]">
@@ -103,7 +77,7 @@ function FoodBank() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredItems.map(item => (
             <FoodCard
-              key={item.id}
+              key={item._id}
               item={item}
               onOrder={handleOrder}
             />

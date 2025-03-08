@@ -19,6 +19,10 @@ const FoodItemSchema = new mongoose.Schema({
   imageUrl: { type: String, required: false },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
+  type : {
+    type : String ,
+    enum : ["free","reduced"]
+  }
 });
 
 export default mongoose.model("FoodItem",FoodItemSchema)

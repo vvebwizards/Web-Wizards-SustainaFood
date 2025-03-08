@@ -13,7 +13,7 @@ export function FoodCard({ item, onOrder }: FoodCardProps) {
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
       <img 
-        src={item.imageUrl} 
+        src={`http://localhost:5000${item.imageUrl}`} 
         alt={item.title} 
         className="w-full h-48 object-cover"
       />

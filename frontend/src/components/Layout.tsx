@@ -165,15 +165,15 @@ const Layout = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Header */}
+   
       <header className="fixed top-0 left-0 w-full bg-white shadow-sm px-6 py-4 flex justify-between items-center z-50">
-        {/* LEFT SIDE: Hamburger + Role icon + Role name */}
+     
         <div className="flex items-center space-x-3">
           <button className="p-3" onClick={() => setSidebarOpen(!sidebarOpen)}>
             <Menu className="h-6 w-6" />
           </button>
           <div className="flex items-center space-x-2">
-            {/* Show the role's icon and name here */}
+         
             <roleConfig.theme.icon
               className={`h-6 w-6 ${roleConfig.theme.colors.header}`}
             />
@@ -183,9 +183,9 @@ const Layout = () => {
           </div>
         </div>
 
-        {/* RIGHT SIDE: Notifications, user info, logout */}
+
         <div className="flex items-center space-x-6">
-          {/* Notifications */}
+      
           <div className="relative">
             <button
               onClick={() => setIsNotificationOpen(!isNotificationOpen)}
@@ -240,17 +240,14 @@ const Layout = () => {
         </div>
       </header>
 
-      {/* Sidebar & Main Content */}
+   
       <div className="flex mt-16">
         <nav
           className={`w-64 bg-white shadow-lg p-5 flex flex-col transition-all duration-300 ${
             sidebarOpen ? "block" : "hidden"
           }`}
         >
-          {/* 
-            Removed the role name from the sidebar to avoid duplication 
-            and keep it only in the header left side. 
-          */}
+         
           <ul className="w-full">
             {roleConfig.navigation.map((item) => (
               <li key={item.to}>

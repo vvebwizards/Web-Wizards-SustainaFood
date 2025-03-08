@@ -168,6 +168,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
+  
   return (
     <InventoryContext.Provider value={{ inventory, categories, addFoodItem, addCategory, updateFoodItem, deleteFoodItem, deleteCategory, error }}>
       {children}
