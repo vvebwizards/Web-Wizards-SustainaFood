@@ -142,23 +142,55 @@ export async function getToDonationFood (req,res) {
 
 export async function donate(req, res) {
   try {
-    const { id } = req.params; 
+    const { id } = req.params;
     const user = await getAuthenticatedUser(req);
-    const donorId = user._id; 
+    const donorId = user._id;
     const foodItemToBeDonated = await FoodItem.findOne({ _id: id, donorId: donorId });
-     if (!foodItemToBeDonated) {
+    if (!foodItemToBeDonated) {
       return res.status(404).json({ error: 'Food item not found or you are not authorized to donate it' });
     }
-    if (foodItemToBeDonated.status !== 'In Stock') {
+     if (foodItemToBeDonated.status !== 'In Stock') {
       return res.status(400).json({ error: 'Only items In Stock can be donated' });
     }
+    const { quantityToDonation } = req.body;
+      if (quantityToDonation > foodItemToBeDonated.quantity) {
+      return res.status(400).json({ error: 'Donation quantity cannot exceed available quantity' });
+    }
+    foodItemToBeDonated.quantityToDonation = Number(quantityToDonation);
+    if (foodItemToBeDonated.quantityToDonation < foodItemToBeDonated.quantity) {
 
-    foodItemToBeDonated.status = 'Pending Donation';
-    foodItemToBeDonated.quantityToDonation = req.body;
+      foodItemToBeDonated.quantity -= foodItemToBeDonated.quantityToDonation;
+    } else if (foodItemToBeDonated.quantityToDonation === foodItemToBeDonated.quantity) {
+      foodItemToBeDonated.status = 'Pending Donation';
+      foodItemToBeDonated.quantity = 0;
+    }
     await foodItemToBeDonated.save();
-     return res.status(200).json({ message: 'Item marked as Pending Donation', foodItem: foodItemToBeDonated });
+    const message = foodItemToBeDonated.status === 'Pending Donation'
+      ? 'Item marked as Pending Donation'
+      : 'Partial donation processed';
+    return res.status(200).json({ message, foodItem: foodItemToBeDonated });
   } catch (err) {
     console.error('Error updating food item status:', err);
     return res.status(500).json({ error: 'Internal server error while updating food item status' });
+  }
+}
+
+export async function toBedonatedFoodByDonor(req, res) {
+  try {
+    const user = await getAuthenticatedUser(req);
+    if (!user) {
+      return res.status(401).json({ error: 'Unauthorized: No authenticated user found' });
+    }
+    const donorId = user._id;
+
+    const donatedFoodItems = await FoodItem.find({ 
+      status:'Pending Donation',
+      donorId: donorId 
+    });
+
+    return res.status(200).json({ foodItems: donatedFoodItems });
+  } catch (err) {
+    console.error('Error fetching donated food items:', err);
+    return res.status(500).json({ error: 'Internal server error while fetching donated food items' });
   }
 }

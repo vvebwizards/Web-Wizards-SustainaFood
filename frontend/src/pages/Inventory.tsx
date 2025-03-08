@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Filter, Search, Heart, GripVertical, X, Settings } from 'lucide-react';
 import { FoodItem } from '../components/FoodItemModal';
 import { useInventory } from '../context/InventoryContext';
@@ -11,12 +11,12 @@ interface Category {
 
 interface DonationItem {
   item: FoodItem;
-  quantity: number; // Remaining stock
-  quantityToDonation: number; // Amount to donate
+  quantity: number; 
+  quantityToDonation: number; 
 }
 
 const Inventory: React.FC = () => {
-  const { inventory, categories, addFoodItem, updateFoodItem, deleteFoodItem, addCategory, deleteCategory, error } = useInventory();
+  const { inventory, categories, addFoodItem, updateFoodItem, deleteFoodItem, donateFoodItem, fetchFoodAvailableForDonation, addCategory, deleteCategory, error } = useInventory();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -29,6 +29,49 @@ const Inventory: React.FC = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingDonation, setPendingDonation] = useState<DonationItem | null>(null);
   const [donationQuantity, setDonationQuantity] = useState<number>(0);
+
+
+  useEffect(() => {
+    const initializeDonationItems = async () => {
+      try {
+    
+        const storedDonationItems = localStorage.getItem('donationItems');
+        let initialDonationItems: DonationItem[] = storedDonationItems ? JSON.parse(storedDonationItems) : [];
+        const availableFoodItems = await fetchFoodAvailableForDonation();
+   
+        const mergedDonationItems = availableFoodItems.map(foodItem => {
+          const existing = initialDonationItems.find(d => d.item._id === foodItem._id);
+          if (existing) {
+            return existing; 
+          }
+          return {
+            item: foodItem,
+            quantity: foodItem.quantity,
+            quantityToDonation: 0 
+          };
+        });
+
+       
+        initialDonationItems.forEach(localItem => {
+          if (!mergedDonationItems.some(d => d.item._id === localItem.item._id)) {
+            mergedDonationItems.push(localItem);
+          }
+        });
+
+        setDonationItems(mergedDonationItems);
+      } catch (err) {
+        console.error('Error initializing donation items:', err);
+        toast.error('Failed to load food items for donation');
+      }
+    };
+
+    initializeDonationItems();
+  }, [fetchFoodAvailableForDonation]);
+
+ 
+  useEffect(() => {
+    localStorage.setItem('donationItems', JSON.stringify(donationItems));
+  }, [donationItems]);
 
   const filteredInventory = inventory.filter(item => {
     const matchesSearch = item.title ? item.title.toLowerCase().includes(searchTerm.toLowerCase()) : false;
@@ -125,25 +168,36 @@ const Inventory: React.FC = () => {
     try {
       await deleteFoodItem(id);
       toast.success('Item deleted successfully');
+      // Remove from donationItems if present
+      setDonationItems(prev => prev.filter(d => d.item._id !== id));
     } catch (err) {
       console.error('Error deleting item:', err);
     }
   };
 
   const handleDragStart = (e: React.DragEvent<HTMLTableRowElement>, item: FoodItem) => {
+    if (item.status !== 'In Stock') {
+      e.preventDefault();
+      toast.warn(`Cannot donate "${item.title}". Only items with "In Stock" status can be donated.`);
+      return;
+    }
     e.dataTransfer.setData('text/plain', JSON.stringify(item));
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const itemData = JSON.parse(e.dataTransfer.getData('text/plain')) as FoodItem;
-    const donationItem: DonationItem = { 
-      item: itemData, 
-      quantity: itemData.quantity, 
-      quantityToDonation: itemData.quantityToDonation || 0 
+    if (itemData.status !== 'In Stock') {
+      toast.warn(`Cannot donate "${itemData.title}". Only items with "In Stock" status can be donated.`);
+      return;
+    }
+    const donationItem: DonationItem = {
+      item: itemData,
+      quantity: itemData.quantity,
+      quantityToDonation: itemData.quantityToDonation || 0
     };
     setPendingDonation(donationItem);
-    setDonationQuantity(itemData.quantity); // Default to full quantity
+    setDonationQuantity(itemData.quantity);
     setShowConfirmModal(true);
   };
 
@@ -160,16 +214,15 @@ const Inventory: React.FC = () => {
     }
 
     try {
-      await updateFoodItem(pendingDonation.item._id, {
-        status: 'Pending Donation',
-        quantity: pendingDonation.item.quantity - donationQuantity, // Remaining quantity
-        quantityToDonation: donationQuantity, // Donated amount
+      await donateFoodItem(pendingDonation.item._id, donationQuantity);
+      setDonationItems(prev => {
+        const updated = prev.filter(d => d.item._id !== pendingDonation.item._id); // Remove if already present
+        return [...updated, { 
+          item: pendingDonation.item, 
+          quantity: pendingDonation.item.quantity - donationQuantity, 
+          quantityToDonation: donationQuantity 
+        }];
       });
-      setDonationItems(prev => [...prev, { 
-        item: pendingDonation.item, 
-        quantity: pendingDonation.item.quantity - donationQuantity, 
-        quantityToDonation: donationQuantity 
-      }]);
       toast.success('Item marked for donation successfully');
     } catch (err) {
       toast.error(err.message || 'Failed to mark item for donation');
@@ -327,7 +380,7 @@ const Inventory: React.FC = () => {
                   <th className="px-2 py-3"></th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity In Stock</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expiration Date</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -338,7 +391,7 @@ const Inventory: React.FC = () => {
                   filteredInventory.map((item) => (
                     <React.Fragment key={item._id}>
                       <tr
-                        draggable
+                        draggable={item.status === 'In Stock'}
                         onDragStart={(e) => handleDragStart(e, item)}
                         onClick={() => handleRowClick(item._id)}
                         className={`cursor-pointer hover:bg-gray-50 ${getExpirationColor(item.expirationDate || '')}`}
@@ -463,7 +516,7 @@ const Inventory: React.FC = () => {
             onDragOver={handleDragOver}
           >
             {donationItems.length === 0 ? (
-              <p className="text-gray-500 text-sm text-center">Drag items here to donate</p>
+              <p className="text-gray-500 text-sm text-center">No items available for donation</p>
             ) : (
               donationItems.map((donation, index) => (
                 <div key={index} className="mb-4 p-3 bg-white border border-green-600 rounded-lg">
@@ -478,10 +531,10 @@ const Inventory: React.FC = () => {
                   <div className="mt-2">
                     <input
                       type="number"
-                      min="1"
-                      max={donation.item.quantity + donation.quantityToDonation}
-                      value={donation.quantityToDonation}
-                      onChange={(e) => handleDonationInputChange(index, parseInt(e.target.value) || 1)}
+                      min="0"
+                      max={donation.item.quantity + donation.item.quantityToDonation}
+                      value={donation.item.quantityToDonation}
+                      onChange={(e) => handleDonationInputChange(index, parseInt(e.target.value) || 0)}
                       className="w-full px-2 py-1 border border-gray-300 rounded-md text-sm"
                       placeholder="Quantity to Donate"
                     />
@@ -493,7 +546,7 @@ const Inventory: React.FC = () => {
         </div>
       </div>
 
-      {/* Confirmation Modal */}
+    
       {showConfirmModal && pendingDonation && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
@@ -532,7 +585,7 @@ const Inventory: React.FC = () => {
         </div>
       )}
 
-      {/* Add/Edit Modal */}
+     
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -584,7 +637,7 @@ const Inventory: React.FC = () => {
                     value={formData.category}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3CONTENTpy-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                   >
                     <option value="">Select Category</option>
                     {categories.map((category) => (
@@ -687,7 +740,7 @@ const Inventory: React.FC = () => {
         </div>
       )}
 
-      {/* Category Management Modal */}
+     
       {showCategoryModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
