@@ -7,6 +7,7 @@ import {
   Package, Calendar, MapPin, Users, Clock, MessageSquare, AlertTriangle, Database, ScrollText
 } from "lucide-react";
 
+import defaultProfileImage from "../assets/images/default_user_img.jpg";
 // A separate mapping for user-friendly role names
 const roleNames = {
   admin: "Administrator",
@@ -146,7 +147,7 @@ const Layout = () => {
       setProfileImage(finalUrl);
     } else {
       console.log("No profile image found, using placeholder");
-      setProfileImage("https://via.placeholder.com/40");
+      setProfileImage(defaultProfileImage);
     }
   }, [user]);
   

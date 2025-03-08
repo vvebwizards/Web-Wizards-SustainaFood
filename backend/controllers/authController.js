@@ -42,7 +42,8 @@ export async function signup(req, res) {
     const hashedPassword = await bcrypt.hash(password, salt);
     const userAgent = req.headers['user-agent'];
     const deviceFingerprint = crypto.createHash('sha256').update(userAgent).digest('hex');
-    const newUser = new User({ username, email, password: hashedPassword, role });
+    const defaultImage = "http://localhost:5000/../../frontend/src/assets/default_user_img.jpg"
+    const newUser = new User({ username, email, password: hashedPassword, role,profileImage:defaultImage });
     newUser.registeredDevices.push(deviceFingerprint);
     await newUser.save();
 

@@ -15,28 +15,16 @@ router.get("/me",updateLastActive, getMe);
 router.put('/update-phone/:userId',updateLastActive, updatePhoneNumber);
 router.post('/send-otp/:userId',updateLastActive, sendOtp);
 router.post('/updatetwofa/:userId',updateLastActive, updateTwoFaStatus);
-
-//reset password
-
 router.post("/request-reset", (req, res, next) => {
     console.log("🟢 Route /request-reset appelée !");
     next();
   }, requestPasswordReset);
-  
-
 router.post("/reset-password", updateLastActive,resetPassword);
-
-
-
 router.put("/update/:userId", updateLastActive,upload, updateUserInfo);
-
-
 router.get(
   "/google",
   passport.authenticate("google", { scope: ["profile", "email"], prompt: "select_account" })
 );
-
-
 router.get(
   "/google/callback",
   passport.authenticate("google", { session: false, failureRedirect: "/login" }),

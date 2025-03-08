@@ -2,13 +2,13 @@ import React, { useState, useEffect } from "react";
 import { Heart, Truck, Users, Edit2, Twitter, Instagram, Facebook } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import defaultProfileImage from "../assets/images/default_user_img.jpg";
 
 const Profile = () => {
   const { user } = useAuth();
   
   // Default profile image
-  const defaultImage =
-    "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80";
+  const defaultImage = defaultProfileImage ;
 
   // Function to get the correct image URL
   const getImageUrl = (profileImage: string | undefined) => {
