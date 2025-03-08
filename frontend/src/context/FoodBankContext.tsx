@@ -17,7 +17,7 @@ export const FoodBankProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const fetchToDonationFood = async () => {
     try {
-      const response = await fetch(`${FOOD_ITEM_API_URL}/foodBank`, {
+      const response = await fetch(`${FOOD_ITEM_API_URL}/getToDonationFood`, {
         method: 'GET',
         credentials: 'include',
       });

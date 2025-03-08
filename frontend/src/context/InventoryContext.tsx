@@ -13,6 +13,7 @@ interface InventoryContextType {
   updateFoodItem: (id: string, item: Partial<Omit<FoodItem, '_id' | 'createdAt' | 'updatedAt'>> & { imageFile?: File }) => Promise<void>;
   deleteFoodItem: (id: string) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
+  updateFoodItemStatus: (id: string, status: string) => Promise<void>;
   error: string | null;
 }
 
@@ -168,9 +169,30 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
+  const updateFoodItemStatus = async (id: string) => {
+    try {
+      const response = await fetch(`${FOOD_ITEM_API_URL}/donate/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to update food item status: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      setInventory(prev => prev.map(item => (item._id === id ? { ...item, status: data.foodItem.status } : item)));
+    } catch (err) {
+      setError(err.message || 'Error updating food item status');
+      console.warn('Error:', err);
+      throw err;
+    }
+  };
   
   return (
-    <InventoryContext.Provider value={{ inventory, categories, addFoodItem, addCategory, updateFoodItem, deleteFoodItem, deleteCategory, error }}>
+    <InventoryContext.Provider value={{ inventory, categories, addFoodItem, addCategory, updateFoodItem, deleteFoodItem, deleteCategory, updateFoodItemStatus,error }}>
       {children}
     </InventoryContext.Provider>
   );

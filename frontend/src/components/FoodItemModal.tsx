@@ -15,4 +15,5 @@ export interface FoodItem {
     price?: number;
     donor?: string;
     type: 'free' | 'reduced';
+    quantityToDonation: number;
   }

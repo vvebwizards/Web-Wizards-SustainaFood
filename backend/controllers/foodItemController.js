@@ -132,10 +132,33 @@ export async function updateOne(req, res) {
 export async function getToDonationFood (req,res) {
   try {
     
-    const toDonationFood = await FoodItem.find({status:'ToDonation'});
+    const toDonationFood = await FoodItem.find({status:'Pending Donation'});
     res.status(200).json(toDonationFood);
   } catch (error) {
     console.error('Error fetching food items:', error);
     res.status(500).json({ error: 'Error fetching food items' });
+  }
+}
+
+export async function donate(req, res) {
+  try {
+    const { id } = req.params; 
+    const user = await getAuthenticatedUser(req);
+    const donorId = user._id; 
+    const foodItemToBeDonated = await FoodItem.findOne({ _id: id, donorId: donorId });
+     if (!foodItemToBeDonated) {
+      return res.status(404).json({ error: 'Food item not found or you are not authorized to donate it' });
+    }
+    if (foodItemToBeDonated.status !== 'In Stock') {
+      return res.status(400).json({ error: 'Only items In Stock can be donated' });
+    }
+
+    foodItemToBeDonated.status = 'Pending Donation';
+    foodItemToBeDonated.quantityToDonation = req.body;
+    await foodItemToBeDonated.save();
+     return res.status(200).json({ message: 'Item marked as Pending Donation', foodItem: foodItemToBeDonated });
+  } catch (err) {
+    console.error('Error updating food item status:', err);
+    return res.status(500).json({ error: 'Internal server error while updating food item status' });
   }
 }

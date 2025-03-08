@@ -12,7 +12,7 @@ const FoodItemSchema = new mongoose.Schema({
   notes: { type: String, required: false },
   status: { 
     type: String, 
-   enum: ['In Stock', 'ToDonation', 'Scheduled', 'Donated', 'Expired', 'Damaged'],
+   enum: ['In Stock', 'Pending Donation', 'Scheduled', 'Donated', 'Expired', 'Damaged'],
     default: 'In Stock'
   },
    donorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, 
@@ -22,7 +22,8 @@ const FoodItemSchema = new mongoose.Schema({
   type : {
     type : String ,
     enum : ["free","reduced"]
-  }
+  },
+  quantityToDonation :{ type: Number,default: 0, min: 0  },
 });
 
 export default mongoose.model("FoodItem",FoodItemSchema)

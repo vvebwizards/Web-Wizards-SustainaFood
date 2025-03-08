@@ -1,5 +1,5 @@
 import express from "express";
-import { addFoodItem ,getAll,deleteOne,updateOne,getToDonationFood} from "../controllers/foodItemController.js";
+import { addFoodItem ,getAll,deleteOne,updateOne,getToDonationFood,donate} from "../controllers/foodItemController.js";
 
 const router = express.Router();
 
@@ -8,5 +8,6 @@ router.get("/getAll",getAll);
 router.put("/updateOne/:id",updateOne);
 router.delete("/deleteOne/:id",deleteOne);
 router.get("/foodBank",getToDonationFood);
+router.put("/donate/:id",donate);
 
 export default router;
