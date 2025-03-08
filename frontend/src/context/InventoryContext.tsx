@@ -13,6 +13,8 @@ interface InventoryContextType {
   updateFoodItem: (id: string, item: Partial<Omit<FoodItem, '_id' | 'createdAt' | 'updatedAt'>> & { imageFile?: File }) => Promise<void>;
   deleteFoodItem: (id: string) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
+  donateFoodItem: (id: string, quantityToDonation: number) => Promise<void>; 
+  fetchFoodAvailableForDonation: () => Promise<FoodItem[]>;
   error: string | null;
 }
 
@@ -59,7 +61,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (item.storageRequirements) formData.append('storageRequirements', item.storageRequirements);
       if (item.notes) formData.append('notes', item.notes);
       formData.append('status', item.status || 'In Stock');
-      if (item.imageFile) formData.append('imageUrl', item.imageFile); // Matches backend Multer config
+      if (item.imageFile) formData.append('imageUrl', item.imageFile);
 
       const response = await fetch(`${FOOD_ITEM_API_URL}/add`, {
         method: 'POST',
@@ -84,8 +86,6 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const updateFoodItem = async (id: string, item: Partial<Omit<FoodItem, '_id' | 'createdAt' | 'updatedAt'>> & { imageFile?: File }) => {
     try {
       const formData = new FormData();
-
-      // Append only the fields that are provided (partial update)
       if (item.title !== undefined) formData.append('title', item.title);
       if (item.category !== undefined) formData.append('category', item.category);
       if (item.quantity !== undefined) formData.append('quantity', item.quantity.toString());
@@ -95,11 +95,11 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (item.storageRequirements !== undefined) formData.append('storageRequirements', item.storageRequirements);
       if (item.notes !== undefined) formData.append('notes', item.notes);
       if (item.status !== undefined) formData.append('status', item.status);
-      if (item.imageFile) formData.append('imageUrl', item.imageFile); // Matches backend Multer config
+      if (item.imageFile) formData.append('imageUrl', item.imageFile);
 
       const response = await fetch(`${FOOD_ITEM_API_URL}/updateOne/${id}`, {
         method: 'PUT',
-        body: formData, // Use FormData instead of JSON
+        body: formData,
         credentials: 'include',
       });
 
@@ -122,15 +122,15 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const response = await fetch(`${CATEGORY_API_URL}/add`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(category), 
+        body: JSON.stringify(category),
         credentials: 'include',
       });
       if (!response.ok) {
-        const errorText = await response.text(); 
+        const errorText = await response.text();
         throw new Error(`Failed to add category: ${response.status} - ${errorText}`);
       }
       const data = await response.json();
-      setCategories(prev => [...prev, data.category]); 
+      setCategories(prev => [...prev, data.category]);
     } catch (err) {
       setError(err.message || 'Error adding category');
       console.warn('Error:', err);
@@ -168,11 +168,55 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
+  const donateFoodItem = async (id: string, quantityToDonation: number) => {
+    try {
+      const response = await fetch(`${FOOD_ITEM_API_URL}/donate/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quantityToDonation }),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to donate food item: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setInventory(prev => prev.map(item => (item._id === id ? data.foodItem : item)));
+    } catch (err) {
+      setError(err.message || 'Error donating food item');
+      console.warn('Error:', err);
+      throw err;
+    }
+  };
+
   return (
-    <InventoryContext.Provider value={{ inventory, categories, addFoodItem, addCategory, updateFoodItem, deleteFoodItem, deleteCategory, error }}>
+    <InventoryContext.Provider value={{ inventory, categories, addFoodItem, addCategory, updateFoodItem, deleteFoodItem, deleteCategory, donateFoodItem,fetchFoodAvailableForDonation, error }}>
       {children}
     </InventoryContext.Provider>
   );
+};
+
+const fetchFoodAvailableForDonation = async (): Promise<FoodItem[]> => {
+  try {
+    const response = await fetch(`${FOOD_ITEM_API_URL}/toBedonatedFoodByDonor`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to fetch food items for donation: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    return data.foodItems; // Return the array of food items
+  } catch (err) {
+    setError(err.message || 'Error fetching food items for donation');
+    console.warn('Error:', err);
+    throw err;
+  }
 };
 
 export const useInventory = () => {
