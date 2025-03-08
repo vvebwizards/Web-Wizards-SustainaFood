@@ -168,7 +168,7 @@ const Inventory: React.FC = () => {
     try {
       await deleteFoodItem(id);
       toast.success('Item deleted successfully');
-      // Remove from donationItems if present
+    
       setDonationItems(prev => prev.filter(d => d.item._id !== id));
     } catch (err) {
       console.error('Error deleting item:', err);

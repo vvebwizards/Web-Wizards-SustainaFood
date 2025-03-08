@@ -1,6 +1,6 @@
 import React from 'react';
-import { Calendar, DollarSign, Heart, Info, Tag, User } from 'lucide-react';
-import { FoodItem }  from "../components/FoodItemModal";
+import { Calendar, Heart, Package, Tag, User } from 'lucide-react';
+import { FoodItem } from "../components/FoodItemModal";
 
 interface FoodCardProps {
   item: FoodItem;
@@ -42,15 +42,18 @@ export function FoodCard({ item, onOrder }: FoodCardProps) {
 
           <div className="flex items-center text-gray-600">
             <User className="w-4 h-4 mr-2" />
-            {/* <span>Donor: {item.donor.name}</span> */}
+            <span>Donor: {item.donorId?.username}</span>
           </div>
 
           <div className="flex items-center text-gray-600">
             <Tag className="w-4 h-4 mr-2" />
             <span>Category: {item.category}</span>
           </div>
-
-          {item.quantity > 0 ? (
+          <div className="flex items-center text-gray-600">
+            <Package className="w-4 h-4 mr-2" />
+            <span>Quantity Available: {item.quantityToDonation} {item.unit}</span>
+          </div>
+          {item.quantityToDonation > 0 ? (
             <button
               onClick={() => onOrder(item)}
               className="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"

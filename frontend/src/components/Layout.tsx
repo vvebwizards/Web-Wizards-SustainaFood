@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 
 import defaultProfileImage from "../assets/images/default_user_img.jpg";
-// A separate mapping for user-friendly role names
+
 const roleNames = {
   admin: "Administrator",
   donor: "Food Donor",
@@ -125,23 +125,23 @@ const Layout = () => {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [profileImage, setProfileImage] = useState("");
 
-  // Determine the user role and config
+ 
   const userRole = user?.role && roleConfigs[user.role] ? user.role : "donor";
   const roleConfig = roleConfigs[userRole];
 
-  // Use roleNames to get a more user-friendly display name
+
   const displayRoleName = roleNames[userRole] || "Food Donor";
 
-  // Fix Profile Image Not Updating on Login
+
   useEffect(() => {
     if (user && user.profileImage) {
       console.log("User profileImage from context:", user.profileImage);
-      // Check if the profileImage is already an absolute URL
+ 
       const isAbsolute = user.profileImage.startsWith("http");
       const imageUrl = isAbsolute
         ? user.profileImage
         : `http://localhost:5000${user.profileImage}`;
-      // Append a timestamp to bypass caching issues
+    
       const finalUrl = `${imageUrl}?t=${Date.now()}`;
       console.log("Final profile image URL:", finalUrl);
       setProfileImage(finalUrl);
@@ -152,7 +152,7 @@ const Layout = () => {
   }, [user]);
   
 
-  // Fix Notifications Not Loading After Refresh
+ 
   useEffect(() => {
     fetchNotifications();
   }, []);

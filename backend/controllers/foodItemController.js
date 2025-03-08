@@ -129,11 +129,13 @@ export async function updateOne(req, res) {
   });
 }
 
-export async function getToDonationFood (req,res) {
+
+
+export async function getToDonationFood(req, res) {
   try {
-    
-    const toDonationFood = await FoodItem.find({status:'Pending Donation'});
-    res.status(200).json(toDonationFood);
+    const toDonationFood = await FoodItem.find({ status: 'Pending Donation' })
+      .populate('donorId', 'username'); 
+       res.status(200).json(toDonationFood);
   } catch (error) {
     console.error('Error fetching food items:', error);
     res.status(500).json({ error: 'Error fetching food items' });

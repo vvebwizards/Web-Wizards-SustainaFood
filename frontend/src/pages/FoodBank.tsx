@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { FoodCard } from '../components/FoodCard';
 import { FoodItem } from '../components/FoodItemModal';
 import { useFoodBank } from '../context/FoodBankContext';
@@ -9,10 +9,13 @@ function FoodBank() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
+  const [isFetched, setIsFetched] = useState(false);
 
   useEffect(() => {
-    fetchToDonationFood(); // Fetch on mount
-  }, [fetchToDonationFood]);
+    if (!isFetched) {
+      fetchToDonationFood().then(() => setIsFetched(true));
+    }
+  }, [fetchToDonationFood, isFetched]);
 
   const filteredItems = toDonationFood.filter(item => {
     const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -30,7 +33,7 @@ function FoodBank() {
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="container mx-auto px-4 py-8">
-        {error && <div className="text-red-600 mb-4">{error}</div>}
+        {error && <div className="text-red-600 mb-4">Error: {error}</div>}
         <div className="mb-8 space-y-4">
           <div className="flex gap-4 flex-wrap">
             <div className="flex-1 min-w-[300px]">
