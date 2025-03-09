@@ -9,13 +9,17 @@ cron.schedule('0 0 * * *', () => {
 });
 
 const checkExpiredItems = async () => {
-    console.log("🔍 Checking for expired food items...");
     const today = new Date();
     today.setDate(today.getDate() - 1); // One day after expiration date
   
-    const expiredItems = await FoodItem.find({ expirationDate: { $lte: today } });
+    const almostExpiredItems = await FoodItem.find({ expirationDate: { $eq: today } });
+    const expiredItems = await FoodItem.find({ expirationDate: { $lt: today } });
   
-    expiredItems.forEach(item => {
+    almostExpiredItems.forEach(item => {
       sendNotification(item.donorId, `Your food item "${item.title}" will expire in 1 day.`);
+    });
+
+    expiredItems.forEach(item => {
+      sendNotification(item.donorId, `WARNING: Your food item "${item.title}" has expired.`);
     });
   };
