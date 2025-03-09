@@ -31,6 +31,7 @@ interface AuthContextType {
   updateUserInfo: (userId: string, username: string, email: string, password: string, profileImage: File) => Promise<void>;
   sendOtp: (userId: string) => Promise<void>;
   updateTwoFaStatus: (userId: string, status: boolean, code: string) => Promise<void>;
+  setUser: (user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -217,8 +218,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         },
         updateTwoFaStatus: async (userId, status, otp) => { 
           await axios.post(`http://localhost:5000/api/auth/updatetwofa/${userId}`, { twofa: status, code: otp });
-          toast.success('✅ 2FA status updated successfully');
+          toast.success('2FA status updated successfully');
         },
+        setUser,
       }}
     >
       {children}

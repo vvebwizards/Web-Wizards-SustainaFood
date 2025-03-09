@@ -2,35 +2,49 @@ import { useState, useEffect } from 'react';
 import { useAuth } from "../context/AuthContext";
 import OtpModal from './OtpModal';
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import Cookies from "js-cookie";
 
 const Settings = () => {
-  const { user, sendOtp, updateTwoFaStatus } = useAuth();
+  const { user, sendOtp, updateTwoFaStatus, setUser } = useAuth();
   const [is2FAEnabled, setIs2FAEnabled] = useState(user?.twofa);
   const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
   const navigate = useNavigate();
-  console.log(user);
 
   useEffect(() => {
     setIs2FAEnabled(user?.twofa || false);
   }, [user]);
+
+  const updateUserStateAndCookies = async () => {
+    const response = await axios.get(`http://localhost:5000/api/auth/me`, { withCredentials: true });
+    const updatedUser = response.data.user;
+    setUser(updatedUser);
+    Cookies.set("user", JSON.stringify(updatedUser), { expires: 7 });
+  };
 
   async function enable2FA() {
     if (is2FAEnabled) {
       const confirmDeactivation = window.confirm('Are you sure you want to deactivate 2FA?');
       if (confirmDeactivation && user?._id) {
         try {
+          console.log("Deactivating 2FA for user:", user._id);
           await updateTwoFaStatus(user._id, false, '');
+          await updateUserStateAndCookies();
           setIs2FAEnabled(false);
         } catch (error) {
           console.error('Error deactivating 2FA:', error);
           alert('Failed to deactivate 2FA');
         }
+      } else {
+        console.error("User ID is undefined or deactivation not confirmed");
       }
     } else {
       try {
         setIsOtpModalOpen(true);
-        if (user?.id) {
-          await sendOtp(user.id);
+        if (user?.id || user?._id) {
+          console.log("Sending OTP to user:", user.id || user._id);
+          await sendOtp(user.id || user._id);
+          await updateUserStateAndCookies();
         } else {
           throw new Error('User ID is undefined');
         }
@@ -42,9 +56,11 @@ const Settings = () => {
   }
 
   async function handleOtpSubmit(otp: string) {
-    if (user?.id) {
+    if (user?._id) {
       try {
-        await updateTwoFaStatus(user.id, true, otp);
+        console.log("Enabling 2FA for user:", user._id);
+        await updateTwoFaStatus(user._id, true, otp);
+        await updateUserStateAndCookies();
         setIsOtpModalOpen(false);
         setIs2FAEnabled(true);
         setTimeout(() => {
