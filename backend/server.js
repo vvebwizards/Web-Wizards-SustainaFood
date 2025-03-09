@@ -15,7 +15,7 @@ import settingsRoutes from "./routes/settingsRoutes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import CategoryRoutes from "./routes/CategoryRoutes.js"
-import './utils/scheduler.js';
+import {refreshUserCronJobs} from './utils/scheduler.js';
 // Import and initialize Passport for Google Auth
 import passport from "passport";
 import "./passport.js"; // This file contains your Passport Google strategy configuration
@@ -58,6 +58,8 @@ app.options("*", (req, res) => {
 app.use(morgan("dev"));
 
 app.use(passport.initialize());
+
+refreshUserCronJobs();
 
 // Routes
 app.use("/api/auth", authRoutes);
