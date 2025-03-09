@@ -2,20 +2,28 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Shield, ArrowRight } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useSearchParams } from "react-router-dom";
 
 function TwoFactorAuth() {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const { verifyTwoFactor } = useAuth();
+  const [searchParams] = useSearchParams();
+  const userId = searchParams.get("userId");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
     try {
-      await verifyTwoFactor(code);
-      navigate("/dashboard");
+      if (userId) {
+        await verifyTwoFactor(userId, code);
+      } else {
+        setError("User ID is missing.");
+      }
+      navigate("/dashboard/profile");
+      window.location.reload();
     } catch (err: any) {
       setError(err.response?.data?.message || "Invalid verification code.");
     }

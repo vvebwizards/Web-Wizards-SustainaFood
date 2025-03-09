@@ -293,9 +293,6 @@ export async function updateUserInfo(req, res) {
   }
 }
 
-
-
-
 export async function requestPasswordReset(req, res) {
   try {
     const { email } = req.body;
@@ -419,8 +416,6 @@ export const updatePhoneNumber = async (req, res) => {
   }
 };
 
-
-
 const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
@@ -474,6 +469,31 @@ export const sendOtp = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+export async function verifyTwoFa(req, res) {
+  try {
+    const { userId } = req.params;
+    const { code } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.otpCode === code) {
+      user.twofa = true;
+      user.otpCode = undefined;
+      user.otpExpires = undefined;
+      await user.save();
+      res.status(200).json(user);
+    } else {
+      res.status(400).json({ message: 'Invalid OTP code' });
+    }
+  } catch (error) {
+    console.error('Error verifying 2FA:', error);
+    res.status(500).json({ message: 'Failed to verify 2FA' });
+  }
+}
 
 export const updateTwoFaStatus = async (req, res) => {
   const { userId } = req.params;

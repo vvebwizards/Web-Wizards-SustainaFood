@@ -29,7 +29,7 @@ interface AuthContextType {
   logout: () => void;
   requestPasswordReset: (email: string) => Promise<void>;
   resetPassword: (token: string, newPassword: string) => Promise<void>;
-  verifyTwoFactor: (code: string) => Promise<void>;
+  verifyTwoFactor: (userId: string, code: string) => Promise<void>;
   updateUserInfo: (userId: string, username: string, email: string, password: string, profileImage: File) => Promise<void>;
   updatePhoneNumber: (userId: string, phone: string) => Promise<void>;
   sendOtp: (userId: string) => Promise<void>;
@@ -101,8 +101,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   
       console.log("✅ Login Success:", response.data);
   
-      if (response.data.requiresTwoFactor) {
-        window.location.href = "/2fa";
+      if (response.data.user.twofa) {
+        await sendOtp(response.data.user.id);
+        window.location.href = `/2fa?userId=${response.data.user.id}`;
         return;
       }
   
@@ -197,6 +198,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error("❌ Error updating user info:", error);
     }
   };
+
+  const sendOtp = async (userId: string) => {
+    await axios.post(`http://localhost:5000/api/auth/send-otp/${userId}`);
+  };  
   
   return (
     <AuthContext.Provider
@@ -206,6 +211,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         signup,
         logout,
         updateUserInfo,
+        sendOtp,
         requestPasswordReset: async (email) => {
           await axios.post("http://localhost:5000/api/auth/request-reset", { email });
           toast.success("✅ Password reset email sent!");
@@ -214,8 +220,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           await axios.post("http://localhost:5000/api/auth/reset-password", { token, newPassword });
           toast.success("✅ Password successfully changed!");
         },
-        verifyTwoFactor: async (code) => {
-          const response = await axios.post("http://localhost:5000/api/auth/verify-2fa", { code });
+        verifyTwoFactor: async (userId, code) => {
+          const response = await axios.post(`http://localhost:5000/api/auth/verify-2fa/${userId}`, { code });
           Cookies.set("user", JSON.stringify(response.data.user), { expires: 7 });
           setUser(response.data.user);
         },
@@ -223,9 +229,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const response = await axios.put(`http://localhost:5000/api/auth/update-phone/${userId}`, { phone }, { withCredentials: true });
           setUser(response.data.user);
           Cookies.set("user", JSON.stringify(response.data.user), { expires: 7 });
-        },
-        sendOtp: async (userId) => {
-          await axios.post(`http://localhost:5000/api/auth/send-otp/${userId}`);
         },
         updateTwoFaStatus: async (userId, status, otp) => {
           await axios.post(`http://localhost:5000/api/auth/updatetwofa/${userId}`, { twofa: status, code : otp });  

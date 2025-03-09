@@ -1,6 +1,6 @@
 import express from "express";
 
-import { signup,login,logout,updateUserInfo, getMe, requestPasswordReset,resetPassword, updatePhoneNumber, sendOtp, updateTwoFaStatus } from "../controllers/authController.js";
+import { signup,login,logout,updateUserInfo, getMe, requestPasswordReset,resetPassword, updatePhoneNumber, verifyTwoFa, sendOtp, updateTwoFaStatus } from "../controllers/authController.js";
 import upload from "../middleware/multerConfig.js";
 import passport from "passport";
 import { updateLastActive } from "../middleware/LastActive.js";
@@ -13,6 +13,7 @@ router.post("/login",updateLastActive, login);
 router.post("/logout",updateLastActive, logout);
 router.get("/me",updateLastActive, getMe);
 router.put('/update-phone/:userId',updateLastActive, updatePhoneNumber);
+router.post('/verify-2fa/:userId', verifyTwoFa);
 router.post('/send-otp/:userId',updateLastActive, sendOtp);
 router.post('/updatetwofa/:userId',updateLastActive, updateTwoFaStatus);
 router.post("/request-reset", (req, res, next) => {
