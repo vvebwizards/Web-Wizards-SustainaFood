@@ -1,8 +1,5 @@
 import Category from "../models/Category.js";
-
 import { getAuthenticatedUser } from "../utils/helpers.js";
-
-
 
 export async function getCategories(req, res) {
   try {

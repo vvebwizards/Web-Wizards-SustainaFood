@@ -11,6 +11,7 @@ import Layout from "./components/Layout";
 import Profile from "./pages/Profile";
 import Statistics from "./pages/Statistics";
 import Settings from "./pages/Settings";
+import Notifications from "./pages/Notifications";
 import Users from "./pages/UserManagement";
 import UpdateProfile from "./pages/UpdateProfile ";
 import WelcomePage from "./pages/WelcomePage";
@@ -21,6 +22,7 @@ import "react-toastify/dist/ReactToastify.css";
 import PublicRoute from "./components/PublicRoute"; // Import the PublicRoute component
 import Inventory from "./pages/Inventory";
 import { InventoryProvider } from "./context/InventoryContext";
+import { SettingsProvider } from "./context/SettingsContext";
 import FoodBank from "./pages/FoodBank";
 import { FoodBankProvider } from "./context/FoodBankContext";
 
@@ -91,7 +93,8 @@ function App() {
             } 
           />
           <Route path="statistics" element={<Statistics />} />
-          <Route path="settings" element={<Settings />} />
+          <Route path="settings" element={<SettingsProvider><Settings /></SettingsProvider>}></Route>
+          <Route path="notifications" element={<Notifications />} />
           <Route path="UpdateProfile/:userId" element={<UpdateProfile />} />
           <Route path="inventory" element={ <InventoryProvider><Inventory /> </InventoryProvider> } />
           <Route path="available" element={
