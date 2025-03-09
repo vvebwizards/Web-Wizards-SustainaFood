@@ -3,18 +3,16 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import geoip from 'geoip-lite';
 import crypto from 'crypto';
-import {UAParser} from'ua-parser-js';
+import { UAParser } from 'ua-parser-js';
 import deviceLocationLoginAlert from "../emailTemplates/deviceLocationLoginAlert.js";
-import { sendEmail} from '../utils/helpers.js';
-import { sendPasswordResetEmail } from "../utils/helpers.js"; 
+import { sendEmail } from '../utils/helpers.js';
+import { sendPasswordResetEmail } from "../utils/helpers.js";
 import dotenv from 'dotenv';
 import { sendNotification } from "../socket/socket.js"
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-
 dotenv.config();
-
 
 export async function signup(req, res) {
   try {
@@ -43,7 +41,7 @@ export async function signup(req, res) {
     const userAgent = req.headers['user-agent'];
     const deviceFingerprint = crypto.createHash('sha256').update(userAgent).digest('hex');
     const defaultImage = "http://localhost:5000/../../frontend/src/assets/default_user_img.jpg"
-    const newUser = new User({ username, email, password: hashedPassword, role,profileImage:defaultImage });
+    const newUser = new User({ username, email, password: hashedPassword, role, profileImage: defaultImage });
     newUser.registeredDevices.push(deviceFingerprint);
     await newUser.save();
 
@@ -103,14 +101,12 @@ export async function login(req, res) {
       phoneNumber: user.phoneNumber,
       profileImage: user.profileImage,
       twofa: user.twofa,
-      token:token
+      token: token
     };
-    
 
     console.log("✅ Login successful for:", email);
     res.status(200).json({ message: "Login successful", user: userData });
 
-   
     setTimeout(async () => {
       console.log("🚨 New device detected! Sending notification...");
 
@@ -123,17 +119,13 @@ export async function login(req, res) {
       } catch (notifError) {
         console.error("❌ Failed to send notification:", notifError);
       }
-    }, 3000); 
-    
+    }, 3000);
+
   } catch (error) {
     console.error("❌ Login Error:", error);
     res.status(500).json({ message: "Error logging in", error: error.message });
   }
 }
-
-
-
-
 
 export async function logout(req, res) {
   res.clearCookie("token", {
@@ -144,7 +136,6 @@ export async function logout(req, res) {
   res.status(200).json({ message: "Logged out successfully" });
 }
 
-
 export async function getMe(req, res) {
   try {
     const token = req.cookies.token;
@@ -154,7 +145,7 @@ export async function getMe(req, res) {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select("-password"); 
+    const user = await User.findById(decoded.id).select("-password");
 
     if (!user) {
       console.log("🚨 User not found");
@@ -169,15 +160,8 @@ export async function getMe(req, res) {
   }
 }
 
-
-
-
-
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-
 
 export async function updateUserInfo(req, res) {
   try {
@@ -189,11 +173,11 @@ export async function updateUserInfo(req, res) {
 
     // Mettre à jour le nom d'utilisateur
     if (req.body.username) {
-      const existingUsername = await User.findOne({ 
+      const existingUsername = await User.findOne({
         username: req.body.username,
         _id: { $ne: userId }
       });
-      
+
       if (existingUsername) {
         return res.status(400).json({ message: "Username is already taken." });
       }
@@ -202,11 +186,11 @@ export async function updateUserInfo(req, res) {
 
     // Mettre à jour l'email
     if (req.body.email) {
-      const existingEmail = await User.findOne({ 
+      const existingEmail = await User.findOne({
         email: req.body.email,
-        _id: { $ne: userId } 
+        _id: { $ne: userId }
       });
-      
+
       if (existingEmail) {
         return res.status(400).json({ message: "Email is already in use." });
       }
@@ -279,16 +263,16 @@ export async function updateUserInfo(req, res) {
       role: updatedUser.role
     };
 
-    res.status(200).json({ 
-      message: "User information updated successfully.", 
-      user: userResponse 
+    res.status(200).json({
+      message: "User information updated successfully.",
+      user: userResponse
     });
 
   } catch (error) {
     console.error("Update User Info Error:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Server error. Please try again later.",
-      error: error.message 
+      error: error.message
     });
   }
 }
@@ -303,10 +287,10 @@ export async function requestPasswordReset(req, res) {
       console.log("❌ Aucun utilisateur trouvé avec cet email.");
       return res.status(404).json({ message: "No user found with this email." });
     }
-   
+
     const resetToken = crypto.randomBytes(32).toString("hex");
     user.resetPasswordToken = resetToken;
-    user.resetPasswordExpires = Date.now() + 3600000; 
+    user.resetPasswordExpires = Date.now() + 3600000;
     await user.save();
 
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
@@ -331,21 +315,20 @@ export async function requestPasswordReset(req, res) {
  
       </div>
     `,
-  };
-     /* html: ` <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background-color: #f9f9f9;">
-      <p>Click the link below to reset your password:</p>
-             <a href="${resetLink}">${resetLink}</a>
-             <p>If you did not request this, please ignore this email.</p>`,
     };
+    /* html: ` <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background-color: #f9f9f9;">
+     <p>Click the link below to reset your password:</p>
+            <a href="${resetLink}">${resetLink}</a>
+            <p>If you did not request this, please ignore this email.</p>`,
+   };
 */
-/* /*
-        <p style="font-size: 14px; color: #777;">Ou copiez et collez ce lien dans votre navigateur :</p>
-        <p style="word-wrap: break-word; color: #3498db;"><a href="${resetLink}">${resetLink}</a></p>
-  
-        
-*/
-   
-  
+    /* /*
+            <p style="font-size: 14px; color: #777;">Ou copiez et collez ce lien dans votre navigateur :</p>
+            <p style="word-wrap: break-word; color: #3498db;"><a href="${resetLink}">${resetLink}</a></p>
+      
+            
+    */
+
     await sendEmail(emailData);
     console.log("✅ Email de réinitialisation envoyé avec succès !");
     res.status(200).json({ message: "Reset link sent successfully!" });
@@ -358,7 +341,7 @@ export async function requestPasswordReset(req, res) {
 export async function resetPassword(req, res) {
   try {
     const { token, newPassword } = req.body;
-    
+
     console.log("🟢 Reset Password Request Received:");
     console.log("Token:", token);
     console.log("New Password:", newPassword);
@@ -369,7 +352,7 @@ export async function resetPassword(req, res) {
 
     const user = await User.findOne({
       resetPasswordToken: token,
-      resetPasswordExpires: { $gt: Date.now() }, 
+      resetPasswordExpires: { $gt: Date.now() },
     });
 
     if (!user) {
@@ -377,14 +360,14 @@ export async function resetPassword(req, res) {
       return res.status(400).json({ message: "Invalid or expired reset token." });
     }
 
-    
+
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(newPassword, salt);
 
-   
+
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
-    
+
     await user.save();
 
     console.log("✅ Mot de passe réinitialisé avec succès !");
@@ -395,26 +378,6 @@ export async function resetPassword(req, res) {
     res.status(500).json({ message: "Internal server error." });
   }
 }
-
-export const updatePhoneNumber = async (req, res) => {
-  const { userId } = req.params;
-  const { phone } = req.body;
-
-  try {
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    user.phoneNumber = phone;
-    await user.save();
-    res.json({ user });
-  } catch (error) {
-    console.error('Error updating phone number:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-};
 
 const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -496,6 +459,7 @@ export async function verifyTwoFa(req, res) {
 }
 
 export const updateTwoFaStatus = async (req, res) => {
+  console.log("🔹 Update 2FA function has been called");
   const { userId } = req.params;
   const { twofa, code } = req.body;
 

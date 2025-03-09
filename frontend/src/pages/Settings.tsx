@@ -1,15 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from "../context/AuthContext";
 import OtpModal from './OtpModal';
 import { useNavigate } from "react-router-dom";
 
 const Settings = () => {
-  const { user, updatePhoneNumber, sendOtp, updateTwoFaStatus } = useAuth();
+  const { user, sendOtp, updateTwoFaStatus } = useAuth();
   const [is2FAEnabled, setIs2FAEnabled] = useState(user?.twofa);
-  const [isEditingPhone, setIsEditingPhone] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || '');
   const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
   const navigate = useNavigate();
+  console.log(user);
 
   useEffect(() => {
     setIs2FAEnabled(user?.twofa || false);
@@ -18,9 +17,9 @@ const Settings = () => {
   async function enable2FA() {
     if (is2FAEnabled) {
       const confirmDeactivation = window.confirm('Are you sure you want to deactivate 2FA?');
-      if (confirmDeactivation && user?.id) {
+      if (confirmDeactivation && user?._id) {
         try {
-          await updateTwoFaStatus(user.id, false, '');
+          await updateTwoFaStatus(user._id, false, '');
           setIs2FAEnabled(false);
         } catch (error) {
           console.error('Error deactivating 2FA:', error);
@@ -38,23 +37,6 @@ const Settings = () => {
       } catch (error) {
         console.error('Error sending OTP:', error);
         alert('Failed to send OTP');
-      }
-    }
-  }
-
-  function handleEditPhone() {
-    setIsEditingPhone(true);
-  }
-
-  async function handleSavePhone() {
-    if (user) {
-      try {
-        await updatePhoneNumber(user.id, phoneNumber);
-        setIsEditingPhone(false);
-        alert('Phone number updated');
-      } catch (error) {
-        console.error('Error updating phone number:', error);
-        alert('Failed to update phone number');
       }
     }
   }
@@ -101,39 +83,8 @@ const Settings = () => {
         </div>
         <div>
           <h2 className="text-lg font-medium text-gray-900 mb-4">
-            Contact Information
+            Notifications Settings
           </h2>
-          <div className="space-y-4">
-            <div className="flex items-center">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Phone Number
-              </label>
-              <p>(+216)</p>
-              <input
-                type="tel"
-                disabled={!isEditingPhone}
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                className="w-full border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 ml-2"
-              />
-              <button
-                onClick={isEditingPhone ? handleSavePhone : handleEditPhone}
-                className="ml-2 px-4 py-2 bg-blue-600 text-white rounded-md"
-              >
-                {isEditingPhone ? 'Save' : 'Edit'}
-              </button>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Alternative Email
-              </label>
-              <input
-                type="email"
-                className="w-full border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
-                placeholder="alternative@example.com"
-              />
-            </div>
-          </div>
         </div>
       </div>
       <OtpModal
