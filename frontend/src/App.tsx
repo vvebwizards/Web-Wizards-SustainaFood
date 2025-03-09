@@ -23,6 +23,8 @@ import PublicRoute from "./components/PublicRoute"; // Import the PublicRoute co
 import Inventory from "./pages/Inventory";
 import { InventoryProvider } from "./context/InventoryContext";
 import { SettingsProvider } from "./context/SettingsContext";
+import FoodBank from "./pages/FoodBank";
+import { FoodBankProvider } from "./context/FoodBankContext";
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user } = useAuth();
@@ -94,14 +96,12 @@ function App() {
           <Route path="settings" element={<SettingsProvider><Settings /></SettingsProvider>}></Route>
           <Route path="notifications" element={<Notifications />} />
           <Route path="UpdateProfile/:userId" element={<UpdateProfile />} />
-          <Route
-            path="inventory"
-            element={
-              <InventoryProvider>
-                <Inventory />
-              </InventoryProvider>
-            }
-          />
+          <Route path="inventory" element={ <InventoryProvider><Inventory /> </InventoryProvider> } />
+          <Route path="available" element={
+            <FoodBankProvider>
+              <FoodBank />
+            </FoodBankProvider>
+          } />
         </Route>
       </Routes>
     </>

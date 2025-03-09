@@ -12,4 +12,8 @@ export interface FoodItem {
     imageUrl?: string; 
     createdAt?: string;
     updatedAt?: string;
+    price?: number;
+    donorId?: { username: string };
+    type: 'free' | 'reduced';
+    quantityToDonation: number;
   }
