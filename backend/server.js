@@ -11,6 +11,7 @@ import userRoutes from "./routes/userRoutes.js";
 import { getMe } from "./controllers/authController.js";
 import setupSocket from "./socket/socket.js";
 import FoodItemRoutes from "./routes/foodItemRoutes.js";
+import settingsRoutes from "./routes/settingsRoutes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import CategoryRoutes from "./routes/CategoryRoutes.js"
@@ -65,6 +66,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/foodItem",FoodItemRoutes);
 app.use("/api/category",CategoryRoutes);
+app.use("/api/settings", settingsRoutes);
 app.get("/", (req, res) => {
   res.send("Backend connected to frontend");
 });

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from "../context/AuthContext";
+import { useSettings } from "../context/SettingsContext";
 import OtpModal from './OtpModal';
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -7,15 +8,30 @@ import Cookies from "js-cookie";
 
 const Settings = () => {
   const { user, sendOtp, updateTwoFaStatus, setUser } = useAuth();
+  const { settings, updateSettings } = useSettings();
   const [is2FAEnabled, setIs2FAEnabled] = useState(user?.twofa);
   const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
   const [notificationTime, setNotificationTime] = useState('00:00');
   const [daysBeforeExpiration, setDaysBeforeExpiration] = useState('1');
+  const [isChanged, setIsChanged] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     setIs2FAEnabled(user?.twofa || false);
   }, [user]);
+
+  useEffect(() => {
+    if (Array.isArray(settings) && settings.length > 0) {
+      const setting = settings[0];
+  
+      const hour = setting?.expiredNotifHour?.toString().padStart(2, '0') || '00';
+      const minute = setting?.expiredNotifMinute?.toString().padStart(2, '0') || '00';
+  
+      setNotificationTime(`${hour}:${minute}`);
+      setDaysBeforeExpiration(setting?.expiredNotifDate?.toString() || '1');
+    }
+  }, [settings]);
+  
 
   const updateUserStateAndCookies = async () => {
     const response = await axios.get(`http://localhost:5000/api/auth/me`, { withCredentials: true });
@@ -79,18 +95,37 @@ const Settings = () => {
 
   const handleNotificationTimeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setNotificationTime(event.target.value);
-    console.log('Notification Time:', event.target.value);
+    setIsChanged(true);
   };
 
   const handleDaysBeforeExpirationChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setDaysBeforeExpiration(event.target.value);
-    console.log('Days Before Expiration:', event.target.value);
+    setIsChanged(true);
+  };
+
+  const handleSave = async () => {
+    const [hour, minute] = notificationTime.split(":").map(Number);
+  
+    try {
+      await updateSettings({
+        expiredNotifHour: hour,
+        expiredNotifMinute: minute,
+        expiredNotifDate: Number(daysBeforeExpiration),
+      });
+      console.log("✅ Settings updated successfully!");
+      setIsChanged(false);
+    } catch (error) {
+      console.error("❌ Failed to update settings:", error);
+    }
   };
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-semibold text-gray-900 mb-6">Settings</h1>
-      <div className="space-y-6">
+      <h1 className="text-2xl font-semibold text-gray-900 mb-3">Settings</h1>
+      <button className="bg-gray-800 px-6 py-1 rounded-md text-white">
+        Reset to Default
+      </button>
+      <div className="space-y-6 mt-5">
         <div>
           <h2 className="text-lg font-medium text-gray-900 mb-4">
             Security Features
@@ -151,6 +186,22 @@ const Settings = () => {
           </div>
         </div>
       </div>
+      {isChanged && (
+        <div className="mt-6 justify-center items-center flex gap-5">
+          <button
+            onClick={handleSave}
+            className="bg-blue-600 text-white px-6 py-1 rounded-md"
+          >
+            Save
+          </button>
+          <button
+            onClick={handleSave}
+            className="bg-gray-800 text-white px-6 py-1 rounded-md"
+          >
+            Discard Changes
+          </button>
+        </div>
+      )}
       <OtpModal
         isOpen={isOtpModalOpen}
         onClose={() => setIsOtpModalOpen(false)}

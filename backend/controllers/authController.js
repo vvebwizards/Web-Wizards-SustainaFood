@@ -1,12 +1,9 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
-import geoip from 'geoip-lite';
+import Settings from "../models/Settings.js";
 import crypto from 'crypto';
-import { UAParser } from 'ua-parser-js';
-import deviceLocationLoginAlert from "../emailTemplates/deviceLocationLoginAlert.js";
 import { sendEmail } from '../utils/helpers.js';
-import { sendPasswordResetEmail } from "../utils/helpers.js";
 import dotenv from 'dotenv';
 import { sendNotification } from "../socket/socket.js"
 import path from 'path';
@@ -44,6 +41,14 @@ export async function signup(req, res) {
     const newUser = new User({ username, email, password: hashedPassword, role, profileImage: defaultImage });
     newUser.registeredDevices.push(deviceFingerprint);
     await newUser.save();
+
+    const newSettings = new Settings({
+      userId: newUser._id,
+      expiredNotifHour: 0,
+      expiredNotifMinute: 0,
+      expiredNotifDate: 1,
+    });
+    await newSettings.save();
 
     res.status(201).json({ message: "User registered successfully." });
   } catch (error) {

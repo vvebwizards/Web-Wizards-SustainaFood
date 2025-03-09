@@ -22,6 +22,7 @@ import "react-toastify/dist/ReactToastify.css";
 import PublicRoute from "./components/PublicRoute"; // Import the PublicRoute component
 import Inventory from "./pages/Inventory";
 import { InventoryProvider } from "./context/InventoryContext";
+import { SettingsProvider } from "./context/SettingsContext";
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user } = useAuth();
@@ -90,7 +91,7 @@ function App() {
             } 
           />
           <Route path="statistics" element={<Statistics />} />
-          <Route path="settings" element={<Settings />} />
+          <Route path="settings" element={<SettingsProvider><Settings /></SettingsProvider>}></Route>
           <Route path="notifications" element={<Notifications />} />
           <Route path="UpdateProfile/:userId" element={<UpdateProfile />} />
           <Route
