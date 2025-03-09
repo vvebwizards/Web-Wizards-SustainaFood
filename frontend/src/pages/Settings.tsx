@@ -9,6 +9,8 @@ const Settings = () => {
   const { user, sendOtp, updateTwoFaStatus, setUser } = useAuth();
   const [is2FAEnabled, setIs2FAEnabled] = useState(user?.twofa);
   const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
+  const [notificationTime, setNotificationTime] = useState('00:00');
+  const [daysBeforeExpiration, setDaysBeforeExpiration] = useState('1');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -75,6 +77,16 @@ const Settings = () => {
     }
   }
 
+  const handleNotificationTimeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setNotificationTime(event.target.value);
+    console.log('Notification Time:', event.target.value);
+  };
+
+  const handleDaysBeforeExpirationChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setDaysBeforeExpiration(event.target.value);
+    console.log('Days Before Expiration:', event.target.value);
+  };
+
   return (
     <div className="p-6">
       <h1 className="text-2xl font-semibold text-gray-900 mb-6">Settings</h1>
@@ -99,8 +111,44 @@ const Settings = () => {
         </div>
         <div>
           <h2 className="text-lg font-medium text-gray-900 mb-4">
-            Notifications Settings
+            Notifications
           </h2>
+          <div className="space-y-4">
+            <div className="ml-6 space-y-4">
+              <h3 className="text-md font-medium text-gray-800 mb-2">
+                Food Expiration Notifications
+              </h3>
+              <div className="flex items-center space-x-16">
+                <label className="text-gray-700 text-sm">
+                  Notification Time:
+                </label>
+                <input
+                  type='time'
+                  className="border border-gray-300 rounded p-1"
+                  value={notificationTime}
+                  onChange={handleNotificationTimeChange}
+                />
+              </div>
+              <div className="flex items-center space-x-16">
+                <label className="text-gray-700 text-sm">
+                  Days Before Expiration:
+                </label>
+                <select
+                  className="border border-gray-300 rounded p-1"
+                  value={daysBeforeExpiration}
+                  onChange={handleDaysBeforeExpirationChange}
+                >
+                  <option value="1">1 day</option>
+                  <option value="2">2 days</option>
+                  <option value="3">3 days</option>
+                  <option value="4">4 days</option>
+                  <option value="5">5 days</option>
+                  <option value="6">6 days</option>
+                  <option value="7">7 days</option>
+                </select>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <OtpModal
