@@ -11,7 +11,6 @@ import { fileURLToPath } from 'url';
 import { sendEmailVerification } from "../utils/helpers.js";
 
 dotenv.config();
-
 export async function signup(req, res) {
   try {
     const { username, email, password, role } = req.body;
@@ -42,34 +41,28 @@ export async function signup(req, res) {
     // ✅ Générer un token de vérification
     const verificationToken = crypto.randomBytes(32).toString("hex");
 
+    const userAgent = req.headers['user-agent'];
+    const deviceFingerprint = crypto.createHash('sha256').update(userAgent).digest('hex');
+    const defaultImage = "http://localhost:5000/../../frontend/src/assets/default_user_img.jpg";
+
     // ✅ Créer un nouvel utilisateur non vérifié
     const newUser = new User({
       username,
       email,
       password: hashedPassword,
       role,
+      profileImage: defaultImage,
       verificationToken,
       verificationExpires: Date.now() + 3600000, // Expiration dans 1 heure
-      verified: false, // L'utilisateur n'est pas encore vérifié
+      verified: false,
     });
 
-// ✅ Vérifier que le token est bien sauvegardé
-console.log("🔹 New user created:", newUser);
-    await newUser.save();
-
-    // ✅ Envoyer l'email de vérification
-    console.log("📡 Tentative d'envoi de l'email de vérification...");
-    await sendEmailVerification(newUser, verificationToken);
-    console.log("✅ Email de vérification envoyé avec succès !");
-
-    res.status(201).json({ message: "User registered successfully. Please check your email for verification." });
-    const userAgent = req.headers['user-agent'];
-    const deviceFingerprint = crypto.createHash('sha256').update(userAgent).digest('hex');
-    const defaultImage = "http://localhost:5000/../../frontend/src/assets/default_user_img.jpg"
-    const newUser = new User({ username, email, password: hashedPassword, role, profileImage: defaultImage });
     newUser.registeredDevices.push(deviceFingerprint);
+    
+    // ✅ Sauvegarde de l'utilisateur AVANT d'envoyer l'email
     await newUser.save();
 
+    // ✅ Création des paramètres par défaut de l'utilisateur
     const newSettings = new Settings({
       userId: newUser._id,
       expiredNotifHour: 0,
@@ -78,12 +71,20 @@ console.log("🔹 New user created:", newUser);
     });
     await newSettings.save();
 
-    res.status(201).json({ message: "User registered successfully." });
+    // ✅ Envoyer l'email de vérification
+    console.log("📡 Tentative d'envoi de l'email de vérification...");
+    await sendEmailVerification(newUser, verificationToken);
+    console.log("✅ Email de vérification envoyé avec succès !");
+
+    // ✅ UNE SEULE réponse HTTP après toutes les opérations
+    return res.status(201).json({ message: "User registered successfully. Please check your email for verification." });
+
   } catch (error) {
     console.error("❌ Signup Error:", error);
-    res.status(500).json({ message: "Server error. Please try again later." });
+    return res.status(500).json({ message: "Server error. Please try again later." });
   }
 }
+
 // ✅ Vérification de l'email via le token
 export async function verifyEmail(req, res) {
   try {

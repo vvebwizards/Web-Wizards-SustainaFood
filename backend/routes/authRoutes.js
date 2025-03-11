@@ -1,8 +1,8 @@
 import express from "express";
 
 import { signup,login,logout,updateUserInfo, getMe, 
-  requestPasswordReset,resetPassword, updatePhoneNumber,
-   sendOtp, updateTwoFaStatus,verifyEmail } from "../controllers/authController.js";
+  requestPasswordReset,resetPassword,
+   sendOtp, updateTwoFaStatus,verifyEmail ,verifyTwoFa} from "../controllers/authController.js";
 
 import upload from "../middleware/multerConfig.js";
 import passport from "passport";

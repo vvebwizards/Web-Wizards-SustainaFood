@@ -27,7 +27,7 @@ import { SettingsProvider } from "./context/SettingsContext";
 import FoodBank from "./pages/FoodBank";
 import { FoodBankProvider } from "./context/FoodBankContext";
         import VerifyEmail from "./pages/VerifyEmail";
-import ConfirmEmail from "./pages/ConfirmEmail";import PublicRoute from "./components/PublicRoute"; // Import the PublicRoute component
+import ConfirmEmail from "./pages/ConfirmEmail";
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user } = useAuth();
