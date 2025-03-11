@@ -79,11 +79,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           withCredentials: true,
         });
   
-        if (!response.data.user || !response.data.user.id) {
+        if (!response.data.user || (!response.data.user.id && !response.data.user._id)) {
           console.warn("⚠️ No user data found in session.");
           setUser(null);
           return;
         }
+        
   
         console.log("✅ Session restored:", response.data.user);
         setUser(response.data.user);

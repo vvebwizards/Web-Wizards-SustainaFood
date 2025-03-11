@@ -4,6 +4,9 @@ import { signup,login,logout,updateUserInfo, getMe,
   requestPasswordReset,resetPassword, updatePhoneNumber,
    sendOtp, updateTwoFaStatus,verifyEmail } from "../controllers/authController.js";
 import upload from "../middleware/multerConfig.js";
+import passport from "passport";
+import { updateLastActive } from "../middleware/LastActive.js";
+import jwt from "jsonwebtoken";
 
 const router = express.Router();
 
@@ -24,7 +27,7 @@ router.post("/request-reset", (req, res, next) => {
   }, requestPasswordReset);
   
 //router.post("/request-reset", requestPasswordReset);
-router.post("/reset-password", resetPassword);
+router.post("/reset-password", updateLastActive,resetPassword);
 
 
 

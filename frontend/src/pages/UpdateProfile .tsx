@@ -9,9 +9,10 @@ const UpdateProfile = () => {
   const navigate = useNavigate();
   const { user, updateUserInfo } = useAuth();
 
+  // Initialize form data with empty strings so inputs are controlled.
   const [formData, setFormData] = useState({
-    username: user?.username || "",
-    email: user?.email || "",
+    username: "",
+    email: "",
     password: "",
   });
   const [profileImage, setProfileImage] = useState<File | null>(null);
@@ -22,10 +23,30 @@ const UpdateProfile = () => {
   const defaultImage =
     "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80";
 
-  // Set the preview URL based on the selected file or user's image
+  // When the user is loaded, update the formData so that inputs become controlled.
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        username: user.username || "",
+        email: user.email || "",
+        password: "",
+      });
+    }
+  }, [user]);
+
+  // Build preview URL. If a new file is selected, create an object URL; otherwise,
+  // use the user's profileImage (check if it’s absolute or relative).
   useEffect(() => {
     if (!profileImage) {
-      setPreview(user?.profileImage ? `http://localhost:5000${user.profileImage}` : defaultImage);
+      if (user?.profileImage) {
+        const isAbsolute = user.profileImage.startsWith("http");
+        const imageUrl = isAbsolute
+          ? user.profileImage
+          : `http://localhost:5000${user.profileImage}`;
+        setPreview(`${imageUrl}?t=${Date.now()}`);
+      } else {
+        setPreview(defaultImage);
+      }
       return;
     }
     const objectUrl = URL.createObjectURL(profileImage);
@@ -49,7 +70,6 @@ const UpdateProfile = () => {
     setError("");
     setSuccess("");
     try {
-      // Calling the updateUserInfo function with 5 arguments as required:
       await updateUserInfo(
         userId!,
         formData.username,

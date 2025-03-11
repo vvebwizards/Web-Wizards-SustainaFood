@@ -1,21 +1,23 @@
 import React from "react";
 
 interface User {
-  id: number;
-  name: string;
+  _id: string;
+  username: string;
   email: string;
-  status: string;
+  blocked: boolean;
   role: string;
   lastActive: string;
-  avatar: string;
+  profileImage: string;
 }
 
 interface UserDetailsModalProps {
   user: User | null;
   isOpen: boolean;
   onClose: () => void;
-  onBlock: (userId: number) => void;
+  onBlock: (userId: string) => void;
 }
+
+const BASE_URL = "http://localhost:5000";
 
 export function UserDetailsModal({
   user,
@@ -24,6 +26,16 @@ export function UserDetailsModal({
   onBlock,
 }: UserDetailsModalProps) {
   if (!isOpen || !user) return null;
+
+  // Helper to get the full image URL
+  const getProfileImageUrl = (profileImage: string) => {
+    if (profileImage && profileImage.trim() !== "") {
+      return profileImage.startsWith("/")
+        ? BASE_URL + profileImage
+        : profileImage;
+    }
+    return "https://via.placeholder.com/64";
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -36,9 +48,16 @@ export function UserDetailsModal({
         </div>
         <div className="space-y-4">
           <div className="flex items-center">
-            <img src={user.avatar} alt="" className="h-16 w-16 rounded-full" />
+            <img
+              src={getProfileImageUrl(user.profileImage)}
+              alt={user.username}
+              className="h-16 w-16 rounded-full"
+              onError={(e) => {
+                e.currentTarget.src = "https://via.placeholder.com/64";
+              }}
+            />
             <div className="ml-4">
-              <h4 className="text-xl font-medium">{user.name}</h4>
+              <h4 className="text-xl font-medium">{user.username}</h4>
               <p className="text-gray-500">{user.email}</p>
             </div>
           </div>
@@ -49,11 +68,11 @@ export function UserDetailsModal({
             </div>
             <div>
               <label className="text-sm text-gray-500">Status</label>
-              <p className="font-medium">{user.status}</p>
+              <p className="font-medium">{user.blocked ? "Blocked" : "Active"}</p>
             </div>
             <div>
               <label className="text-sm text-gray-500">Last Active</label>
-              <p className="font-medium">{user.lastActive}</p>
+              <p className="font-medium">{new Date(user.lastActive).toLocaleString()}</p>
             </div>
           </div>
           <div className="flex justify-end space-x-2 mt-6">
@@ -65,16 +84,16 @@ export function UserDetailsModal({
             </button>
             <button
               onClick={() => {
-                onBlock(user.id);
+                onBlock(user._id);
                 onClose();
               }}
               className={`px-4 py-2 rounded-lg text-white ${
-                user.status === "Active"
+                !user.blocked
                   ? "bg-red-600 hover:bg-red-700"
                   : "bg-green-600 hover:bg-green-700"
               }`}
             >
-              {user.status === "Active" ? "Block User" : "Unblock User"}
+              {!user.blocked ? "Block User" : "Unblock User"}
             </button>
           </div>
         </div>
@@ -82,3 +101,5 @@ export function UserDetailsModal({
     </div>
   );
 }
+
+export default UserDetailsModal;
