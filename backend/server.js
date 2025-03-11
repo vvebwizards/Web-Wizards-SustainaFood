@@ -10,10 +10,12 @@ import notificationRoutes from "./routes/notificationRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import { getMe } from "./controllers/authController.js";
 import setupSocket from "./socket/socket.js";
-
+import FoodItemRoutes from "./routes/foodItemRoutes.js";
+import settingsRoutes from "./routes/settingsRoutes.js";
 import path from "path";
 import { fileURLToPath } from "url";
-
+import CategoryRoutes from "./routes/CategoryRoutes.js"
+import {refreshUserCronJobs} from './utils/scheduler.js';
 // Import and initialize Passport for Google Auth
 import passport from "passport";
 import "./passport.js"; // This file contains your Passport Google strategy configuration
@@ -50,20 +52,23 @@ app.options("*", (req, res) => {
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
   res.header("Access-Control-Allow-Credentials", "true");
-  res.sendStatus(204); // No Content (Preflight OK)
+  res.sendStatus(204); 
 });
 
 app.use(morgan("dev"));
 
-// Initialize Passport middleware for Google OAuth
 app.use(passport.initialize());
+
+refreshUserCronJobs();
 
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/auth/me", getMe);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/users", userRoutes);
-
+app.use("/api/foodItem",FoodItemRoutes);
+app.use("/api/category",CategoryRoutes);
+app.use("/api/settings", settingsRoutes);
 app.get("/", (req, res) => {
   res.send("Backend connected to frontend");
 });

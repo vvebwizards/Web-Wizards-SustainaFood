@@ -1,21 +1,16 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
-import geoip from 'geoip-lite';
+import Settings from "../models/Settings.js";
 import crypto from 'crypto';
-import {UAParser} from'ua-parser-js';
-import deviceLocationLoginAlert from "../emailTemplates/deviceLocationLoginAlert.js";
-import { sendEmail} from '../utils/helpers.js';
-import { sendPasswordResetEmail } from "../utils/helpers.js"; // ✅ Import de la nouvelle fonction
+import { sendEmail } from '../utils/helpers.js';
 import dotenv from 'dotenv';
 import { sendNotification } from "../socket/socket.js"
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { sendEmailVerification } from "../utils/helpers.js";
 
-
 dotenv.config();
-
 
 export async function signup(req, res) {
   try {
@@ -68,6 +63,22 @@ console.log("🔹 New user created:", newUser);
     console.log("✅ Email de vérification envoyé avec succès !");
 
     res.status(201).json({ message: "User registered successfully. Please check your email for verification." });
+    const userAgent = req.headers['user-agent'];
+    const deviceFingerprint = crypto.createHash('sha256').update(userAgent).digest('hex');
+    const defaultImage = "http://localhost:5000/../../frontend/src/assets/default_user_img.jpg"
+    const newUser = new User({ username, email, password: hashedPassword, role, profileImage: defaultImage });
+    newUser.registeredDevices.push(deviceFingerprint);
+    await newUser.save();
+
+    const newSettings = new Settings({
+      userId: newUser._id,
+      expiredNotifHour: 0,
+      expiredNotifMinute: 0,
+      expiredNotifDate: 1,
+    });
+    await newSettings.save();
+
+    res.status(201).json({ message: "User registered successfully." });
   } catch (error) {
     console.error("❌ Signup Error:", error);
     res.status(500).json({ message: "Server error. Please try again later." });
@@ -162,13 +173,12 @@ export async function login(req, res) {
       phoneNumber: user.phoneNumber,
       profileImage: user.profileImage,
       twofa: user.twofa,
+      token: token
     };
-    
 
     console.log("✅ Login successful for:", email);
     res.status(200).json({ message: "Login successful", user: userData });
 
-    // ⏳ **Wait before sending notification**
     setTimeout(async () => {
       console.log("🚨 New device detected! Sending notification...");
 
@@ -181,18 +191,14 @@ export async function login(req, res) {
       } catch (notifError) {
         console.error("❌ Failed to send notification:", notifError);
       }
-    }, 3000); // ⏳ **Give time for WebSocket to register user**
-    
+    }, 3000);
+
   } catch (error) {
     console.error("❌ Login Error:", error);
     res.status(500).json({ message: "Error logging in", error: error.message });
   }
 }
 
-
-
-
-// ✅ Logout function to clear cookie
 export async function logout(req, res) {
   res.clearCookie("token", {
     httpOnly: true,
@@ -202,17 +208,16 @@ export async function logout(req, res) {
   res.status(200).json({ message: "Logged out successfully" });
 }
 
-
 export async function getMe(req, res) {
   try {
-    const token = req.cookies.token; // ✅ Get token from cookies
+    const token = req.cookies.token;
     if (!token) {
       console.log("🚨 No token found in cookies");
       return res.status(401).json({ message: "Not authenticated" });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select("-password"); // Exclude password
+    const user = await User.findById(decoded.id).select("-password");
 
     if (!user) {
       console.log("🚨 User not found");
@@ -227,53 +232,44 @@ export async function getMe(req, res) {
   }
 }
 
-
-
-// ✅ update user information
-
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-
 
 export async function updateUserInfo(req, res) {
   try {
     const { userId } = req.params;
-
-    // Find the user by ID
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
 
-    // Update username if provided
+    // Mettre à jour le nom d'utilisateur
     if (req.body.username) {
-      const existingUsername = await User.findOne({ 
+      const existingUsername = await User.findOne({
         username: req.body.username,
-        _id: { $ne: userId } // Exclude current user from check
+        _id: { $ne: userId }
       });
-      
+
       if (existingUsername) {
         return res.status(400).json({ message: "Username is already taken." });
       }
       user.username = req.body.username;
     }
 
-    // Update email if provided
+    // Mettre à jour l'email
     if (req.body.email) {
-      const existingEmail = await User.findOne({ 
+      const existingEmail = await User.findOne({
         email: req.body.email,
-        _id: { $ne: userId } // Exclude current user from check
+        _id: { $ne: userId }
       });
-      
+
       if (existingEmail) {
         return res.status(400).json({ message: "Email is already in use." });
       }
       user.email = req.body.email;
     }
 
-    // Update password if provided
+    // Mettre à jour le mot de passe
     if (req.body.password) {
       if (req.body.password.length < 6) {
         return res.status(400).json({ message: "Password must be at least 6 characters long." });
@@ -283,52 +279,75 @@ export async function updateUserInfo(req, res) {
       user.password = hashedPassword;
     }
 
-    // Update profile image if provided
-    if (req.file) {
-      // Delete old profile image if it exists
+    // Mettre à jour l'image de profil (profileImage)
+    if (req.files && req.files.profileImage) {
+      const profileImageFile = req.files.profileImage[0]; // Prendre le premier fichier du tableau
+      console.log('Profile image uploaded:', profileImageFile);
+
+      // Supprimer l'ancienne image si elle existe
       if (user.profileImage) {
         const oldImagePath = path.join(__dirname, '..', user.profileImage);
         try {
           await fs.access(oldImagePath);
           await fs.unlink(oldImagePath);
+          console.log('Old profile image deleted:', oldImagePath);
         } catch (error) {
-          console.log('Old image not found or could not be deleted');
+          console.error('Failed to delete old profile image:', error);
         }
       }
 
-      // Update with new image path
-      user.profileImage = `/uploads/${req.file.filename}`;
+      // Mettre à jour le chemin de la nouvelle image
+      user.profileImage = `/uploads/${profileImageFile.filename}`;
     }
 
-    // Save the updated user information
-    const updatedUser = await user.save();
+    // Mettre à jour l'image supplémentaire (imageUrl)
+    if (req.files && req.files.imageUrl) {
+      const imageUrlFile = req.files.imageUrl[0]; // Prendre le premier fichier du tableau
+      console.log('Image URL uploaded:', imageUrlFile);
 
-    // Remove sensitive information before sending response
+      // Supprimer l'ancienne image si elle existe
+      if (user.imageUrl) {
+        const oldImagePath = path.join(__dirname, '..', user.imageUrl);
+        try {
+          await fs.access(oldImagePath);
+          await fs.unlink(oldImagePath);
+          console.log('Old image URL deleted:', oldImagePath);
+        } catch (error) {
+          console.error('Failed to delete old image URL:', error);
+        }
+      }
+
+      // Mettre à jour le chemin de la nouvelle image
+      user.imageUrl = `/uploads/${imageUrlFile.filename}`;
+    }
+
+    // Sauvegarder les modifications
+    const updatedUser = await user.save();
+    console.log('User updated:', updatedUser);
+
+    // Répondre avec les informations mises à jour
     const userResponse = {
       id: updatedUser._id,
       username: updatedUser.username,
       email: updatedUser.email,
       profileImage: updatedUser.profileImage,
+      imageUrl: updatedUser.imageUrl,
       role: updatedUser.role
     };
 
-    res.status(200).json({ 
-      message: "User information updated successfully.", 
-      user: userResponse 
+    res.status(200).json({
+      message: "User information updated successfully.",
+      user: userResponse
     });
 
   } catch (error) {
     console.error("Update User Info Error:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Server error. Please try again later.",
-      error: error.message 
+      error: error.message
     });
   }
 }
-
-
-//reset password
-
 
 export async function requestPasswordReset(req, res) {
   try {
@@ -340,10 +359,10 @@ export async function requestPasswordReset(req, res) {
       console.log("❌ Aucun utilisateur trouvé avec cet email.");
       return res.status(404).json({ message: "No user found with this email." });
     }
-    // Générer un token sécurisé
+
     const resetToken = crypto.randomBytes(32).toString("hex");
     user.resetPasswordToken = resetToken;
-    user.resetPasswordExpires = Date.now() + 3600000; // 1 heure
+    user.resetPasswordExpires = Date.now() + 3600000;
     await user.save();
 
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
@@ -368,21 +387,20 @@ export async function requestPasswordReset(req, res) {
  
       </div>
     `,
-  };
-     /* html: ` <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background-color: #f9f9f9;">
-      <p>Click the link below to reset your password:</p>
-             <a href="${resetLink}">${resetLink}</a>
-             <p>If you did not request this, please ignore this email.</p>`,
     };
+    /* html: ` <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background-color: #f9f9f9;">
+     <p>Click the link below to reset your password:</p>
+            <a href="${resetLink}">${resetLink}</a>
+            <p>If you did not request this, please ignore this email.</p>`,
+   };
 */
-/* /*
-        <p style="font-size: 14px; color: #777;">Ou copiez et collez ce lien dans votre navigateur :</p>
-        <p style="word-wrap: break-word; color: #3498db;"><a href="${resetLink}">${resetLink}</a></p>
-  
-        
-*/
-   
-   //await sendPasswordResetEmail(emailData);
+    /* /*
+            <p style="font-size: 14px; color: #777;">Ou copiez et collez ce lien dans votre navigateur :</p>
+            <p style="word-wrap: break-word; color: #3498db;"><a href="${resetLink}">${resetLink}</a></p>
+      
+            
+    */
+
     await sendEmail(emailData);
     console.log("✅ Email de réinitialisation envoyé avec succès !");
     res.status(200).json({ message: "Reset link sent successfully!" });
@@ -395,7 +413,7 @@ export async function requestPasswordReset(req, res) {
 export async function resetPassword(req, res) {
   try {
     const { token, newPassword } = req.body;
-    
+
     console.log("🟢 Reset Password Request Received:");
     console.log("Token:", token);
     console.log("New Password:", newPassword);
@@ -406,7 +424,7 @@ export async function resetPassword(req, res) {
 
     const user = await User.findOne({
       resetPasswordToken: token,
-      resetPasswordExpires: { $gt: Date.now() }, // Vérifie si le token est encore valide
+      resetPasswordExpires: { $gt: Date.now() },
     });
 
     if (!user) {
@@ -414,14 +432,14 @@ export async function resetPassword(req, res) {
       return res.status(400).json({ message: "Invalid or expired reset token." });
     }
 
-    // Hash du mot de passe
+
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(newPassword, salt);
 
-    // Supprimer le token après usage
+
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
-    
+
     await user.save();
 
     console.log("✅ Mot de passe réinitialisé avec succès !");
@@ -432,28 +450,6 @@ export async function resetPassword(req, res) {
     res.status(500).json({ message: "Internal server error." });
   }
 }
-
-export const updatePhoneNumber = async (req, res) => {
-  const { userId } = req.params;
-  const { phone } = req.body;
-
-  try {
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    user.phoneNumber = phone;
-    await user.save();
-    res.json({ user });
-  } catch (error) {
-    console.error('Error updating phone number:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-};
-
-
 
 const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -509,7 +505,33 @@ export const sendOtp = async (req, res) => {
   }
 };
 
+export async function verifyTwoFa(req, res) {
+  try {
+    const { userId } = req.params;
+    const { code } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.otpCode === code) {
+      user.twofa = true;
+      user.otpCode = undefined;
+      user.otpExpires = undefined;
+      await user.save();
+      res.status(200).json(user);
+    } else {
+      res.status(400).json({ message: 'Invalid OTP code' });
+    }
+  } catch (error) {
+    console.error('Error verifying 2FA:', error);
+    res.status(500).json({ message: 'Failed to verify 2FA' });
+  }
+}
+
 export const updateTwoFaStatus = async (req, res) => {
+  console.log("🔹 Update 2FA function has been called");
   const { userId } = req.params;
   const { twofa, code } = req.body;
 

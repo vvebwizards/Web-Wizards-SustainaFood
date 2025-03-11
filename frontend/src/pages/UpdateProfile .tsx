@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Camera } from "lucide-react";
 import { motion } from "framer-motion";
+import defaultProfileImage from "../assets/images/default_user_img.jpg";
 
 const UpdateProfile = () => {
   const { userId } = useParams();
@@ -21,9 +22,9 @@ const UpdateProfile = () => {
   const [success, setSuccess] = useState("");
 
   const defaultImage =
-    "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80";
+    "";
 
-  // When the user is loaded, update the formData so that inputs become controlled.
+ 
   useEffect(() => {
     if (user) {
       setFormData({
@@ -34,8 +35,7 @@ const UpdateProfile = () => {
     }
   }, [user]);
 
-  // Build preview URL. If a new file is selected, create an object URL; otherwise,
-  // use the user's profileImage (check if it’s absolute or relative).
+
   useEffect(() => {
     if (!profileImage) {
       if (user?.profileImage) {
@@ -45,7 +45,7 @@ const UpdateProfile = () => {
           : `http://localhost:5000${user.profileImage}`;
         setPreview(`${imageUrl}?t=${Date.now()}`);
       } else {
-        setPreview(defaultImage);
+        setPreview(defaultProfileImage);
       }
       return;
     }
@@ -125,7 +125,7 @@ const UpdateProfile = () => {
             </div>
             <p className="mt-4 text-lg font-medium text-gray-800">{user?.username}</p>
           </div>
-          {/* Right Column: Update Form */}
+          
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700">

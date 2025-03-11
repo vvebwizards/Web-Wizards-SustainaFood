@@ -3,6 +3,7 @@ import express from "express";
 import { signup,login,logout,updateUserInfo, getMe, 
   requestPasswordReset,resetPassword, updatePhoneNumber,
    sendOtp, updateTwoFaStatus,verifyEmail } from "../controllers/authController.js";
+
 import upload from "../middleware/multerConfig.js";
 import passport from "passport";
 import { updateLastActive } from "../middleware/LastActive.js";
@@ -10,41 +11,44 @@ import jwt from "jsonwebtoken";
 
 const router = express.Router();
 
-router.post("/signup", signup);
-router.post("/login", login);
-router.post("/logout", logout);
-router.get("/me", getMe);
-router.put('/update-phone/:userId', updatePhoneNumber);
-router.post('/send-otp/:userId', sendOtp);
-router.post('/updatetwofa/:userId', updateTwoFaStatus);
+
+router.post("/signup", updateLastActive, signup);
+router.post("/login", updateLastActive, login);
+router.post("/logout", updateLastActive, logout);
+router.get("/me", updateLastActive, getMe);
+router.post('/verify-2fa/:userId', verifyTwoFa);
+router.post('/send-otp/:userId', updateLastActive, sendOtp);
+router.post('/updatetwofa/:userId', updateLastActive, updateTwoFaStatus);
 router.get("/verify-email", verifyEmail);
-
-//reset password
-
 router.post("/request-reset", (req, res, next) => {
-    console.log("🟢 Route /request-reset appelée !");
-    next();
-  }, requestPasswordReset);
-  
-//router.post("/request-reset", requestPasswordReset);
-router.post("/reset-password", updateLastActive,resetPassword);
+  console.log("🟢 Route /request-reset appelée !");
+  next();
+}, requestPasswordReset);
+router.post("/reset-password", updateLastActive, resetPassword);
+router.put("/update/:userId", updateLastActive, upload, updateUserInfo);
+router.get(
+  "/google",
+  passport.authenticate("google", { scope: ["profile", "email"], prompt: "select_account" })
+);
+router.get(
+  "/google/callback",
+  passport.authenticate("google", { session: false, failureRedirect: "/login" }),
+  (req, res) => {
 
+    const token = jwt.sign(
+      { id: req.user._id, role: req.user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
 
+    res.cookie("token", token, {
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
 
-router.put("/update/:userId", upload, updateUserInfo);
-/*
-router.post("/verify-email", async (req, res) => {
-  const { token } = req.body;
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    await User.findByIdAndUpdate(decoded.userId, { isVerified: true });
-
-    res.json({ message: "Email verified successfully!" });
-  } catch (err) {
-    res.status(400).json({ error: "Invalid or expired token" });
+    res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
   }
-});
-*/
-export default router;
+);
 
+export default router;
