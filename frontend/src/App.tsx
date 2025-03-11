@@ -18,7 +18,8 @@ import { NotificationProvider } from "./context/NotificationContext";
 import { AdminProvider } from "./context/AdminContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import PublicRoute from "./components/PublicRoute"; // Import the PublicRoute component
+import VerifyEmail from "./pages/VerifyEmail";
+import ConfirmEmail from "./pages/ConfirmEmail";import PublicRoute from "./components/PublicRoute"; // Import the PublicRoute component
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user } = useAuth();
@@ -41,6 +42,9 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/get-involved" element={<GetInvolved />} />
+
+        <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/confirm-email" element={<ConfirmEmail />} />
 
         {/* Wrap public routes with PublicRoute */}
         <Route

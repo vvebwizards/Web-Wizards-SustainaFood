@@ -38,6 +38,24 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const verifyEmail = async (token: string) => {
+  try {
+    const response = await fetch(
+      `${process.env.REACT_APP_API_URL}/api/auth/verify-email?token=${token}`,
+      {
+        method: "GET",
+      }
+    );
+
+    const data = await response.json();
+    console.log("🔍 Réponse de l'API :", data);
+
+    return response.ok;
+  } catch (error) {
+    console.error("❌ Erreur lors de la vérification d'email :", error);
+    return false;
+  }
+};
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -123,6 +141,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
   
 
+
   const signup = async (username: string, email: string, password: string, role: string) => {
     try {
       const response = await axios.post("http://localhost:5000/api/auth/signup", {
@@ -132,6 +151,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         role,
       });
       console.log("✅ Signup Success:", response.data);
+      window.location.href = `/verify-email?email=${email}`;
+
       return response.data;
     } catch (error: any) {
       console.error("❌ Signup Failed:", error.response?.data || error.message);
@@ -207,11 +228,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         updateUserInfo,
         requestPasswordReset: async (email) => {
           await axios.post("http://localhost:5000/api/auth/request-reset", { email });
-          toast.success("✅ Password reset email sent!");
+          toast.success(" Password reset email sent!");
         },
         resetPassword: async (token, newPassword) => {
           await axios.post("http://localhost:5000/api/auth/reset-password", { token, newPassword });
-          toast.success("✅ Password successfully changed!");
+          toast.success(" Password successfully changed!");
         },
         verifyTwoFactor: async (code) => {
           const response = await axios.post("http://localhost:5000/api/auth/verify-2fa", { code });

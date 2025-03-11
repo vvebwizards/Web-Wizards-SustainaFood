@@ -20,7 +20,8 @@ const userSchema = new mongoose.Schema({
   phoneNumber: { type: String, default: "" },
   twofa: { type: Boolean, default: false },
   otpCode: { type: String, default: null },
-  otpExpires: { type: Date, default: null },
+  otpExpires: { type: Date, default: null }, verificationToken: { type: String },
+  verified: { type: Boolean, default: false }
 }, { timestamps: true });
 
 export default mongoose.model("User", userSchema);
