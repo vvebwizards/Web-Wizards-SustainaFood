@@ -8,6 +8,7 @@ import dotenv from 'dotenv';
 import { sendNotification } from "../socket/socket.js"
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { sendEmailVerification } from "../utils/helpers.js";
 
 dotenv.config();
 
@@ -19,6 +20,7 @@ export async function signup(req, res) {
       return res.status(400).json({ message: "All fields are required." });
     }
 
+    // Vérifier si l'utilisateur existe déjà
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "Email is already in use." });
@@ -33,8 +35,34 @@ export async function signup(req, res) {
       return res.status(400).json({ message: "Password must be at least 6 characters long." });
     }
 
+    // Hacher le mot de passe
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+
+    // ✅ Générer un token de vérification
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+
+    // ✅ Créer un nouvel utilisateur non vérifié
+    const newUser = new User({
+      username,
+      email,
+      password: hashedPassword,
+      role,
+      verificationToken,
+      verificationExpires: Date.now() + 3600000, // Expiration dans 1 heure
+      verified: false, // L'utilisateur n'est pas encore vérifié
+    });
+
+// ✅ Vérifier que le token est bien sauvegardé
+console.log("🔹 New user created:", newUser);
+    await newUser.save();
+
+    // ✅ Envoyer l'email de vérification
+    console.log("📡 Tentative d'envoi de l'email de vérification...");
+    await sendEmailVerification(newUser, verificationToken);
+    console.log("✅ Email de vérification envoyé avec succès !");
+
+    res.status(201).json({ message: "User registered successfully. Please check your email for verification." });
     const userAgent = req.headers['user-agent'];
     const deviceFingerprint = crypto.createHash('sha256').update(userAgent).digest('hex');
     const defaultImage = "http://localhost:5000/../../frontend/src/assets/default_user_img.jpg"
@@ -52,10 +80,49 @@ export async function signup(req, res) {
 
     res.status(201).json({ message: "User registered successfully." });
   } catch (error) {
-    console.error("Signup Error:", error);
+    console.error("❌ Signup Error:", error);
     res.status(500).json({ message: "Server error. Please try again later." });
   }
 }
+// ✅ Vérification de l'email via le token
+export async function verifyEmail(req, res) {
+  try {
+    const token = req.query.token;
+
+    console.log("🔍 Token reçu pour vérification :", token);
+
+    if (!token) {
+      return res.status(400).json({ message: "Token is missing." });
+    }
+
+    const user = await User.findOne({ verificationToken: token });
+
+    if (!user) {
+      console.error("❌ Aucun utilisateur trouvé avec ce token !");
+      return res.status(400).json({ message: "Invalid or expired verification token." });
+    }
+
+    console.log("🔍 Utilisateur trouvé :", user);
+
+    if (user.verificationExpires && user.verificationExpires < Date.now()) {
+      console.error("❌ Token expiré !");
+      return res.status(400).json({ message: "Verification token has expired." });
+    }
+
+    user.verified = true;
+    user.verificationToken = undefined;
+    user.verificationExpires = undefined;
+    await user.save();
+
+    console.log("✅ Email vérifié avec succès !");
+    res.status(200).json({ message: "Email verified successfully. You can now log in." });
+
+  } catch (error) {
+    console.error("❌ Erreur de vérification d'email :", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+}
+
 
 export async function login(req, res) {
   console.log("🔹 Login request received:", req.body);
@@ -494,6 +561,25 @@ export const updateTwoFaStatus = async (req, res) => {
     res.status(500).json({ message: 'Failed to update 2FA status' });
   }
 };
+
+/*
+const sendVerificationEmail = async (user, token) => {
+  const verificationLink = `http://localhost:5173/confirm-email?token=${token}`;
+
+  const emailData = {
+    from: process.env.MAILER_EMAIL_ID,
+    to: user.email,
+    subject: "Verify Your Email",
+    html: `
+      <h2>Welcome, ${user.username}!</h2>
+      <p>Click the button below to verify your email and activate your account:</p>
+      <a href="${verificationLink}" style="display:inline-block; padding:10px 20px; background-color:green; color:white; text-decoration:none; border-radius:5px;">Verify Email</a>
+      <p>If you did not sign up, please ignore this email.</p>
+    `,
+  };
+
+  return transporter.sendMail(emailData);
+};*/
 
 /*
 export async function resetPassword(req, res) {
