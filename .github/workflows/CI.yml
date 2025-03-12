@@ -1,0 +1,73 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      mongo:
+        image: mongo:latest
+        ports:
+          - 27017:27017
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "22"
+
+      - name: Install MongoDB Shell (mongosh)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget
+          wget https://downloads.mongodb.com/compass/mongosh-2.2.5-linux-x64.tgz
+          tar -xvzf mongosh-2.2.5-linux-x64.tgz
+          sudo mv mongosh-2.2.5-linux-x64/bin/mongosh /usr/local/bin/mongosh
+          rm -rf mongosh-2.2.5-linux-x64.tgz mongosh-2.2.5-linux-x64
+
+      - name: Install dependencies (Frontend)
+        working-directory: ./frontend
+        run: |
+          rm -rf node_modules
+          rm -f package-lock.json
+          npm install
+
+      - name: Install dependencies (Backend)
+        working-directory: ./backend
+        run: npm install
+
+      - name: Verify MongoDB connection
+        run: |
+          echo "Testing MongoDB connection..."
+          mongosh --eval 'db.runCommand({ ping: 1 })'
+
+      # - name: Run Linting (Frontend)
+      #   working-directory: ./frontend
+      #   run: npm run lint
+
+      # - name: Run frontend tests
+      #   working-directory: ./frontend
+      #   run: npm test
+
+      # - name: Run Linting (Frontend)
+      #   working-directory: ./backend
+      #   run: npm run lint
+
+      # - name: Run backend testscd
+      #   working-directory: ./backend
+      #   run: npm test
+
+      # - name: Run backend integration tests
+      #   working-directory: ./backend
+      #   run: npm run test:integration
