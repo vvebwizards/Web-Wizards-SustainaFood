@@ -30,6 +30,7 @@ const Inventory: React.FC = () => {
   const [pendingDonation, setPendingDonation] = useState<DonationItem | null>(null);
   const [donationQuantity, setDonationQuantity] = useState<number>(0);
   const [isDetectingFreshness, setIsDetectingFreshness] = useState(false);
+  const [isFoodRotten, setIsFoodRotten] = useState(false);
 
 
   useEffect(() => {
@@ -105,61 +106,79 @@ const Inventory: React.FC = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (formData.quantity <= 0) {
-      toast.error('The quantity must be greater than 0');
-      return;
+  e.preventDefault();
+  setIsFoodRotten(false);
+  if (formData.quantity <= 0) {
+    toast.error('The quantity must be greater than 0');
+    return;
+  }
+
+  const currentDate = new Date();
+  const expirationDate = new Date(formData.expirationDate);
+  if (expirationDate <= currentDate) {
+    toast.error('The expiration date must be later than the current date.');
+    return;
+  }
+
+  try {
+    const categoryLower = formData.category.toLowerCase();
+    // Only show detection overlay for new items in Fruits or Vegetables.
+    if (!editingItem && (categoryLower === 'fruits' || categoryLower === 'vegetables')) {
+      setIsDetectingFreshness(true);
     }
-    
-    const currentDate = new Date();
-    const expirationDate = new Date(formData.expirationDate);
-    if (expirationDate <= currentDate) {
-      toast.error('The expiration date must be later than the current date.');
-      return;
+
+    if (editingItem) {
+      await updateFoodItem(editingItem._id, formData);
+      toast.success('Article mis à jour avec succès.');
+    } else {
+      await addFoodItem(formData); 
+      toast.success('Article ajouté avec succès.');
     }
+
+    setIsDetectingFreshness(false);
+    setIsFoodRotten(false); 
+
+   
+    setFormData({
+      title: '',
+      category: categories[0]?.name || 'produce',
+      quantity: 0,
+      unit: 'kg',
+      expirationDate: '',
+      nutritionalInfo: '',
+      storageRequirements: 'room-temperature',
+      notes: '',
+      imageUrl: '',
+      status: 'In Stock',
+      type: 'free',
+      quantityToDonation: 0,
+    });
+    setShowAddModal(false);
+    setEditingItem(null);
+  } catch (err: any) {
+    setIsDetectingFreshness(false);
+
+  
     
-    try {
-      // Check if it's a new item and the category requires freshness detection
-      const categoryLower = formData.category.toLowerCase();
-      if (!editingItem && (categoryLower === 'fruits' || categoryLower === 'vegetables')) {
-        setIsDetectingFreshness(true);
-        // Simulate a 3-second loading screen
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        setIsDetectingFreshness(false);
-      }
-      
-      if (editingItem) {
-        await updateFoodItem(editingItem._id, formData);
-        toast.success('Article mis à jour avec succès.');
+    const errorMsg = err.response?.data?.error
+      || err.response?.data   
+      || err.message          
+      || 'An unknown error occurred.';
+  
+    
+      if (errorMsg.toLowerCase().includes("rotten")) {
+        setIsFoodRotten(true);
+    
+        toast.error("Food item is rotten and can't be donated.");
       } else {
-        await addFoodItem(formData);
-        toast.success('Article ajouté avec succès.');
+        
+        toast.error('An error occurred. Please try again.');
       }
-      
-      // Reset the form and close the modal
-      setFormData({
-        title: '',
-        category: categories[0]?.name || 'produce',
-        quantity: 0,
-        unit: 'kg',
-        expirationDate: '',
-        nutritionalInfo: '',
-        storageRequirements: 'room-temperature',
-        notes: '',
-        imageUrl: '',
-        status: 'In Stock',
-        type: 'free',
-        quantityToDonation: 0,
-      });
-      setShowAddModal(false);
-      setEditingItem(null);
-      
-    } catch (err) {
-      console.error('Erreur :', err);
-      toast.error('Une erreur s\'est produite. Veuillez réessayer.');
-    }
-  };
+  }
+  
+  
+};
+
   
 
   const handleEdit = (item: FoodItem) => {
@@ -350,6 +369,7 @@ const Inventory: React.FC = () => {
           </div>
           <button
             onClick={() => {
+              setIsFoodRotten(false);
               setEditingItem(null);
               setFormData({
                 title: '',
@@ -379,6 +399,7 @@ const Inventory: React.FC = () => {
             <Settings size={18} />
             <span>Manage Categories</span>
           </button>
+        
         </div>
       </div>
 
@@ -618,6 +639,21 @@ const Inventory: React.FC = () => {
           </div>
         </div>
       )}
+      {isFoodRotten && (
+  <div className="absolute inset-0 flex items-center justify-center bg-red-100 bg-opacity-80 z-50">
+    <div className="flex flex-col items-center space-y-4 p-6 bg-white rounded-lg border-2 border-dashed border-red-600 shadow-lg">
+      <img
+  src="https://thumbs.dreamstime.com/b/grumpy-rotten-red-apple-fruit-cartoon-mascot-character-grumpy-rotten-red-apple-fruit-cartoon-mascot-character-illustration-94818152.jpg"
+  alt="Rotten Food"
+  className="h-40 w-40 object-contain"
+/>
+      <p className="text-red-600 text-xl font-semibold">
+        Rotten food can't be donated.
+      </p>
+    </div>
+  </div>
+)}
+
 
       <h3 className="text-lg font-semibold text-gray-800 mb-4">
         {editingItem ? 'Edit Inventory Item' : 'Add New Inventory Item'}
@@ -766,9 +802,13 @@ const Inventory: React.FC = () => {
           </button>
         </div>
       </form>
+
+
+
     </div>
   </div>
 )}
+
 
 
 

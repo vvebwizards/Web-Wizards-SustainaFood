@@ -72,6 +72,12 @@ export async function addFoodItem(req, res) {
 
         // ✅ Extract only "Fresh" or "Rotten"
         freshnessStatus = predictionClass.toLowerCase().includes("rotten") ? "Rotten" : "Fresh";
+
+        // Block the add process if the item is rotten.
+        if (freshnessStatus === "Rotten") {
+          console.error("❌ Food item detected as rotten, cannot be donated.");
+          return res.status(400).json({ error: "Food item is rotten and can't be donated." });
+        }
       }
 
       // **Save in Database**
@@ -103,6 +109,7 @@ export async function addFoodItem(req, res) {
     }
   });
 }
+
 
 
 
