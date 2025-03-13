@@ -24,6 +24,7 @@ const FoodItemSchema = new mongoose.Schema({
     enum : ["free","reduced"]
   },
   quantityToDonation : { type: Number,default: 0, min: 0  },
+  freshness: { type: String, default: "Unknown" },
 });
 
 export default mongoose.model("FoodItem",FoodItemSchema)

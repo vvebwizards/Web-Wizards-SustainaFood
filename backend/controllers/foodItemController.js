@@ -1,12 +1,28 @@
 import FoodItem from "../models/FoodItem.js";
 import { getAuthenticatedUser } from "../utils/helpers.js";
-
+import { classifyFoodFreshness } from "../utils/roboflow.js";
 import upload from "../middleware/multerConfig.js"; // Adjust the import path as needed
+
+import axios from "axios";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+// Define __dirname for ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export async function addFoodItem(req, res) {
   upload(req, res, async (err) => {
     if (err) {
-      return res.status(400).json({ error: err });
+      console.error("❌ Multer Error:", err);
+      return res.status(400).json({ error: err.message });
+    }
+
+    console.log("🔹 Uploaded Files:", req.files); // ✅ Debugging
+
+    if (!req.files || !req.files.imageUrl) {
+      console.error("❌ No image uploaded");
+      return res.status(400).json({ error: "No image uploaded" });
     }
 
     try {
@@ -22,13 +38,35 @@ export async function addFoodItem(req, res) {
         status,
       } = req.body;
 
-
       const donor = await getAuthenticatedUser(req);
+      if (!donor) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
 
-    
-      const uploadedFile = req.files?.profileImage?.[0] || req.files?.imageUrl?.[0];
+      const uploadedFile = req.files.imageUrl[0];
+      const imagePath = path.join(__dirname, "..", "uploads", uploadedFile.filename);
 
-    
+      console.log("🖼 Sending image to Roboflow...");
+
+      // **Step 1: Convert Image to Base64**
+      const imageBase64 = fs.readFileSync(imagePath, { encoding: "base64" });
+
+      // **Step 2: Send to Roboflow API**
+      const roboflowResponse = await axios.post(
+        "https://detect.roboflow.com/freshness-detection-rhrze/3",
+        imageBase64,
+        {
+          params: { api_key: "bQ3thOx4acHnOavJMXxJ" },
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        }
+      );
+
+      console.log("✅ Roboflow Response:", roboflowResponse.data);
+
+      // **Step 3: Extract Freshness Result**
+      const freshnessPrediction = roboflowResponse.data?.predictions?.[0]?.class || "Unknown";
+
+      // **Step 4: Save in Database**
       const newFoodItem = new FoodItem({
         title,
         category,
@@ -38,24 +76,27 @@ export async function addFoodItem(req, res) {
         nutritionalInfo,
         storageRequirements,
         notes,
-        status: status || 'In Stock',
+        status: status || "In Stock",
         donorId: donor._id,
-        imageUrl: uploadedFile ? `/uploads/${uploadedFile.filename}` : null, 
+        imageUrl: `/uploads/${uploadedFile.filename}`,
+        freshness: freshnessPrediction, // ✅ Save freshness classification
       });
 
-
       const savedFoodItem = await newFoodItem.save();
+      console.log("✅ Food item added successfully:", savedFoodItem);
 
       res.status(201).json({
-        message: 'Food item added successfully',
+        message: "Food item added successfully",
         foodItem: savedFoodItem,
       });
     } catch (error) {
-      console.error('Error adding food item:', error);
-      res.status(500).json({ error: 'Error adding food item' });
+      console.error("❌ Error adding food item:", error);
+      res.status(500).json({ error: error.message || "Error adding food item" });
     }
   });
 }
+
+
 
 export async function getAll (req,res){
     try {
