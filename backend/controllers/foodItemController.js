@@ -46,27 +46,35 @@ export async function addFoodItem(req, res) {
       const uploadedFile = req.files.imageUrl[0];
       const imagePath = path.join(__dirname, "..", "uploads", uploadedFile.filename);
 
-      console.log("🖼 Sending image to Roboflow...");
+      let freshnessStatus = "N/A"; // Default value for non-perishable food
 
-      // **Step 1: Convert Image to Base64**
-      const imageBase64 = fs.readFileSync(imagePath, { encoding: "base64" });
+      // **Only use Roboflow if category is Fruits or Vegetables**
+      if (["Fruits", "Vegetables"].includes(category)) {
+        console.log("🖼 Sending image to Roboflow for freshness check...");
 
-      // **Step 2: Send to Roboflow API**
-      const roboflowResponse = await axios.post(
-        "https://detect.roboflow.com/freshness-detection-rhrze/3",
-        imageBase64,
-        {
-          params: { api_key: "bQ3thOx4acHnOavJMXxJ" },
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        }
-      );
+        // **Convert Image to Base64**
+        const imageBase64 = fs.readFileSync(imagePath, { encoding: "base64" });
 
-      console.log("✅ Roboflow Response:", roboflowResponse.data);
+        // **Send to Roboflow API**
+        const roboflowResponse = await axios.post(
+          "https://detect.roboflow.com/freshness-detection-rhrze/3",
+          imageBase64,
+          {
+            params: { api_key: "bQ3thOx4acHnOavJMXxJ" },
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          }
+        );
 
-      // **Step 3: Extract Freshness Result**
-      const freshnessPrediction = roboflowResponse.data?.predictions?.[0]?.class || "Unknown";
+        console.log("✅ Roboflow Response:", roboflowResponse.data);
 
-      // **Step 4: Save in Database**
+        // **Extract Freshness Result**
+        const predictionClass = roboflowResponse.data?.predictions?.[0]?.class || "Unknown";
+
+        // ✅ Extract only "Fresh" or "Rotten"
+        freshnessStatus = predictionClass.toLowerCase().includes("rotten") ? "Rotten" : "Fresh";
+      }
+
+      // **Save in Database**
       const newFoodItem = new FoodItem({
         title,
         category,
@@ -79,7 +87,7 @@ export async function addFoodItem(req, res) {
         status: status || "In Stock",
         donorId: donor._id,
         imageUrl: `/uploads/${uploadedFile.filename}`,
-        freshness: freshnessPrediction, // ✅ Save freshness classification
+        freshness: freshnessStatus, // ✅ Only "Fresh" or "Rotten" for Fruits & Vegetables
       });
 
       const savedFoodItem = await newFoodItem.save();
