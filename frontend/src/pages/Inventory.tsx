@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Filter, Search, Heart, GripVertical, X, Settings } from 'lucide-react';
+import { Plus, Edit, Trash2, Filter, Search, Heart, GripVertical, X, Settings,Loader2,Cpu   } from 'lucide-react';
 import { FoodItem } from '../components/FoodItemModal';
 import { useInventory } from '../context/InventoryContext';
 import { toast } from 'react-toastify';
@@ -29,6 +29,7 @@ const Inventory: React.FC = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingDonation, setPendingDonation] = useState<DonationItem | null>(null);
   const [donationQuantity, setDonationQuantity] = useState<number>(0);
+  const [isDetectingFreshness, setIsDetectingFreshness] = useState(false);
 
 
   useEffect(() => {
@@ -105,17 +106,29 @@ const Inventory: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (formData.quantity <= 0) {
       toast.error('The quantity must be greater than 0');
       return;
     }
+    
     const currentDate = new Date();
     const expirationDate = new Date(formData.expirationDate);
     if (expirationDate <= currentDate) {
       toast.error('The expiration date must be later than the current date.');
       return;
     }
+    
     try {
+      // Check if it's a new item and the category requires freshness detection
+      const categoryLower = formData.category.toLowerCase();
+      if (!editingItem && (categoryLower === 'fruits' || categoryLower === 'vegetables')) {
+        setIsDetectingFreshness(true);
+        // Simulate a 3-second loading screen
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        setIsDetectingFreshness(false);
+      }
+      
       if (editingItem) {
         await updateFoodItem(editingItem._id, formData);
         toast.success('Article mis à jour avec succès.');
@@ -123,6 +136,8 @@ const Inventory: React.FC = () => {
         await addFoodItem(formData);
         toast.success('Article ajouté avec succès.');
       }
+      
+      // Reset the form and close the modal
       setFormData({
         title: '',
         category: categories[0]?.name || 'produce',
@@ -139,11 +154,13 @@ const Inventory: React.FC = () => {
       });
       setShowAddModal(false);
       setEditingItem(null);
+      
     } catch (err) {
       console.error('Erreur :', err);
       toast.error('Une erreur s\'est produite. Veuillez réessayer.');
     }
   };
+  
 
   const handleEdit = (item: FoodItem) => {
     setEditingItem(item);
@@ -795,6 +812,19 @@ const Inventory: React.FC = () => {
           </div>
         </div>
       )}
+{isDetectingFreshness && (
+  <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50">
+    <div className="flex flex-col items-center">
+      <Cpu className="h-6 w-6 text-white mb-2" />
+      <Loader2 className="animate-spin h-10 w-10 text-white mb-4" />
+      <p className="text-white text-lg">AI Detecting Freshness...</p>
+    </div>
+  </div>
+)}
+
+
+
+
     </div>
   );
 };
