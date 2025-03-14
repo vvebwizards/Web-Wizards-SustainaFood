@@ -182,6 +182,7 @@ const Inventory: React.FC = () => {
   
 
   const handleEdit = (item: FoodItem) => {
+    setIsFoodRotten(false);
     setEditingItem(item);
     setFormData({
       title: item.title || '',
@@ -627,7 +628,6 @@ const Inventory: React.FC = () => {
 {showAddModal && (
   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
     <div className="relative bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-      
       {isDetectingFreshness && (
         <div className="absolute inset-0 flex items-center justify-center bg-green-100 bg-opacity-80 z-50">
           <div className="flex flex-col items-center space-y-4 p-6 bg-white rounded-lg border-2 border-dashed border-green-600 shadow-lg">

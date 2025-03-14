@@ -1,8 +1,8 @@
 import FoodItem from "../models/FoodItem.js";
 import { getAuthenticatedUser } from "../utils/helpers.js";
-import { classifyFoodFreshness } from "../utils/roboflow.js";
 import upload from "../middleware/multerConfig.js"; // Adjust the import path as needed
-
+import { sendNotification } from "../socket/socket.js"
+import User from "../models/User.js";
 import axios from "axios";
 import fs from "fs";
 import path from "path";
@@ -60,7 +60,7 @@ export async function addFoodItem(req, res) {
           "https://detect.roboflow.com/freshness-detection-rhrze/3",
           imageBase64,
           {
-            params: { api_key: "bQ3thOx4acHnOavJMXxJ" },
+            params: { api_key: "gvgPfyypMFK52lNz1UE2" },
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
           }
         );
@@ -76,6 +76,19 @@ export async function addFoodItem(req, res) {
         // Block the add process if the item is rotten.
         if (freshnessStatus === "Rotten") {
           console.error("❌ Food item detected as rotten, cannot be donated.");
+            // Retrieve all admin users (assuming admins have a role property set to "admin")
+  const adminUsers = await User.find({ role: "admin" });
+  
+  // Loop through each admin and send a notification.
+  // IMPORTANT: Ensure you have an accessible `io` instance.
+  adminUsers.forEach(async (admin) => {
+    await sendNotification(
+      admin._id,
+      `User ${donor.username} tried to donate rotten food: "${title}"`,
+     
+    );
+  });
+
           return res.status(400).json({ error: "Food item is rotten and can't be donated." });
         }
       }
