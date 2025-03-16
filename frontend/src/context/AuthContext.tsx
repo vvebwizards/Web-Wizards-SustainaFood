@@ -22,15 +22,34 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string, captchaToken: string) => Promise<void>;
-  signup: (username: string, email: string, password: string, role: string) => Promise<void>;
+  login: (
+    email: string,
+    password: string,
+    captchaToken: string
+  ) => Promise<void>;
+  signup: (
+    username: string,
+    email: string,
+    password: string,
+    role: string
+  ) => Promise<void>;
   logout: () => void;
   requestPasswordReset: (email: string) => Promise<void>;
   resetPassword: (token: string, newPassword: string) => Promise<void>;
   verifyTwoFactor: (userId: string, code: string) => Promise<void>;
-  updateUserInfo: (userId: string, username: string, email: string, password: string, profileImage: File) => Promise<void>;
+  updateUserInfo: (
+    userId: string,
+    username: string,
+    email: string,
+    password: string,
+    profileImage: File
+  ) => Promise<void>;
   sendOtp: (userId: string) => Promise<void>;
-  updateTwoFaStatus: (userId: string, status: boolean, code: string) => Promise<void>;
+  updateTwoFaStatus: (
+    userId: string,
+    status: boolean,
+    code: string
+  ) => Promise<void>;
   setUser: (user: User) => void;
 }
 
@@ -76,7 +95,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           withCredentials: true,
         });
 
-        if (!response.data.user || (!response.data.user.id && !response.data.user._id)) {
+        if (
+          !response.data.user ||
+          (!response.data.user.id && !response.data.user._id)
+        ) {
           console.warn("⚠️ No user data found in session.");
           setUser(null);
           return;
@@ -87,12 +109,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         localStorage.setItem("user", JSON.stringify(response.data.user));
 
         if (response.data.user.profileImage) {
-          const imageUrl = `http://localhost:5000${response.data.user.profileImage}?t=${new Date().getTime()}`;
+          const imageUrl = `http://localhost:5000${
+            response.data.user.profileImage
+          }?t=${new Date().getTime()}`;
           localStorage.setItem("profileImage", imageUrl);
         }
       } catch (error) {
         if (axios.isAxiosError(error)) {
-          console.warn("⚠️ No active session found:", error.response?.data || error.message);
+          console.warn(
+            "⚠️ No active session found:",
+            error.response?.data || error.message
+          );
         } else {
           console.warn("⚠️ No active session found:", error);
         }
@@ -103,9 +130,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     checkSession();
   }, []);
 
-  const login = async (email: string, password: string, captchaToken: string) => {
+  const login = async (
+    email: string,
+    password: string,
+    captchaToken: string
+  ) => {
     try {
-      console.log("📡 Sending login request:", { email, password, captchaToken });
+      console.log("📡 Sending login request:", {
+        email,
+        password,
+        captchaToken,
+      });
 
       const response = await axios.post(
         "http://localhost:5000/api/auth/login",
@@ -126,27 +161,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       // ✅ Store profile image separately for easy access
       if (response.data.user.profileImage) {
-        const imageUrl = `http://localhost:5000${response.data.user.profileImage}?t=${new Date().getTime()}`;
+        const imageUrl = `http://localhost:5000${
+          response.data.user.profileImage
+        }?t=${new Date().getTime()}`;
         localStorage.setItem("profileImage", imageUrl);
       }
 
       Cookies.set("user", JSON.stringify(response.data.user), { expires: 7 });
-
     } catch (error: any) {
       console.error("❌ Login Failed:", error);
       throw error;
     }
   };
 
-
-  const signup = async (username: string, email: string, password: string, role: string) => {
+  const signup = async (
+    username: string,
+    email: string,
+    password: string,
+    role: string
+  ) => {
     try {
-      const response = await axios.post("http://localhost:5000/api/auth/signup", {
-        username,
-        email,
-        password,
-        role,
-      });
+      const response = await axios.post(
+        "http://localhost:5000/api/auth/signup",
+        {
+          username,
+          email,
+          password,
+          role,
+        }
+      );
       console.log("✅ Signup Success:", response.data);
       window.location.href = `/verify-email?email=${email}`;
 
@@ -159,7 +202,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     try {
-      await axios.post("http://localhost:5000/api/auth/logout", {}, { withCredentials: true });
+      await axios.post(
+        "http://localhost:5000/api/auth/logout",
+        {},
+        { withCredentials: true }
+      );
 
       setUser(null);
       localStorage.removeItem("user");
@@ -198,14 +245,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const response = await axios.put(
         `http://localhost:5000/api/auth/update/${userId}`,
         formData,
-        { withCredentials: true, headers: { "Content-Type": "multipart/form-data" } }
+        {
+          withCredentials: true,
+          headers: { "Content-Type": "multipart/form-data" },
+        }
       );
 
       console.log("✅ User Info Updated:", response.data.user);
       setUser(response.data.user);
       localStorage.setItem("user", JSON.stringify(response.data.user));
       Cookies.set("user", JSON.stringify(response.data.user), { expires: 7 });
-
     } catch (error) {
       console.error("❌ Error updating user info:", error);
     }
@@ -225,21 +274,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         updateUserInfo,
         sendOtp,
         requestPasswordReset: async (email) => {
-          await axios.post("http://localhost:5000/api/auth/request-reset", { email });
+          await axios.post("http://localhost:5000/api/auth/request-reset", {
+            email,
+          });
           toast.success(" Password reset email sent!");
         },
         resetPassword: async (token, newPassword) => {
-          await axios.post("http://localhost:5000/api/auth/reset-password", { token, newPassword });
+          await axios.post("http://localhost:5000/api/auth/reset-password", {
+            token,
+            newPassword,
+          });
           toast.success(" Password successfully changed!");
         },
         verifyTwoFactor: async (userId, code) => {
-          const response = await axios.post(`http://localhost:5000/api/auth/verify-2fa/${userId}`, { code });
-          Cookies.set("user", JSON.stringify(response.data.user), { expires: 7 });
+          const response = await axios.post(
+            `http://localhost:5000/api/auth/verify-2fa/${userId}`,
+            { code }
+          );
+          Cookies.set("user", JSON.stringify(response.data.user), {
+            expires: 7,
+          });
           setUser(response.data.user);
         },
-        updateTwoFaStatus: async (userId, status, otp) => { 
-          await axios.post(`http://localhost:5000/api/auth/updatetwofa/${userId}`, { twofa: status, code: otp });
-          toast.success('2FA status updated successfully');
+        updateTwoFaStatus: async (userId, status, otp) => {
+          await axios.post(
+            `http://localhost:5000/api/auth/updatetwofa/${userId}`,
+            { twofa: status, code: otp }
+          );
+          toast.success("2FA status updated successfully");
         },
         setUser,
       }}
