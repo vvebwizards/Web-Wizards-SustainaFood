@@ -1,6 +1,7 @@
 import supertest from 'supertest';
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken'; // Added for token verification
 import { app } from '../server.js';
 import FoodItem from '../models/FoodItem.js';
 import User from '../models/User.js';
@@ -8,10 +9,10 @@ import User from '../models/User.js';
 const request = supertest(app);
 
 describe('FoodItem Controller Tests', () => {
-  let token; 
-  let donorId; 
+  let token; // Store JWT token
+  let donorId; // Store donor ID
 
-  
+  // Initial setup: Create a test user once
   beforeAll(async () => {
     await User.deleteMany({});
     await FoodItem.deleteMany({});
@@ -31,24 +32,32 @@ describe('FoodItem Controller Tests', () => {
     donorId = testUser._id;
   });
 
-
+  // Re-authenticate before each test to ensure a fresh token
   beforeEach(async () => {
     await FoodItem.deleteMany({});
 
-    
+    // Login to get a fresh token
     const loginResponse = await request
       .post('/api/auth/login')
-      .set('User-Agent', 'Mozilla/5.0 (Test)') 
+      .set('User-Agent', 'Mozilla/5.0 (Test)') // Match signup device fingerprint
       .send({
         email: 'donor@example.com',
         password: 'password123',
         captchaToken: 'dummy-captcha-token',
       });
 
-    console.log('Login Response:', loginResponse.status, loginResponse.body); 
+    console.log('Login Response:', loginResponse.body); // Debug login response
     token = loginResponse.body.user.token;
     if (!token) {
       throw new Error('Failed to get token from login');
+    }
+
+    // Verify token (optional debugging)
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log('Token Decoded:', decoded);
+    } catch (err) {
+      console.error('Token Verification Failed:', err.message);
     }
   });
 
@@ -59,16 +68,16 @@ describe('FoodItem Controller Tests', () => {
   test('should create a new food item', async () => {
     const response = await request
       .post('/api/foodItem/add')
-      .set('Cookie', `token=${token}`) 
+      .set('Cookie', `token=${token}`) // Send fresh token as cookie
       .send({
         title: 'Apple',
         category: 'Fruits',
         quantity: 10,
-        unit: 'kg', 
-        expirationDate: '2025-12-31', 
+        unit: 'kg',
+        expirationDate: '2025-12-31',
       });
 
-    console.log('Create Response:', response.status, response.body); 
+    console.log('Create Response:', response.status, response.body);
     expect(response.statusCode).toBe(201);
     expect(response.body.message).toBe('Food item added successfully');
     expect(response.body.foodItem).toHaveProperty('title', 'Apple');
@@ -90,7 +99,6 @@ describe('FoodItem Controller Tests', () => {
       .get('/api/foodItem/getAll')
       .set('Cookie', `token=${token}`);
 
-    console.log('Get All Response:', response.status, response.body);
     expect(response.statusCode).toBe(200);
     expect(response.body).toBeInstanceOf(Array);
     expect(response.body.length).toBeGreaterThan(0);
@@ -120,7 +128,6 @@ describe('FoodItem Controller Tests', () => {
         expirationDate: '2025-12-31',
       });
 
-    console.log('Update Response:', response.status, response.body); 
     expect(response.statusCode).toBe(200);
     expect(response.body.message).toBe('Food item updated successfully');
     expect(response.body.foodItem).toHaveProperty('quantity', 25);
@@ -142,8 +149,31 @@ describe('FoodItem Controller Tests', () => {
       .delete(`/api/foodItem/deleteOne/${foodItem.body.foodItem._id}`)
       .set('Cookie', `token=${token}`);
 
-    console.log('Delete Response:', response.status, response.body); 
     expect(response.statusCode).toBe(200);
     expect(response.body).toHaveProperty('message', 'Food item deleted successfully');
+  });
+
+  test('should mark a food item as Pending Donation', async () => {
+    const foodItem = await request
+      .post('/api/foodItem/add')
+      .set('Cookie', `token=${token}`)
+      .send({
+        title: 'Pear',
+        category: 'Fruits',
+        quantity: 20,
+        unit: 'kg',
+        expirationDate: '2025-12-31',
+      });
+
+    const response = await request
+      .put(`/api/foodItem/donate/${foodItem.body.foodItem._id}`)
+      .set('Cookie', `token=${token}`)
+      .send({
+        quantityToDonation: 20,
+      });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body.message).toBe('Item marked as Pending Donation');
+    expect(response.body.foodItem).toHaveProperty('status', 'Pending Donation');
   });
 });
