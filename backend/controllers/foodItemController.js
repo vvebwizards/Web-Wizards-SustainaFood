@@ -196,3 +196,44 @@ export async function toBedonatedFoodByDonor(req, res) {
     return res.status(500).json({ error: 'Internal server error while fetching donated food items' });
   }
 }
+
+export async function predict_supply_demand(req,res) {
+  try {
+    // Get data from the request body (sent by the frontend)
+    const { proposedQuantity, category, expirationDate, unit } = req.body;
+
+    // Validate inputs
+    if (proposedQuantity === undefined || typeof proposedQuantity !== 'number') {
+        return res.status(400).json({ error: 'Invalid or missing proposedQuantity' });
+    }
+    if (!category || typeof category !== 'string') {
+        return res.status(400).json({ error: 'Invalid or missing category' });
+    }
+    if (!expirationDate || typeof expirationDate !== 'string') {
+        return res.status(400).json({ error: 'Invalid or missing expirationDate' });
+    }
+    if (!unit || typeof unit !== 'string') {
+        return res.status(400).json({ error: 'Invalid or missing unit' });
+    }
+
+    // Predict Quantity Requested using the provided values
+    const { predictedQuantityZScore, predictedQuantityKg } = await predictQuantityRequested(
+        proposedQuantity,
+        unit,
+        category,
+        expirationDate
+    );
+
+    // Return the prediction in the expected format
+    res.status(200).json({
+        message: 'Prediction successful',
+        predictedQuantityRequested: {
+            zScore: predictedQuantityZScore,
+            kg: predictedQuantityKg
+        }
+    });
+} catch (error) {
+    console.error('Error predicting Quantity Requested:', error);
+    res.status(500).json({ error: 'Error predicting Quantity Requested' });
+}
+}

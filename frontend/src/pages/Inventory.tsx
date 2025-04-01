@@ -16,7 +16,7 @@ interface DonationItem {
 }
 
 const Inventory: React.FC = () => {
-  const { inventory, categories, addFoodItem, updateFoodItem, deleteFoodItem, donateFoodItem, fetchFoodAvailableForDonation, addCategory, deleteCategory, error } = useInventory();
+  const { inventory, categories, addFoodItem, updateFoodItem, deleteFoodItem, donateFoodItem, fetchFoodAvailableForDonation, addCategory, deleteCategory, predictQuantityRequested, error } = useInventory();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -29,12 +29,12 @@ const Inventory: React.FC = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingDonation, setPendingDonation] = useState<DonationItem | null>(null);
   const [donationQuantity, setDonationQuantity] = useState<number>(0);
-
+  const [predictedDemand, setPredictedDemand] = useState<number | null>(null); // New state for predicted demand
+  const [isPredicting, setIsPredicting] = useState(false); // New state to handle loading state during prediction
 
   useEffect(() => {
     const initializeDonationItems = async () => {
       try {
-    
         const storedDonationItems = localStorage.getItem('donationItems');
         let initialDonationItems: DonationItem[] = storedDonationItems ? JSON.parse(storedDonationItems) : [];
         const availableFoodItems = await fetchFoodAvailableForDonation();
@@ -51,7 +51,6 @@ const Inventory: React.FC = () => {
           };
         });
 
-       
         initialDonationItems.forEach(localItem => {
           if (!mergedDonationItems.some(d => d.item._id === localItem.item._id)) {
             mergedDonationItems.push(localItem);
@@ -68,7 +67,6 @@ const Inventory: React.FC = () => {
     initializeDonationItems();
   }, [fetchFoodAvailableForDonation]);
 
- 
   useEffect(() => {
     localStorage.setItem('donationItems', JSON.stringify(donationItems));
   }, [donationItems]);
@@ -100,6 +98,41 @@ const Inventory: React.FC = () => {
       setFormData(prev => ({ ...prev, [name]: parseInt(value) || 0 }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
+    }
+    // Reset predicted demand when inputs change
+    if (name === 'quantity' || name === 'category' || name === 'expirationDate') {
+      setPredictedDemand(null);
+    }
+  };
+
+  const handlePredictDemand = async () => {
+    if (formData.quantity <= 0) {
+      toast.error('Please enter a quantity greater than 0 to predict demand.');
+      return;
+    }
+    if (!formData.category) {
+      toast.error('Please select a category to predict demand.');
+      return;
+    }
+    if (!formData.expirationDate) {
+      toast.error('Please select an expiration date to predict demand.');
+      return;
+    }
+
+    setIsPredicting(true);
+    try {
+      const predictedQuantity = await predictQuantityRequested(
+        formData.quantity,
+        formData.category,
+        formData.expirationDate
+      );
+      setPredictedDemand(predictedQuantity);
+      toast.success('Demand predicted successfully!');
+    } catch (err) {
+      console.error('Error predicting demand:', err);
+      toast.error('Failed to predict demand. Please try again.');
+    } finally {
+      setIsPredicting(false);
     }
   };
 
@@ -137,6 +170,7 @@ const Inventory: React.FC = () => {
         type: 'free',
         quantityToDonation: 0,
       });
+      setPredictedDemand(null); // Reset predicted demand after submission
       setShowAddModal(false);
       setEditingItem(null);
     } catch (err) {
@@ -161,6 +195,7 @@ const Inventory: React.FC = () => {
       type: item.type || 'free',
       quantityToDonation: item.quantityToDonation || 0,
     });
+    setPredictedDemand(null); // Reset predicted demand when editing
     setShowAddModal(true);
   };
 
@@ -168,7 +203,6 @@ const Inventory: React.FC = () => {
     try {
       await deleteFoodItem(id);
       toast.success('Item deleted successfully');
-    
       setDonationItems(prev => prev.filter(d => d.item._id !== id));
     } catch (err) {
       console.error('Error deleting item:', err);
@@ -216,7 +250,7 @@ const Inventory: React.FC = () => {
     try {
       await donateFoodItem(pendingDonation.item._id, donationQuantity);
       setDonationItems(prev => {
-        const updated = prev.filter(d => d.item._id !== pendingDonation.item._id); // Remove if already present
+        const updated = prev.filter(d => d.item._id !== pendingDonation.item._id);
         return [...updated, { 
           item: pendingDonation.item, 
           quantity: pendingDonation.item.quantity - donationQuantity, 
@@ -242,7 +276,7 @@ const Inventory: React.FC = () => {
   const handleDonationInputChange = (index: number, value: number) => {
     setDonationItems(prev => {
       const updated = [...prev];
-      const maxQuantity = updated[index].item.quantity + updated[index].quantityToDonation; // Original total
+      const maxQuantity = updated[index].item.quantity + updated[index].quantityToDonation;
       updated[index].quantityToDonation = value > maxQuantity ? maxQuantity : value;
       updated[index].quantity = maxQuantity - updated[index].quantityToDonation;
       return updated;
@@ -348,6 +382,7 @@ const Inventory: React.FC = () => {
                 type: 'free',
                 quantityToDonation: 0,
               });
+              setPredictedDemand(null); // Reset predicted demand when opening modal
               setShowAddModal(true);
             }}
             className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
@@ -533,7 +568,7 @@ const Inventory: React.FC = () => {
                       type="number"
                       min="0"
                       max={donation.item.quantity + donation.item.quantityToDonation}
-                      value={donation.item.quantityToDonation}
+                      value={donation.quantityToDonation}
                       onChange={(e) => handleDonationInputChange(index, parseInt(e.target.value) || 0)}
                       className="w-full px-2 py-1 border border-gray-300 rounded-md text-sm"
                       placeholder="Quantity to Donate"
@@ -546,7 +581,6 @@ const Inventory: React.FC = () => {
         </div>
       </div>
 
-    
       {showConfirmModal && pendingDonation && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
@@ -585,7 +619,6 @@ const Inventory: React.FC = () => {
         </div>
       )}
 
-     
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -649,15 +682,30 @@ const Inventory: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Quantity*</label>
-                  <input
-                    type="number"
-                    name="quantity"
-                    value={formData.quantity}
-                    onChange={handleInputChange}
-                    required
-                    min="0"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                  />
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="number"
+                      name="quantity"
+                      value={formData.quantity}
+                      onChange={handleInputChange}
+                      required
+                      min="0"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={handlePredictDemand}
+                      disabled={isPredicting}
+                      className={`px-3 py-2 rounded-md text-white ${isPredicting ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'}`}
+                    >
+                      {isPredicting ? 'Predicting...' : 'Predict Demand'}
+                    </button>
+                  </div>
+                  {predictedDemand !== null && (
+                    <p className="mt-1 text-sm text-gray-600">
+                      Predicted Demand: {predictedDemand.toFixed(2)} {formData.unit}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Unit*</label>
@@ -723,7 +771,10 @@ const Inventory: React.FC = () => {
               <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
                 <button
                   type="button"
-                  onClick={() => setShowAddModal(false)}
+                  onClick={() => {
+                    setShowAddModal(false);
+                    setPredictedDemand(null); // Reset predicted demand when closing modal
+                  }}
                   className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
                 >
                   Cancel
@@ -740,7 +791,6 @@ const Inventory: React.FC = () => {
         </div>
       )}
 
-     
       {showCategoryModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">

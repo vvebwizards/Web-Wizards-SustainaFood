@@ -15,6 +15,7 @@ interface InventoryContextType {
   deleteCategory: (id: string) => Promise<void>;
   donateFoodItem: (id: string, quantityToDonation: number) => Promise<void>; 
   fetchFoodAvailableForDonation: () => Promise<FoodItem[]>;
+  predictQuantityRequested: (proposedQuantity: number, category: string, expirationDate: string) => Promise<number>;
   error: string | null;
 }
 
@@ -191,12 +192,6 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
-  return (
-    <InventoryContext.Provider value={{ inventory, categories, addFoodItem, addCategory, updateFoodItem, deleteFoodItem, deleteCategory, donateFoodItem,fetchFoodAvailableForDonation, error }}>
-      {children}
-    </InventoryContext.Provider>
-  );
-};
 
 const fetchFoodAvailableForDonation = async (): Promise<FoodItem[]> => {
   try {
@@ -217,6 +212,53 @@ const fetchFoodAvailableForDonation = async (): Promise<FoodItem[]> => {
     console.warn('Error:', err);
     throw err;
   }
+};
+
+const predictQuantityRequested = async (proposedQuantity: number, category: string, expirationDate: string): Promise<number> => {
+  try {
+    const response = await fetch(`${FOOD_ITEM_API_URL}/predict-quantity-requested`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        proposedQuantity,
+        category,
+        expirationDate,
+        unit: 'kg' // Hardcoded since the model expects kg
+      }),
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to predict quantity requested: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    return data.predictedQuantityRequested.kg; // Return the predicted quantity in kg
+  } catch (err) {
+    setError(err.message || 'Error predicting quantity requested');
+    console.warn('Error:', err);
+    throw err;
+  }
+};
+
+return (
+  <InventoryContext.Provider value={{ 
+    inventory, 
+    categories, 
+    addFoodItem, 
+    addCategory, 
+    updateFoodItem, 
+    deleteFoodItem, 
+    deleteCategory, 
+    donateFoodItem, 
+    fetchFoodAvailableForDonation, 
+    predictQuantityRequested, 
+    error 
+  }}>
+    {children}
+  </InventoryContext.Provider>
+);
 };
 
 export const useInventory = () => {
