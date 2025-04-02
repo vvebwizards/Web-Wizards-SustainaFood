@@ -15,7 +15,7 @@ interface InventoryContextType {
   deleteCategory: (id: string) => Promise<void>;
   donateFoodItem: (id: string, quantityToDonation: number) => Promise<void>; 
   fetchFoodAvailableForDonation: () => Promise<FoodItem[]>;
-  predictQuantityRequested: (proposedQuantity: number, category: string, expirationDate: string) => Promise<number>;
+  predictQuantityRequested: (foodItem: string, category: string) => Promise<number>;
   error: string | null;
 }
 
@@ -25,7 +25,6 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [inventory, setInventory] = useState<FoodItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState<string | null>(null);
-
   useEffect(() => {
     const fetchInventory = async () => {
       try {
@@ -214,16 +213,14 @@ const fetchFoodAvailableForDonation = async (): Promise<FoodItem[]> => {
   }
 };
 
-const predictQuantityRequested = async (proposedQuantity: number, category: string, expirationDate: string): Promise<number> => {
+const predictQuantityRequested = async (foodItem: string, category: string): Promise<number> => {
   try {
     const response = await fetch(`${FOOD_ITEM_API_URL}/predict-quantity-requested`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        proposedQuantity,
+        foodItem,
         category,
-        expirationDate,
-        unit: 'kg' // Hardcoded since the model expects kg
       }),
       credentials: 'include',
     });
@@ -234,13 +231,16 @@ const predictQuantityRequested = async (proposedQuantity: number, category: stri
     }
 
     const data = await response.json();
-    return data.predictedQuantityRequested.kg; // Return the predicted quantity in kg
+    return data.predictedQuantityRequested ; 
   } catch (err) {
     setError(err.message || 'Error predicting quantity requested');
     console.warn('Error:', err);
     throw err;
   }
 };
+
+
+
 
 return (
   <InventoryContext.Provider value={{ 
@@ -254,7 +254,8 @@ return (
     donateFoodItem, 
     fetchFoodAvailableForDonation, 
     predictQuantityRequested, 
-    error 
+    error
+
   }}>
     {children}
   </InventoryContext.Provider>

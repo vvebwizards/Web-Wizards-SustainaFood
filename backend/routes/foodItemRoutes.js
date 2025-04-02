@@ -1,5 +1,5 @@
 import express from "express";
-import { addFoodItem ,getAll,deleteOne,updateOne,getToDonationFood,donate,toBedonatedFoodByDonor,predict_supply_demand} from "../controllers/foodItemController.js";
+import { addFoodItem ,getAll,deleteOne,updateOne,getToDonationFood,donate,toBedonatedFoodByDonor,predictSupplyDemand} from "../controllers/foodItemController.js";
 
 const router = express.Router();
 
@@ -10,6 +10,6 @@ router.delete("/deleteOne/:id",deleteOne);
 router.get("/foodBank",getToDonationFood);
 router.put("/donate/:id",donate);
 router.get("/toBedonatedFoodByDonor",toBedonatedFoodByDonor);
-router.post('/predict-quantity-requested', predict_supply_demand);
+router.post('/predict-quantity-requested', predictSupplyDemand);
     
 export default router;

@@ -1,6 +1,6 @@
 import FoodItem from "../models/FoodItem.js";
 import { getAuthenticatedUser } from "../utils/helpers.js";
-
+import { predictQuantityRequested } from '../utils/predict.js'
 import upload from "../middleware/multerConfig.js"; // Adjust the import path as needed
 
 export async function addFoodItem(req, res) {
@@ -197,43 +197,113 @@ export async function toBedonatedFoodByDonor(req, res) {
   }
 }
 
-export async function predict_supply_demand(req,res) {
+// export async function predict_supply_demand(req,res) {
+//   try {
+//     // Get data from the request body (sent by the frontend)
+//     const { proposedQuantity, category, expirationDate, unit } = req.body;
+
+//     // Validate inputs
+//     if (proposedQuantity === undefined || typeof proposedQuantity !== 'number') {
+//         return res.status(400).json({ error: 'Invalid or missing proposedQuantity' });
+//     }
+//     if (!category || typeof category !== 'string') {
+//         return res.status(400).json({ error: 'Invalid or missing category' });
+//     }
+//     if (!expirationDate || typeof expirationDate !== 'string') {
+//         return res.status(400).json({ error: 'Invalid or missing expirationDate' });
+//     }
+//     if (!unit || typeof unit !== 'string') {
+//         return res.status(400).json({ error: 'Invalid or missing unit' });
+//     }
+
+//     // Predict Quantity Requested using the provided values
+//     const { predictedQuantityZScore, predictedQuantityKg } = await predictQuantityRequested(
+//         proposedQuantity,
+//         unit,
+//         category,
+//         expirationDate
+//     );
+
+//     // Return the prediction in the expected format
+//     res.status(200).json({
+//         message: 'Prediction successful',
+//         predictedQuantityRequested: {
+//             zScore: predictedQuantityZScore,
+//             kg: predictedQuantityKg
+//         }
+//     });
+// } catch (error) {
+//     console.error('Error predicting Quantity Requested:', error);
+//     res.status(500).json({ error: 'Error predicting Quantity Requested' });
+// }
+// }
+
+function estimateFoodWasteRate(category, quantity) {
+  // Base waste rates by category
+  const wasteRates = {
+      'Fruits': 0.3,    // Perishable
+      'Vegetables': 0.3,
+      'Dairy': 0.5,
+      'Meat': 0.5,
+      'Grains': 0.1,    // Less perishable
+      'Canned Goods': 0.1
+  };
+
+  // Get the base waste rate based on category, or default to 0.2 if unknown
+  let baseWasteRate = wasteRates[category] || 0.2;
+
+  // If quantity donated is large, increase the waste rate (e.g., over 500kg)
+  if (quantity > 500) {
+      baseWasteRate += 0.1;  // Increase waste rate for large donations
+  }
+
+  // Clamp the waste rate between 0 and 1
+  return Math.min(Math.max(baseWasteRate, 0), 1);
+}
+
+async function getMostRecentDonation(category, foodItem) {
+  const item = await FoodItem.aggregate([
+      { $match: { category, title: foodItem } },
+      { $sort: { updatedAt: -1 } },  
+      { $limit: 1 },  
+      { $project: { quantityToDonation: 1, _id: 0 } }  
+  ]);
+
+  return item.length > 0 ? item[0].quantityToDonation : null;
+}
+
+
+export async function predictSupplyDemand(req, res) {
   try {
-    // Get data from the request body (sent by the frontend)
-    const { proposedQuantity, category, expirationDate, unit } = req.body;
+    const { category, foodItem } = req.body;
 
-    // Validate inputs
-    if (proposedQuantity === undefined || typeof proposedQuantity !== 'number') {
-        return res.status(400).json({ error: 'Invalid or missing proposedQuantity' });
-    }
-    if (!category || typeof category !== 'string') {
-        return res.status(400).json({ error: 'Invalid or missing category' });
-    }
-    if (!expirationDate || typeof expirationDate !== 'string') {
-        return res.status(400).json({ error: 'Invalid or missing expirationDate' });
-    }
-    if (!unit || typeof unit !== 'string') {
-        return res.status(400).json({ error: 'Invalid or missing unit' });
+    if (!category || !foodItem ) {
+      return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Predict Quantity Requested using the provided values
-    const { predictedQuantityZScore, predictedQuantityKg } = await predictQuantityRequested(
-        proposedQuantity,
-        unit,
-        category,
-        expirationDate
+    
+    let recentDonationQuantity = await getMostRecentDonation(category, foodItem);
+
+    if (recentDonationQuantity === null) {
+      return res.status(400).json({ error: "No donation data available for this food item" });
+    }
+
+    
+    const foodWasteRate = estimateFoodWasteRate(category, recentDonationQuantity);
+
+    const { predictedQuantityKg } = await predictQuantityRequested(
+      recentDonationQuantity, foodWasteRate
     );
 
-    // Return the prediction in the expected format
+
     res.status(200).json({
-        message: 'Prediction successful',
-        predictedQuantityRequested: {
-            zScore: predictedQuantityZScore,
-            kg: predictedQuantityKg
-        }
+      message: "Prediction successful",
+      recentDonationQuantity,
+      predictedQuantityRequested: predictedQuantityKg,
+      foodWasteRate
     });
-} catch (error) {
-    console.error('Error predicting Quantity Requested:', error);
-    res.status(500).json({ error: 'Error predicting Quantity Requested' });
-}
+  } catch (error) {
+    console.error("Error predicting supply-demand:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 }

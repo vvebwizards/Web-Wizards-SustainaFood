@@ -11,12 +11,25 @@ interface Category {
 
 interface DonationItem {
   item: FoodItem;
-  quantity: number; 
-  quantityToDonation: number; 
+  quantity: number;
+  quantityToDonation: number;
 }
 
 const Inventory: React.FC = () => {
-  const { inventory, categories, addFoodItem, updateFoodItem, deleteFoodItem, donateFoodItem, fetchFoodAvailableForDonation, addCategory, deleteCategory, predictQuantityRequested, error } = useInventory();
+  const { 
+    inventory, 
+    categories, 
+    addFoodItem, 
+    updateFoodItem, 
+    deleteFoodItem, 
+    donateFoodItem, 
+    fetchFoodAvailableForDonation, 
+    predictQuantityRequested,
+    addCategory, 
+    deleteCategory, 
+    error 
+  } = useInventory();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -29,8 +42,9 @@ const Inventory: React.FC = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingDonation, setPendingDonation] = useState<DonationItem | null>(null);
   const [donationQuantity, setDonationQuantity] = useState<number>(0);
-  const [predictedDemand, setPredictedDemand] = useState<number | null>(null); // New state for predicted demand
-  const [isPredicting, setIsPredicting] = useState(false); // New state to handle loading state during prediction
+  const [showPredictionModal, setShowPredictionModal] = useState(false);
+  const [selectedPredictionItem, setSelectedPredictionItem] = useState<string>('');
+  const [predictionResult, setPredictionResult] = useState<number | null>(null);
 
   useEffect(() => {
     const initializeDonationItems = async () => {
@@ -42,12 +56,12 @@ const Inventory: React.FC = () => {
         const mergedDonationItems = availableFoodItems.map(foodItem => {
           const existing = initialDonationItems.find(d => d.item._id === foodItem._id);
           if (existing) {
-            return existing; 
+            return existing;
           }
           return {
             item: foodItem,
             quantity: foodItem.quantity,
-            quantityToDonation: 0 
+            quantityToDonation: 0
           };
         });
 
@@ -99,41 +113,6 @@ const Inventory: React.FC = () => {
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
-    // Reset predicted demand when inputs change
-    if (name === 'quantity' || name === 'category' || name === 'expirationDate') {
-      setPredictedDemand(null);
-    }
-  };
-
-  const handlePredictDemand = async () => {
-    if (formData.quantity <= 0) {
-      toast.error('Please enter a quantity greater than 0 to predict demand.');
-      return;
-    }
-    if (!formData.category) {
-      toast.error('Please select a category to predict demand.');
-      return;
-    }
-    if (!formData.expirationDate) {
-      toast.error('Please select an expiration date to predict demand.');
-      return;
-    }
-
-    setIsPredicting(true);
-    try {
-      const predictedQuantity = await predictQuantityRequested(
-        formData.quantity,
-        formData.category,
-        formData.expirationDate
-      );
-      setPredictedDemand(predictedQuantity);
-      toast.success('Demand predicted successfully!');
-    } catch (err) {
-      console.error('Error predicting demand:', err);
-      toast.error('Failed to predict demand. Please try again.');
-    } finally {
-      setIsPredicting(false);
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -170,7 +149,6 @@ const Inventory: React.FC = () => {
         type: 'free',
         quantityToDonation: 0,
       });
-      setPredictedDemand(null); // Reset predicted demand after submission
       setShowAddModal(false);
       setEditingItem(null);
     } catch (err) {
@@ -195,7 +173,6 @@ const Inventory: React.FC = () => {
       type: item.type || 'free',
       quantityToDonation: item.quantityToDonation || 0,
     });
-    setPredictedDemand(null); // Reset predicted demand when editing
     setShowAddModal(true);
   };
 
@@ -318,6 +295,25 @@ const Inventory: React.FC = () => {
     }
   };
 
+  const handlePrediction = async () => {
+    if (!selectedPredictionItem) {
+      toast.error('Please select an item for prediction');
+      return;
+    }
+    const item = inventory.find(i => i._id === selectedPredictionItem);
+    if (!item) return;
+
+    setPredictionResult(null);
+    try {
+      const response = await predictQuantityRequested(item.title, item.category);
+      console.log('Prediction response:', response); // Log the response for debugging
+      setPredictionResult(response);
+    } catch (err) {
+      console.error('Error fetching prediction:', err);
+      toast.error('Failed to predict quantity requested');
+    }
+  };
+
   const formatCategory = (category: string) => {
     return category.charAt(0).toUpperCase() + category.slice(1);
   };
@@ -382,20 +378,30 @@ const Inventory: React.FC = () => {
                 type: 'free',
                 quantityToDonation: 0,
               });
-              setPredictedDemand(null); // Reset predicted demand when opening modal
               setShowAddModal(true);
             }}
-            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+            className="flex items-center space-x-1 px-2 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700"
           >
-            <Plus size={18} />
+            <Plus size={16} />
             <span>Add Item</span>
           </button>
           <button
             onClick={() => setShowCategoryModal(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="flex items-center space-x-1 px-2 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
-            <Settings size={18} />
-            <span>Manage Categories</span>
+            <Settings size={16} />
+            <span>Categories</span>
+          </button>
+          <button
+            onClick={() => {
+              setSelectedPredictionItem('');
+              setPredictionResult(null);
+              setShowPredictionModal(true);
+            }}
+            className="flex items-center space-x-1 px-2 py-1 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+          >
+            <Settings size={16} />
+            <span>Predict</span>
           </button>
         </div>
       </div>
@@ -692,20 +698,7 @@ const Inventory: React.FC = () => {
                       min="0"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                     />
-                    <button
-                      type="button"
-                      onClick={handlePredictDemand}
-                      disabled={isPredicting}
-                      className={`px-3 py-2 rounded-md text-white ${isPredicting ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'}`}
-                    >
-                      {isPredicting ? 'Predicting...' : 'Predict Demand'}
-                    </button>
                   </div>
-                  {predictedDemand !== null && (
-                    <p className="mt-1 text-sm text-gray-600">
-                      Predicted Demand: {predictedDemand.toFixed(2)} {formData.unit}
-                    </p>
-                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Unit*</label>
@@ -770,16 +763,6 @@ const Inventory: React.FC = () => {
               </div>
               <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
                 <button
-                  type="button"
-                  onClick={() => {
-                    setShowAddModal(false);
-                    setPredictedDemand(null); // Reset predicted demand when closing modal
-                  }}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
                   type="submit"
                   className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
                 >
@@ -841,6 +824,66 @@ const Inventory: React.FC = () => {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPredictionModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Predict Quantity Requested</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Select Item</label>
+                <select
+                  value={selectedPredictionItem}
+                  onChange={(e) => setSelectedPredictionItem(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="">Select an item</option>
+                  {inventory.map((item) => (
+                    <option key={item._id} value={item._id}>
+                      {item.title} ({formatCategory(item.category)})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {selectedPredictionItem && (
+                <>
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Item:</p>
+                    <p className="text-gray-900">{inventory.find(i => i._id === selectedPredictionItem)?.title || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Category:</p>
+                    <p className="text-gray-900">{formatCategory(inventory.find(i => i._id === selectedPredictionItem)?.category || '')}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Prediction Response:</p>
+                    {predictionResult !== null ? (
+                      <p className="text-gray-900">{predictionResult} kg</p>
+                    ) : (
+                      <p className="text-gray-500">Click "Predict" to see the response</p>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => setShowPredictionModal(false)}
+                className="px-2 py-1 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handlePrediction}
+                disabled={!selectedPredictionItem}
+                className="px-2 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-purple-300"
+              >
+                Predict
+              </button>
             </div>
           </div>
         </div>
