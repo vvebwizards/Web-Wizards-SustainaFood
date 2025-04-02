@@ -95,6 +95,32 @@ export const sendPasswordResetEmail = async (email, resetToken) => {
     throw new Error("Failed to send reset email.");
   }
 };
+// Envoi d’email de vérification
+export const sendEmailVerification = async (user, verificationToken) => {
+  const verificationLink = `${process.env.FRONTEND_URL}/confirm-email?token=${verificationToken}`;
+  console.log("📧 Lien de vérification envoyé :", verificationLink);
 
+  const emailData = {
+    from: process.env.MAILER_EMAIL_ID,
+    to: user.email,
+    subject: "Verify Your Email",
+    html: `
+      <h2>Welcome, ${user.username}!</h2>
+      <p>Click the button below to verify your email and activate your account:</p>
+      <a href="${verificationLink}" style="display:inline-block; padding:10px 20px; background-color:green; color:white; text-decoration:none; border-radius:5px;">
+        ✅ Verify Email
+      </a>
+      <p>If you did not sign up, please ignore this email.</p>
+    `,
+  };
 
+  console.log("📡 Preparing to send email...");
+  console.log("📧 Email Data:", emailData);
 
+  try {
+    await sendEmail(emailData);
+    console.log("✅ Verification email sent successfully!");
+  } catch (error) {
+    console.error("❌ Failed to send verification email:", error);
+  }
+};

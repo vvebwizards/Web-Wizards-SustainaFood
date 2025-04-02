@@ -11,10 +11,11 @@ import userRoutes from "./routes/userRoutes.js";
 import { getMe } from "./controllers/authController.js";
 import setupSocket from "./socket/socket.js";
 import FoodItemRoutes from "./routes/foodItemRoutes.js";
+import settingsRoutes from "./routes/settingsRoutes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import CategoryRoutes from "./routes/CategoryRoutes.js"
-
+import {refreshUserCronJobs} from './utils/scheduler.js';
 // Import and initialize Passport for Google Auth
 import passport from "passport";
 import "./passport.js"; // This file contains your Passport Google strategy configuration
@@ -58,6 +59,8 @@ app.use(morgan("dev"));
 
 app.use(passport.initialize());
 
+refreshUserCronJobs();
+
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/auth/me", getMe);
@@ -65,6 +68,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/foodItem",FoodItemRoutes);
 app.use("/api/category",CategoryRoutes);
+app.use("/api/settings", settingsRoutes);
 app.get("/", (req, res) => {
   res.send("Backend connected to frontend");
 });

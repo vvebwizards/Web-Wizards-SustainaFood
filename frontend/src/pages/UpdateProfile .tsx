@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import axios from "axios";
 import { Camera } from "lucide-react";
 import { motion } from "framer-motion";
 import defaultProfileImage from "../assets/images/default_user_img.jpg";
+import Modal from "../components/Modal";
 
 const UpdateProfile = () => {
   const { userId } = useParams();
@@ -20,11 +22,15 @@ const UpdateProfile = () => {
   const [preview, setPreview] = useState<string>("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [isPasswordModalOpen, setPasswordModalOpen] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    oldPassword: "",
+    newPassword: "",
+    confirmNewPassword: "",
+  });
 
-  const defaultImage =
-    "";
+  const defaultImage = "";
 
- 
   useEffect(() => {
     if (user) {
       setFormData({
@@ -34,7 +40,6 @@ const UpdateProfile = () => {
       });
     }
   }, [user]);
-
 
   useEffect(() => {
     if (!profileImage) {
@@ -65,16 +70,49 @@ const UpdateProfile = () => {
     }
   };
 
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPasswordData((prev) => ({ ...prev, [name]: value }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSuccess("");
+
+    // Validate passwords
+    if (passwordData.newPassword || passwordData.confirmNewPassword) {
+      if (passwordData.newPassword !== passwordData.confirmNewPassword) {
+        setError("New password and confirm password do not match.");
+        return;
+      }
+
+      // try {
+      //   // Check if old password is correct before proceeding
+      //   const response = await axios.post(
+      //     "http://localhost:5000/api/auth/verify-password",
+      //     {
+      //       userId: user?.id,
+      //       oldPassword: passwordData.oldPassword,
+      //     }
+      //   );
+
+      //   if (!response.data.valid) {
+      //     setError("Old password is incorrect.");
+      //     return;
+      //   }
+      // } catch (err: any) {
+      //   setError("Error verifying old password.");
+      //   return;
+      // }
+    }
+
     try {
       await updateUserInfo(
         userId!,
         formData.username,
         formData.email,
-        formData.password,
+        passwordData.newPassword,
         profileImage!
       );
       setSuccess("Profile updated successfully!");
@@ -94,7 +132,9 @@ const UpdateProfile = () => {
       className="min-h-screen bg-gray-50 py-8"
     >
       <div className="max-w-4xl mx-auto bg-white shadow rounded-lg p-6">
-        <h1 className="text-3xl font-semibold text-gray-900 mb-6">Update Profile</h1>
+        <h1 className="text-3xl font-semibold text-gray-900 mb-6">
+          Update Profile
+        </h1>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Left Column: Profile Photo */}
           <div className="flex flex-col items-center">
@@ -123,12 +163,17 @@ const UpdateProfile = () => {
                 <Camera className="h-5 w-5" />
               </label>
             </div>
-            <p className="mt-4 text-lg font-medium text-gray-800">{user?.username}</p>
+            <p className="mt-4 text-lg font-medium text-gray-800">
+              {user?.username}
+            </p>
           </div>
-          
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="username"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Username
               </label>
               <input
@@ -142,7 +187,10 @@ const UpdateProfile = () => {
               />
             </div>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Email
               </label>
               <input
@@ -155,8 +203,11 @@ const UpdateProfile = () => {
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            {/* <div>
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Password
               </label>
               <input
@@ -168,7 +219,25 @@ const UpdateProfile = () => {
                 placeholder="Enter new password"
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               />
+            </div> */}
+            <div className="flex items-center justify-between">
+              <label className="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <button
+                type="button"
+                onClick={() => setPasswordModalOpen(true)}
+                className="text-blue-600 hover:underline"
+              >
+                Edit
+              </button>
             </div>
+            <input
+              type="password"
+              value="••••••••"
+              disabled
+              className="w-full px-3 py-2 border rounded-md bg-gray-100"
+            />
             {error && <p className="text-red-500 text-sm">{error}</p>}
             {success && <p className="text-green-500 text-sm">{success}</p>}
             <button
@@ -180,6 +249,41 @@ const UpdateProfile = () => {
           </form>
         </div>
       </div>
+      {isPasswordModalOpen && (
+        <Modal onClose={() => setPasswordModalOpen(false)}>
+          <h2 className="text-lg font-semibold">Change Password</h2>
+          <input
+            type="password"
+            name="oldPassword"
+            placeholder="Old Password"
+            value={passwordData.oldPassword}
+            onChange={handlePasswordChange}
+            className="w-full px-3 py-2 border rounded-md mt-2"
+          />
+          <input
+            type="password"
+            name="newPassword"
+            placeholder="New Password"
+            value={passwordData.newPassword}
+            onChange={handlePasswordChange}
+            className="w-full px-3 py-2 border rounded-md mt-2"
+          />
+          <input
+            type="password"
+            name="confirmNewPassword"
+            placeholder="Confirm New Password"
+            value={passwordData.confirmNewPassword}
+            onChange={handlePasswordChange}
+            className="w-full px-3 py-2 border rounded-md mt-2"
+          />
+          <button
+            onClick={() => setPasswordModalOpen(false)}
+            className="w-full py-2 mt-4 bg-blue-600 text-white rounded-md"
+          >
+            Update Password
+          </button>
+        </Modal>
+      )}
     </motion.div>
   );
 };
