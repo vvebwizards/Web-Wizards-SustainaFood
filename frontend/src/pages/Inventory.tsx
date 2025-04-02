@@ -393,16 +393,21 @@ const Inventory: React.FC = () => {
             <span>Categories</span>
           </button>
           <button
-            onClick={() => {
-              setSelectedPredictionItem('');
-              setPredictionResult(null);
-              setShowPredictionModal(true);
-            }}
-            className="flex items-center space-x-1 px-2 py-1 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-          >
-            <Settings size={16} />
-            <span>Predict</span>
-          </button>
+              onClick={() => {
+                setSelectedPredictionItem('');
+                setPredictionResult(null);
+                setShowPredictionModal(true);
+              }}
+              disabled={inventory.length === 0} // Disable if no items
+              className={`flex items-center space-x-1 px-2 py-1 ${
+                inventory.length === 0 
+                  ? "bg-gray-400 cursor-not-allowed" 
+                  : "bg-purple-600 hover:bg-purple-700"
+              } text-white rounded-lg`}
+            >
+              <Settings size={16} />
+              <span>Predict</span>
+            </button>
         </div>
       </div>
 
