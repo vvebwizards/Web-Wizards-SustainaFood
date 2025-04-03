@@ -1,12 +1,28 @@
 import FoodItem from "../models/FoodItem.js";
 import { getAuthenticatedUser } from "../utils/helpers.js";
-
 import upload from "../middleware/multerConfig.js"; // Adjust the import path as needed
+import { sendNotification } from "../socket/socket.js"
+import User from "../models/User.js";
+import axios from "axios";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+// Define __dirname for ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export async function addFoodItem(req, res) {
   upload(req, res, async (err) => {
     if (err) {
-      return res.status(400).json({ error: err });
+      console.error("❌ Multer Error:", err);
+      return res.status(400).json({ error: err.message });
+    }
+
+    console.log("🔹 Uploaded Files:", req.files); // ✅ Debugging
+
+    if (!req.files || !req.files.imageUrl) {
+      console.error("❌ No image uploaded");
+      return res.status(400).json({ error: "No image uploaded" });
     }
 
     try {
@@ -22,13 +38,62 @@ export async function addFoodItem(req, res) {
         status,
       } = req.body;
 
-
       const donor = await getAuthenticatedUser(req);
+      if (!donor) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
 
-    
-      const uploadedFile = req.files?.profileImage?.[0] || req.files?.imageUrl?.[0];
+      const uploadedFile = req.files.imageUrl[0];
+      const imagePath = path.join(__dirname, "..", "uploads", uploadedFile.filename);
 
-    
+      let freshnessStatus = "N/A"; // Default value for non-perishable food
+
+      // **Only use Roboflow if category is Fruits or Vegetables**
+      if (["Fruits", "Vegetables"].includes(category)) {
+        console.log("🖼 Sending image to Roboflow for freshness check...");
+
+        // **Convert Image to Base64**
+        const imageBase64 = fs.readFileSync(imagePath, { encoding: "base64" });
+
+        // **Send to Roboflow API**
+        const roboflowResponse = await axios.post(
+          "https://detect.roboflow.com/freshness-detection-rhrze/3",
+          imageBase64,
+          {
+            params: { api_key: "gvgPfyypMFK52lNz1UE2" },
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          }
+        );
+
+        console.log("✅ Roboflow Response:", roboflowResponse.data);
+
+        // **Extract Freshness Result**
+        const predictionClass = roboflowResponse.data?.predictions?.[0]?.class || "Unknown";
+
+        // ✅ Extract only "Fresh" or "Rotten"
+        freshnessStatus = predictionClass.toLowerCase().includes("rotten") ? "Rotten" : "Fresh";
+
+        // Block the add process if the item is rotten.
+        if (freshnessStatus === "Rotten") {
+          console.error("❌ Food item detected as rotten, cannot be donated.");
+            // Retrieve all admin users (assuming admins have a role property set to "admin")
+  const adminUsers = await User.find({ role: "admin" });
+  
+  // Loop through each admin and send a notification.
+  // IMPORTANT: Ensure you have an accessible `io` instance.
+  adminUsers.forEach(async (admin) => {
+    await sendNotification(
+      admin._id,
+      `User ${donor.username} tried to donate rotten food: "${title}"`,
+     
+    );
+  });
+
+          return res.status(400).json({ error: "Food item is rotten and can't be donated." });
+        }
+      }
+
+      // **Save in Database**
       const newFoodItem = new FoodItem({
         title,
         category,
@@ -38,24 +103,28 @@ export async function addFoodItem(req, res) {
         nutritionalInfo,
         storageRequirements,
         notes,
-        status: status || 'In Stock',
+        status: status || "In Stock",
         donorId: donor._id,
-        imageUrl: uploadedFile ? `/uploads/${uploadedFile.filename}` : null, 
+        imageUrl: `/uploads/${uploadedFile.filename}`,
+        freshness: freshnessStatus, // ✅ Only "Fresh" or "Rotten" for Fruits & Vegetables
       });
 
-
       const savedFoodItem = await newFoodItem.save();
+      console.log("✅ Food item added successfully:", savedFoodItem);
 
       res.status(201).json({
-        message: 'Food item added successfully',
+        message: "Food item added successfully",
         foodItem: savedFoodItem,
       });
     } catch (error) {
-      console.error('Error adding food item:', error);
-      res.status(500).json({ error: 'Error adding food item' });
+      console.error("❌ Error adding food item:", error);
+      res.status(500).json({ error: error.message || "Error adding food item" });
     }
   });
 }
+
+
+
 
 export async function getAll (req,res){
     try {

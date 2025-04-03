@@ -39,7 +39,7 @@ const roleConfigs = {
       { to: "/dashboard/reports", icon: LineChart, label: "Analytics" },
       { to: "/dashboard/logs", icon: ScrollText, label: "System Logs" },
       { to: "/dashboard/database", icon: Database, label: "Database" },
-      { to: "/dashboard/alerts", icon: AlertTriangle, label: "System Alerts" },
+      { to: "/dashboard/notifications", icon: AlertTriangle, label: "System Alerts" },
       { to: "/dashboard/settings", icon: Settings, label: "System Settings" },
     ],
   },
