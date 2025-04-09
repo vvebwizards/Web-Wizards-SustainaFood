@@ -86,25 +86,11 @@ const Profile = () => {
           <p className="text-2xl font-semibold text-green-600">48</p>
         </div>
 
-        <div className="p-6 bg-green-50 rounded-lg shadow hover:shadow-lg transform hover:-translate-y-1 transition">
-          <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mb-4">
-            <Users className="h-6 w-6 text-green-600" />
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">People Helped</h3>
-          <p className="text-2xl font-semibold text-green-600">1,200+</p>
-        </div>
+     
       </div>
 
    
-      <div className="bg-white rounded-lg border p-6 shadow-sm">
-        <h3 className="text-xl font-medium text-gray-900 mb-4">About Me</h3>
-        <p className="text-gray-600 leading-relaxed">
-          Passionate about reducing food waste and helping our community.
-          Regular contributor to local food banks and community kitchens.
-          Committed to making a difference through food rescue and redistribution efforts.
-        </p>
-      </div>
-
+      
  
       <div className="bg-white rounded-lg border p-6 shadow-sm">
         <h3 className="text-xl font-medium text-gray-900 mb-4">Recent Activity</h3>
