@@ -40,8 +40,7 @@ interface AuthContextType {
   updateUserInfo: (
     userId: string,
     username: string,
-    email: string,
-    password: string,
+   
     profileImage: File
   ) => Promise<void>;
   sendOtp: (userId: string) => Promise<void>;
@@ -51,6 +50,7 @@ interface AuthContextType {
     code: string
   ) => Promise<void>;
   setUser: (user: User) => void;
+  updatePassword: (userId: string, currentPassword: string, newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -221,11 +221,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const updatePassword = async (userId: string, currentPassword: string, newPassword: string) => {
+    try {
+      console.log("📡 Sending update password request for user", userId);
+      const response = await axios.put(
+        `http://localhost:5000/api/users/update-password/${userId}`,
+        { currentPassword, newPassword },
+        { withCredentials: true }
+      );
+      toast.success("Password updated successfully!");
+      console.log("✅ Password update successful:", response.data);
+    } catch (error) {
+      console.error("❌ Error updating password:", error);
+      toast.error("Failed to update password. Please try again.");
+    }
+  };
+
   const updateUserInfo = async (
     userId: string | undefined,
     username: string,
-    email: string,
-    password: string,
     profileImage: File | null
   ) => {
     if (!userId) {
@@ -236,8 +250,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const formData = new FormData();
       formData.append("username", username);
-      formData.append("email", email);
-      if (password) formData.append("password", password);
       if (profileImage) formData.append("profileImage", profileImage);
 
       console.log(`📡 Sending update request for user ${userId}`);
@@ -273,6 +285,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         logout,
         updateUserInfo,
         sendOtp,
+        updatePassword,
         requestPasswordReset: async (email) => {
           await axios.post("http://localhost:5000/api/auth/request-reset", {
             email,
@@ -296,6 +309,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           });
           setUser(response.data.user);
         },
+        
         updateTwoFaStatus: async (userId, status, otp) => {
           await axios.post(
             `http://localhost:5000/api/auth/updatetwofa/${userId}`,

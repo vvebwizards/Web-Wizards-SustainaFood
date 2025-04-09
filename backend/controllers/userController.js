@@ -64,27 +64,45 @@ export async function deleteUser(req, res) {
 
 
 export const updatePassword = async (req, res) => {
-  const { userId } = req.params; 
+  const { userId } = req.params;
   const { currentPassword, newPassword } = req.body;
 
   try {
-    const user = getAuthenticatedUserwithPassword(req, true); 
+  
+    const user = await getAuthenticatedUserwithPassword(req, true);
+    
+    console.log("Fetched user:", user); 
+    
     if (!user || user.isDeleted) {
       return res.status(404).json({ message: "User not found." });
     }
+
+    console.log("User password:", user.password); 
+
     if (!user.password) {
       return res.status(400).json({ message: "Password update not available for Google accounts." });
     }
+
+ 
+    if (currentPassword === newPassword) {
+      return res.status(400).json({ message: "New password must be different from current password." });
+    }
+
+   
     const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: "Current password is incorrect." });
     }
+
+   
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(newPassword, salt);
     await user.save();
+
     res.status(200).json({ message: "Password updated successfully." });
   } catch (err) {
     console.error("Password update error:", err);
     res.status(500).json({ message: "Internal server error." });
   }
 };
+

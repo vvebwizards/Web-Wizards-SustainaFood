@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import axios from "axios";
-import { Camera } from "lucide-react";
+import { Camera, X } from "lucide-react"; // Added X icon
 import { motion } from "framer-motion";
 import defaultProfileImage from "../assets/images/default_user_img.jpg";
 import Modal from "../components/Modal";
@@ -10,18 +10,16 @@ import Modal from "../components/Modal";
 const UpdateProfile = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
-  const { user, updateUserInfo } = useAuth();
+  const { user, updateUserInfo, updatePassword } = useAuth();
 
-  // Initialize form data with empty strings so inputs are controlled.
   const [formData, setFormData] = useState({
     username: "",
-    email: "",
-    password: "",
   });
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string>("");
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [profileSuccess, setProfileSuccess] = useState(""); // Separate success for profile
+  const [passwordSuccess, setPasswordSuccess] = useState(""); // Separate success for password
   const [isPasswordModalOpen, setPasswordModalOpen] = useState(false);
   const [passwordData, setPasswordData] = useState({
     oldPassword: "",
@@ -35,8 +33,6 @@ const UpdateProfile = () => {
     if (user) {
       setFormData({
         username: user.username || "",
-        email: user.email || "",
-        password: "",
       });
     }
   }, [user]);
@@ -78,49 +74,47 @@ const UpdateProfile = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setSuccess("");
+    setProfileSuccess("");
 
-    // Validate passwords
-    if (passwordData.newPassword || passwordData.confirmNewPassword) {
-      if (passwordData.newPassword !== passwordData.confirmNewPassword) {
-        setError("New password and confirm password do not match.");
-        return;
-      }
+    try {
+      await updateUserInfo(userId!, formData.username, profileImage!);
+      setProfileSuccess("Profile updated successfully!");
+    } catch (err: any) {
+      setError(err.message || "An error occurred. Please try again.");
+    }
+  };
 
-      // try {
-      //   // Check if old password is correct before proceeding
-      //   const response = await axios.post(
-      //     "http://localhost:5000/api/auth/verify-password",
-      //     {
-      //       userId: user?.id,
-      //       oldPassword: passwordData.oldPassword,
-      //     }
-      //   );
+  const handlePasswordSubmit = async () => {
+    setError("");
+    setPasswordSuccess("");
 
-      //   if (!response.data.valid) {
-      //     setError("Old password is incorrect.");
-      //     return;
-      //   }
-      // } catch (err: any) {
-      //   setError("Error verifying old password.");
-      //   return;
-      // }
+    // Check for empty inputs
+    if (!passwordData.oldPassword || !passwordData.newPassword || !passwordData.confirmNewPassword) {
+      setError("All fields are required.");
+      return;
+    }
+
+    // Check if new password matches confirm password
+    if (passwordData.newPassword !== passwordData.confirmNewPassword) {
+      setError("New password and confirmation do not match.");
+      return;
+    }
+
+    // Check if current password matches new password
+    if (passwordData.oldPassword === passwordData.newPassword) {
+      setError("New password must be different from current password.");
+      return;
     }
 
     try {
-      await updateUserInfo(
-        userId!,
-        formData.username,
-        formData.email,
-        passwordData.newPassword,
-        profileImage!
-      );
-      setSuccess("Profile updated successfully!");
+      await updatePassword(userId!, passwordData.oldPassword, passwordData.newPassword);
+      setPasswordSuccess("Password updated successfully!");
       setTimeout(() => {
-        navigate("/dashboard/profile");
-      }, 2000);
+        setPasswordModalOpen(false);
+        setPasswordData({ oldPassword: "", newPassword: "", confirmNewPassword: "" });
+      }, 2000); // Close modal after 2 seconds
     } catch (err: any) {
-      setError(err.message || "An error occurred. Please try again.");
+      setError(err.response?.data?.message || "Failed to update password.");
     }
   };
 
@@ -132,9 +126,7 @@ const UpdateProfile = () => {
       className="min-h-screen bg-gray-50 py-8"
     >
       <div className="max-w-4xl mx-auto bg-white shadow rounded-lg p-6">
-        <h1 className="text-3xl font-semibold text-gray-900 mb-6">
-          Update Profile
-        </h1>
+        <h1 className="text-3xl font-semibold text-gray-900 mb-6">Update Profile</h1>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Left Column: Profile Photo */}
           <div className="flex flex-col items-center">
@@ -163,102 +155,97 @@ const UpdateProfile = () => {
                 <Camera className="h-5 w-5" />
               </label>
             </div>
-            <p className="mt-4 text-lg font-medium text-gray-800">
-              {user?.username}
-            </p>
+            <p className="mt-4 text-lg font-medium text-gray-800">{user?.username}</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Right Column: User Info and Password */}
+          <div className="space-y-6">
+            {/* User Info Update Section */}
             <div>
-              <label
-                htmlFor="username"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Username
-              </label>
-              <input
-                type="text"
-                name="username"
-                id="username"
-                value={formData.username}
-                onChange={handleChange}
-                placeholder="Enter new username"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-              />
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                🧑‍💼 User Info Update
+              </h2>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label
+                    htmlFor="username"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Username
+                  </label>
+                  <input
+                    type="text"
+                    name="username"
+                    id="username"
+                    value={formData.username}
+                    onChange={handleChange}
+                    placeholder="Enter new username"
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full py-3 px-4 rounded-md bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition"
+                >
+                  Update Profile
+                </button>
+                {profileSuccess && (
+                  <p className="text-green-500 text-sm mt-2">{profileSuccess}</p>
+                )}
+                {error && !isPasswordModalOpen && (
+                  <p className="text-red-500 text-sm mt-2">{error}</p>
+                )}
+              </form>
             </div>
+
+            {/* Update Password Section */}
             <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Email
-              </label>
-              <input
-                type="email"
-                name="email"
-                id="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="Enter new email"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            {/* <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Password
-              </label>
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                🔒 Update Password
+              </h2>
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-medium text-gray-700">
+                  Password
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setPasswordModalOpen(true)}
+                  className="text-blue-600 hover:underline"
+                >
+                  Edit
+                </button>
+              </div>
               <input
                 type="password"
-                name="password"
-                id="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Enter new password"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                value="••••••••"
+                disabled
+                className="w-full px-3 py-2 border rounded-md bg-gray-100 mt-1"
               />
-            </div> */}
-            <div className="flex items-center justify-between">
-              <label className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <button
-                type="button"
-                onClick={() => setPasswordModalOpen(true)}
-                className="text-blue-600 hover:underline"
-              >
-                Edit
-              </button>
             </div>
-            <input
-              type="password"
-              value="••••••••"
-              disabled
-              className="w-full px-3 py-2 border rounded-md bg-gray-100"
-            />
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-            {success && <p className="text-green-500 text-sm">{success}</p>}
-            <button
-              type="submit"
-              className="w-full py-3 px-4 rounded-md bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition"
-            >
-              Update Profile
-            </button>
-          </form>
+          </div>
         </div>
       </div>
+
+      {/* Password Update Modal */}
       {isPasswordModalOpen && (
         <Modal onClose={() => setPasswordModalOpen(false)}>
-          <h2 className="text-lg font-semibold">Change Password</h2>
+          <div className="relative">
+            <h2 className="text-lg font-semibold text-gray-800">🔒 Change Password</h2>
+            <button
+              onClick={() => setPasswordModalOpen(false)}
+              className="absolute top-0 right-0 text-gray-500 hover:text-gray-700"
+              title="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
           <input
             type="password"
             name="oldPassword"
-            placeholder="Old Password"
+            placeholder="Current Password"
             value={passwordData.oldPassword}
             onChange={handlePasswordChange}
-            className="w-full px-3 py-2 border rounded-md mt-2"
+            className="w-full px-3 py-2 border rounded-md mt-4"
           />
           <input
             type="password"
@@ -276,9 +263,15 @@ const UpdateProfile = () => {
             onChange={handlePasswordChange}
             className="w-full px-3 py-2 border rounded-md mt-2"
           />
+          {error && isPasswordModalOpen && (
+            <p className="text-red-500 text-sm mt-2">{error}</p>
+          )}
+          {passwordSuccess && (
+            <p className="text-green-500 text-sm mt-2">{passwordSuccess}</p>
+          )}
           <button
-            onClick={() => setPasswordModalOpen(false)}
-            className="w-full py-2 mt-4 bg-blue-600 text-white rounded-md"
+            onClick={handlePasswordSubmit}
+            className="w-full py-2 mt-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
           >
             Update Password
           </button>

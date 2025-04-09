@@ -276,7 +276,7 @@ export async function updateUserInfo(req, res) {
       return res.status(404).json({ message: "User not found." });
     }
 
-    // Mettre à jour le nom d'utilisateur
+   
     if (req.body.username) {
       const existingUsername = await User.findOne({
         username: req.body.username,
@@ -287,29 +287,6 @@ export async function updateUserInfo(req, res) {
         return res.status(400).json({ message: "Username is already taken." });
       }
       user.username = req.body.username;
-    }
-
-    // Mettre à jour l'email
-    if (req.body.email) {
-      const existingEmail = await User.findOne({
-        email: req.body.email,
-        _id: { $ne: userId }
-      });
-
-      if (existingEmail) {
-        return res.status(400).json({ message: "Email is already in use." });
-      }
-      user.email = req.body.email;
-    }
-
-    // Mettre à jour le mot de passe
-    if (req.body.password) {
-      if (req.body.password.length < 6) {
-        return res.status(400).json({ message: "Password must be at least 6 characters long." });
-      }
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(req.body.password, salt);
-      user.password = hashedPassword;
     }
 
     // Mettre à jour l'image de profil (profileImage)

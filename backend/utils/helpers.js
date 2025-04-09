@@ -47,18 +47,12 @@ export async function getAuthenticatedUser(req) {
 
   return user;
 }
-export async function getAuthenticatedUserwithPassword(req, includePassword = false) {
+export async function getAuthenticatedUserwithPassword(req) {
   const token = req.cookies.token;
   if (!token) throw new Error("Not authenticated");
 
   const decoded = jwt.verify(token, process.env.JWT_SECRET);
-  
-  const query = User.findById(decoded.id);
-  if (!includePassword) {
-    query.select("-password");
-  }
-
-  const user = await query;
+  const user = await User.findById(decoded.id);
   if (!user) throw new Error("User not found");
 
   return user;
