@@ -3,6 +3,7 @@ import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import { deviceLocationLoginAlert } from '../emailTemplates/deviceLocationLoginAlert.js';
 dotenv.config();
 
 const {
@@ -46,16 +47,55 @@ export async function getAuthenticatedUser(req) {
 
   return user;
 }
+export async function getAuthenticatedUserwithPassword(req, includePassword = false) {
+  const token = req.cookies.token;
+  if (!token) throw new Error("Not authenticated");
+
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  
+  const query = User.findById(decoded.id);
+  if (!includePassword) {
+    query.select("-password");
+  }
+
+  const user = await query;
+  if (!user) throw new Error("User not found");
+
+  return user;
+}
+
+export const sendNewDeviceLoginAlert = async (userId, deviceInfo) => {
+  try {
+    const user = await User.findById(userId)
+    if (!user) {
+      console.error("❌ User not found in database, email not sent.");
+      return;
+    }
+    console.log(`📧 Preparing device alert email for ${user.email} (${user.username})`);
+    const { device, browser, os } = deviceInfo;
+    const htmlContent = deviceLocationLoginAlert(user.username, device, browser, os);
+    const mailOptions = {
+      from: process.env.MAILER_EMAIL_ID,
+      to: user.email,
+      subject: "New Device Login Alert",
+      html: htmlContent,
+    };
+    await sendEmail(mailOptions);
+    console.log("✅ Device login email sent to", user.email);
+  } catch (error) {
+    console.error("❌ Failed to send device login alert email:", error);
+  }
+};
 
 export const sendEmail = async (mailOptions) => {
   try {
     console.log("📨 Preparing to send email with options:", mailOptions);
 
     const transporter = nodemailer.createTransport({
-      service: "gmail", // Ensure this matches your provider
+      service: "gmail", 
       auth: {
-        user: process.env.MAILER_EMAIL_ID, // Check if correctly set in .env
-        pass: process.env.MAILER_PASSWORD, // Check if correctly set in .env
+        user: process.env.MAILER_EMAIL_ID,
+        pass: process.env.MAILER_PASSWORD, 
       },
     });
 
@@ -67,8 +107,6 @@ export const sendEmail = async (mailOptions) => {
   }
 };
 
-
-//reset
 export const sendPasswordResetEmail = async (email, resetToken) => {
   try {
     const resetLink = `${API_ENDPOINT}/reset-password?token=${resetToken}`;
@@ -95,7 +133,7 @@ export const sendPasswordResetEmail = async (email, resetToken) => {
     throw new Error("Failed to send reset email.");
   }
 };
-// Envoi d’email de vérification
+
 export const sendEmailVerification = async (user, verificationToken) => {
   const verificationLink = `${process.env.FRONTEND_URL}/confirm-email?token=${verificationToken}`;
   console.log("📧 Lien de vérification envoyé :", verificationLink);

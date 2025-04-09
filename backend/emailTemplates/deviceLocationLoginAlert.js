@@ -9,7 +9,7 @@ const deviceLocationLoginAlert = (
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Login Alert</title>
+      <title>Login Alert from your SustainaFood account</title>
       <style>
         body {
           font-family: Arial, sans-serif;
@@ -47,12 +47,15 @@ const deviceLocationLoginAlert = (
         <strong>Operating System:</strong> ${os}</p>
         <p>And from a new location:</p>
         <p>If this was you, no action is required. If it wasn't you, please change your password immediately.</p>
+        
         <p>Best regards.</p>
+        <p>SustainaFood Team .</p>
       </div>
     </body>
     </html>
   `;
 
-export default deviceLocationLoginAlert;
+  export { deviceLocationLoginAlert };
+
 
   

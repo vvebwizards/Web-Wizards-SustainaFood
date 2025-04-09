@@ -9,6 +9,9 @@ import { sendNotification } from "../socket/socket.js"
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { sendEmailVerification } from "../utils/helpers.js";
+import {UAParser} from'ua-parser-js';
+import { deviceLocationLoginAlert } from "../emailTemplates/deviceLocationLoginAlert.js";
+
 
 dotenv.config();
 export async function signup(req, res) {
@@ -180,10 +183,39 @@ export async function login(req, res) {
     console.log("✅ Login successful for:", email);
     res.status(200).json({ message: "Login successful", user: userData });
 
+    const userAgent = req.headers['user-agent']; 
+    const deviceFingerprint = crypto.createHash('sha256').update(userAgent).digest('hex'); 
+
+    const parser = new UAParser(userAgent);
+    const deviceInfo = parser.getResult();
+    const deviceDetails = {
+        browser: deviceInfo.browser.name,
+        os: deviceInfo.os.name,
+        device: deviceInfo.device.type || 'Desktop', 
+    };
+    
+    const isRegisteredDevice = user.registeredDevices.includes(deviceFingerprint);
+
     setTimeout(async () => {
       console.log("🚨 New device detected! Sending notification...");
 
       try {
+          const emailTemplate = deviceLocationLoginAlert(
+          user.username,
+          deviceDetails.device, 
+          deviceDetails.browser,
+          deviceDetails.os,
+        );
+  
+        const mailOptions = {
+          from: process.env.MAILER_EMAIL_ID,
+          to: user.email, 
+          subject: 'Login Alert',
+          html: emailTemplate,
+        };
+        
+       await sendEmail(mailOptions);
+
         await sendNotification(
           user._id,
           `New Login Alert: Your account was accessed from a new device.`,

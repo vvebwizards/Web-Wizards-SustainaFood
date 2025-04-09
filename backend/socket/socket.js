@@ -46,7 +46,6 @@ export async function sendNotification(userId, message, io) {
 
     console.log(`🔹 Saving notification to DB for user ${userId}...`);
 
-    // ✅ Save notification in MongoDB
     const notification = new Notification({ userId, message });
 
     await notification
@@ -54,7 +53,7 @@ export async function sendNotification(userId, message, io) {
       .then(() => console.log("✅ Notification successfully saved in DB!"))
       .catch((err) => console.error("❌ DB Save Error:", err));
 
-    // ✅ Get the socket ID dynamically
+
     const socketId = onlineUsers.get(userId);
 
     if (socketId) {
