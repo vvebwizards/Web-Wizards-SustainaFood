@@ -107,58 +107,10 @@ const Profile = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
      
-        <div className="bg-white rounded-lg border p-6 shadow-sm">
-          <h3 className="text-xl font-medium text-gray-900 mb-4">Additional Information</h3>
-          <div className="space-y-3">
-            <p className="text-gray-600">
-              <span className="font-medium">Location:</span>{" "}
-              {user?.location || "Not provided"}
-            </p>
-            <p className="text-gray-600">
-              <span className="font-medium">Phone:</span>{" "}
-              {user?.phone || "Not provided"}
-            </p>
-            <p className="text-gray-600">
-              <span className="font-medium">Member since:</span>{" "}
-              {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "Not available"}
-            </p>
-            <p className="text-gray-600">
-              <span className="font-medium">Address:</span>{" "}
-              {user?.address || "Not provided"}
-            </p>
-          </div>
-        </div>
+       
 
      
-        <div className="bg-white rounded-lg border p-6 shadow-sm">
-          <h3 className="text-xl font-medium text-gray-900 mb-4">Social Media</h3>
-          <div className="flex items-center space-x-4">
-            <a
-              href={user?.twitter || "#"}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-500 hover:text-blue-700"
-            >
-              <Twitter className="h-6 w-6" />
-            </a>
-            <a
-              href={user?.instagram || "#"}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-pink-500 hover:text-pink-700"
-            >
-              <Instagram className="h-6 w-6" />
-            </a>
-            <a
-              href={user?.facebook || "#"}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-800 hover:text-blue-900"
-            >
-              <Facebook className="h-6 w-6" />
-            </a>
-          </div>
-        </div>
+       
       </div>
     </div>
   );
