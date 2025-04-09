@@ -27,7 +27,7 @@ const UpdateProfile = () => {
     confirmNewPassword: "",
   });
 
-  const defaultImage = "";
+  const defaultImage = defaultProfileImage;
 
   useEffect(() => {
     if (user) {

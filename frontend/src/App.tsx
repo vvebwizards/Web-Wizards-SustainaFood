@@ -57,7 +57,7 @@ function App() {
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/confirm-email" element={<ConfirmEmail />} />
 
-        {/* Wrap public routes with PublicRoute */}
+ 
         <Route
           path="/signup"
           element={

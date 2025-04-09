@@ -123,36 +123,28 @@ const Layout = () => {
   const { notifications, fetchNotifications, markAsRead } = useNotifications();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [profileImage, setProfileImage] = useState("");
+  const [profileImage, setProfileImage] = useState(defaultProfileImage); // Set default here
 
- 
   const userRole = user?.role && roleConfigs[user.role] ? user.role : "donor";
   const roleConfig = roleConfigs[userRole];
-
-
   const displayRoleName = roleNames[userRole] || "Food Donor";
 
-
   useEffect(() => {
-    if (user && user.profileImage) {
+    if (user?.profileImage) {
       console.log("User profileImage from context:", user.profileImage);
- 
       const isAbsolute = user.profileImage.startsWith("http");
       const imageUrl = isAbsolute
         ? user.profileImage
         : `http://localhost:5000${user.profileImage}`;
-    
       const finalUrl = `${imageUrl}?t=${Date.now()}`;
       console.log("Final profile image URL:", finalUrl);
       setProfileImage(finalUrl);
     } else {
-      console.log("No profile image found, using placeholder");
-      setProfileImage(defaultProfileImage);
+      console.log("No profile image found, using default");
+      setProfileImage(defaultProfileImage); // Explicitly set default
     }
   }, [user]);
-  
 
- 
   useEffect(() => {
     fetchNotifications();
   }, []);
@@ -165,15 +157,12 @@ const Layout = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-   
       <header className="fixed top-0 left-0 w-full bg-white shadow-sm px-6 py-4 flex justify-between items-center z-50">
-     
         <div className="flex items-center space-x-3">
           <button className="p-3" onClick={() => setSidebarOpen(!sidebarOpen)}>
             <Menu className="h-6 w-6" />
           </button>
           <div className="flex items-center space-x-2">
-         
             <roleConfig.theme.icon
               className={`h-6 w-6 ${roleConfig.theme.colors.header}`}
             />
@@ -183,9 +172,7 @@ const Layout = () => {
           </div>
         </div>
 
-
         <div className="flex items-center space-x-6">
-      
           <div className="relative">
             <button
               onClick={() => setIsNotificationOpen(!isNotificationOpen)}
@@ -230,6 +217,10 @@ const Layout = () => {
             src={profileImage}
             alt="Profile"
             className="h-8 w-8 rounded-full border border-gray-300"
+            onError={(e) => {
+              console.log("Image load failed, reverting to default");
+              e.currentTarget.src = defaultProfileImage; // Fallback to default if URL fails
+            }}
           />
           <button
             onClick={handleLogout}
@@ -240,14 +231,12 @@ const Layout = () => {
         </div>
       </header>
 
-   
       <div className="flex mt-16">
         <nav
           className={`w-64 bg-white shadow-lg p-5 flex flex-col transition-all duration-300 ${
             sidebarOpen ? "block" : "hidden"
           }`}
         >
-         
           <ul className="w-full">
             {roleConfig.navigation.map((item) => (
               <li key={item.to}>

@@ -7,27 +7,26 @@ import defaultProfileImage from "../assets/images/default_user_img.jpg";
 const Profile = () => {
   const { user } = useAuth();
   
-  // Default profile image
+
   const defaultImage = defaultProfileImage ;
 
-  // Function to get the correct image URL
+
   const getImageUrl = (profileImage: string | undefined) => {
     if (!profileImage) return defaultImage;
     if (profileImage.startsWith("http")) return profileImage;
-    return `http://localhost:5000${profileImage}?t=${new Date().getTime()}`; // Prevent caching issues
+    return `http://localhost:5000${profileImage}?t=${new Date().getTime()}`; 
   };
 
-  // Profile image state
   const [profileImageUrl, setProfileImageUrl] = useState(getImageUrl(user?.profileImage));
 
-  // Fix Profile Image Not Updating on Login
+
   useEffect(() => {
     if (user?.profileImage) {
       setProfileImageUrl(getImageUrl(user.profileImage));
     }
   }, [user?.profileImage]);
 
-  // Dummy recent activity data
+
   const recentActivity = [
     { id: 1, text: "Donated 50 lbs of produce on April 1, 2023" },
     { id: 2, text: "Delivered a donation on March 25, 2023" },
@@ -38,7 +37,7 @@ const Profile = () => {
     <div className="p-6 max-w-4xl mx-auto space-y-8">
       <h1 className="text-3xl font-semibold text-gray-900 mb-4">Profile</h1>
 
-      {/* Profile Header */}
+     
       <div className="flex items-center space-x-6">
         <div>
           <img
@@ -52,11 +51,11 @@ const Profile = () => {
             }}
           />
         </div>
-        {/* User Info */}
+     
         <div>
           <h2 className="text-2xl font-medium text-gray-900">{user?.username}</h2>
           <p className="text-gray-500">{user?.email}</p>
-          {/* Iconized Edit Profile Link */}
+     
           <div className="mt-2">
             <Link
               to={`/dashboard/UpdateProfile/${user?.id}`}
@@ -69,7 +68,7 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* Profile Stats */}
+      
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <div className="p-6 bg-green-50 rounded-lg shadow hover:shadow-lg transform hover:-translate-y-1 transition">
           <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mb-4">
@@ -96,7 +95,7 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* About Me Section */}
+   
       <div className="bg-white rounded-lg border p-6 shadow-sm">
         <h3 className="text-xl font-medium text-gray-900 mb-4">About Me</h3>
         <p className="text-gray-600 leading-relaxed">
@@ -106,7 +105,7 @@ const Profile = () => {
         </p>
       </div>
 
-      {/* Recent Activity Section */}
+ 
       <div className="bg-white rounded-lg border p-6 shadow-sm">
         <h3 className="text-xl font-medium text-gray-900 mb-4">Recent Activity</h3>
         <ul className="space-y-4">
@@ -119,9 +118,9 @@ const Profile = () => {
         </ul>
       </div>
 
-      {/* Bottom Section: Additional User Info & Social Media */}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Additional User Information */}
+     
         <div className="bg-white rounded-lg border p-6 shadow-sm">
           <h3 className="text-xl font-medium text-gray-900 mb-4">Additional Information</h3>
           <div className="space-y-3">
@@ -144,7 +143,7 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Social Media Section */}
+     
         <div className="bg-white rounded-lg border p-6 shadow-sm">
           <h3 className="text-xl font-medium text-gray-900 mb-4">Social Media</h3>
           <div className="flex items-center space-x-4">
