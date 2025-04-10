@@ -1,13 +1,13 @@
 import FoodItem from "../models/FoodItem.js";
 import { getAuthenticatedUser } from "../utils/helpers.js";
-import upload from "../middleware/multerConfig.js"; // Adjust the import path as needed
+import upload from "../middleware/multerConfig.js"; 
 import { sendNotification } from "../socket/socket.js"
 import User from "../models/User.js";
 import axios from "axios";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-// Define __dirname for ES Modules
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -18,7 +18,7 @@ export async function addFoodItem(req, res) {
       return res.status(400).json({ error: err.message });
     }
 
-    console.log("🔹 Uploaded Files:", req.files); // ✅ Debugging
+    console.log("🔹 Uploaded Files:", req.files);
 
     if (!req.files || !req.files.imageUrl) {
       console.error("❌ No image uploaded");
@@ -46,16 +46,15 @@ export async function addFoodItem(req, res) {
       const uploadedFile = req.files.imageUrl[0];
       const imagePath = path.join(__dirname, "..", "uploads", uploadedFile.filename);
 
-      let freshnessStatus = "N/A"; // Default value for non-perishable food
+      let freshnessStatus = "N/A"; 
 
-      // **Only use Roboflow if category is Fruits or Vegetables**
+      
       if (["Fruits", "Vegetables"].includes(category)) {
         console.log("🖼 Sending image to Roboflow for freshness check...");
 
-        // **Convert Image to Base64**
         const imageBase64 = fs.readFileSync(imagePath, { encoding: "base64" });
 
-        // **Send to Roboflow API**
+        
         const roboflowResponse = await axios.post(
           "https://detect.roboflow.com/freshness-detection-rhrze/3",
           imageBase64,
@@ -67,20 +66,17 @@ export async function addFoodItem(req, res) {
 
         console.log("✅ Roboflow Response:", roboflowResponse.data);
 
-        // **Extract Freshness Result**
+       
         const predictionClass = roboflowResponse.data?.predictions?.[0]?.class || "Unknown";
 
-        // ✅ Extract only "Fresh" or "Rotten"
+       
         freshnessStatus = predictionClass.toLowerCase().includes("rotten") ? "Rotten" : "Fresh";
 
-        // Block the add process if the item is rotten.
+      
         if (freshnessStatus === "Rotten") {
           console.error("❌ Food item detected as rotten, cannot be donated.");
-            // Retrieve all admin users (assuming admins have a role property set to "admin")
   const adminUsers = await User.find({ role: "admin" });
   
-  // Loop through each admin and send a notification.
-  // IMPORTANT: Ensure you have an accessible `io` instance.
   adminUsers.forEach(async (admin) => {
     await sendNotification(
       admin._id,
@@ -93,7 +89,6 @@ export async function addFoodItem(req, res) {
         }
       }
 
-      // **Save in Database**
       const newFoodItem = new FoodItem({
         title,
         category,
@@ -106,7 +101,7 @@ export async function addFoodItem(req, res) {
         status: status || "In Stock",
         donorId: donor._id,
         imageUrl: `/uploads/${uploadedFile.filename}`,
-        freshness: freshnessStatus, // ✅ Only "Fresh" or "Rotten" for Fruits & Vegetables
+        freshness: freshnessStatus, 
       });
 
       const savedFoodItem = await newFoodItem.save();
@@ -263,5 +258,50 @@ export async function toBedonatedFoodByDonor(req, res) {
   } catch (err) {
     console.error('Error fetching donated food items:', err);
     return res.status(500).json({ error: 'Internal server error while fetching donated food items' });
+  }
+}
+
+export async function removeFromDonation(req, res) {
+  try {
+    const { id } = req.params; 
+    const user = await getAuthenticatedUser(req);
+    if (!user) {
+      return res.status(401).json({ error: "Unauthorized: No authenticated user found" });
+    }
+    const donorId = user._id;
+
+    const foodItem = await FoodItem.findOne({ _id: id, donorId });
+    if (!foodItem) {
+      return res.status(404).json({ error: "Food item not found or you are not authorized to modify it" });
+    }
+
+    if (foodItem.status !== "Pending Donation") {
+      return res.status(400).json({ error: "Only items with 'Pending Donation' status can be removed" });
+    }
+
+    const currentDate = new Date();
+    const expirationDate = new Date(foodItem.expirationDate);
+
+   
+    if (currentDate > expirationDate) {
+      foodItem.status = "Expired";
+    } else {
+      foodItem.status = "Damaged";
+    }
+
+
+    foodItem.quantity += foodItem.quantityToDonation;
+    foodItem.quantityToDonation = 0;
+
+    foodItem.updatedAt = new Date();
+    await foodItem.save();
+
+    return res.status(200).json({
+      message: `Item status updated to '${foodItem.status}' and removed from donation`,
+      foodItem,
+    });
+  } catch (err) {
+    console.error("Error removing item from donation:", err);
+    return res.status(500).json({ error: "Internal server error while removing item from donation" });
   }
 }
