@@ -1,14 +1,49 @@
-import React from "react";
+import React, { useState } from "react";
 import { useCart } from "../context/CartContext";
-import { Trash, Calendar, CheckCircle } from "lucide-react";
-
+import { useAuth } from "../context/AuthContext";
+import { Trash, Calendar, CheckCircle, X } from "lucide-react";
 
 const Cart: React.FC = () => {
   const { cartItems, clearCart, updateQuantity, removeFromCart } = useCart();
+  const { user } = useAuth();
 
-  const handleOrder = () => {
-    alert("✅ Your request has been submitted!");
-    clearCart();
+  const [showModal, setShowModal] = useState(false);
+  const [deliveryLocation, setDeliveryLocation] = useState("");
+
+  const handleSubmitClick = () => {
+    setShowModal(true);
+  };
+
+  const handleOrderConfirm = async () => {
+    if (!deliveryLocation.trim()) {
+      alert("📍 Please enter your delivery location.");
+      return;
+    }
+
+    try {
+      const orderPayload = cartItems.map(item => ({
+        itemId: item._id,
+        orderedQuantity: item.quantity,
+        recipientId: user?._id,
+        location: deliveryLocation,
+      }));
+
+      const response = await fetch("http://localhost:5000/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderPayload),
+      });
+
+      if (!response.ok) throw new Error("Order submission failed");
+
+      alert("✅ Your request has been submitted!");
+      clearCart();
+      setShowModal(false);
+      setDeliveryLocation("");
+    } catch (error) {
+      console.error("Order error:", error);
+      alert("❌ Something went wrong while submitting your request.");
+    }
   };
 
   return (
@@ -27,7 +62,6 @@ const Cart: React.FC = () => {
                 key={index}
                 className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-white border border-gray-200 shadow-md rounded-lg p-4"
               >
-                {/* Left: Image & info */}
                 <div className="flex gap-4 w-full sm:w-auto">
                   <img
                     src={`http://localhost:5000${item.imageUrl}`}
@@ -51,7 +85,6 @@ const Cart: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Right: Controls */}
                 <div className="flex flex-col sm:items-end gap-2 w-full sm:w-auto">
                   <div className="flex items-center gap-2">
                     <button
@@ -99,20 +132,50 @@ const Cart: React.FC = () => {
                 Clear Cart
               </button>
               <button
-  onClick={handleOrder}
-  disabled={cartItems.length === 0}
-  className={`w-full sm:w-auto py-2 px-6 rounded-lg font-semibold transition flex items-center justify-center gap-2 ${
-    cartItems.length === 0
-      ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-      : "bg-green-600 text-white hover:bg-green-700"
-  }`}
->
-  <CheckCircle className="w-4 h-4" />
-  <span>Submit Order</span>
-</button>
-
+                onClick={handleSubmitClick}
+                disabled={cartItems.length === 0}
+                className={`w-full sm:w-auto py-2 px-6 rounded-lg font-semibold transition flex items-center justify-center gap-2 ${
+                  cartItems.length === 0
+                    ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                    : "bg-green-600 text-white hover:bg-green-700"
+                }`}
+              >
+                <CheckCircle className="w-4 h-4" />
+                <span>Submit Request</span>
+              </button>
             </div>
           </div>
+
+          {/* Location Modal */}
+          {showModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+              <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                  📍 Enter Delivery Location
+                </h3>
+                <input
+                  type="text"
+                  value={deliveryLocation}
+                  onChange={(e) => setDeliveryLocation(e.target.value)}
+                  placeholder="e.g., 123 Main Street, City"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md mb-4"
+                />
+                <button
+                  onClick={handleOrderConfirm}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md flex justify-center items-center gap-2"
+                >
+                  <CheckCircle className="w-5 h-5" />
+                  Confirm & Submit
+                </button>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>
