@@ -2,43 +2,49 @@ import Order from "../models/orderModel.js";
 import FoodItem from "../models/foodItem.js";
 
 // POST /api/orders
-export const createOrders = async (req, res) => {
+export const createOrder = async (req, res) => {
   try {
-    const orders = req.body;
+    const { recipientId, location, items } = req.body;
 
-    for (const order of orders) {
-      const item = await FoodItem.findById(order.itemId);
-      if (!item) continue;
-
-      item.quantityToDonation = Math.max(item.quantityToDonation - order.orderedQuantity, 0);
-      await item.save();
-
-      await Order.create({
-        item: item._id,
-        quantity: order.orderedQuantity,
-        recipientId: order.recipientId,
-        location: order.location,
-        status: "pending",
-      });
+    if (!recipientId || !location || !items || !Array.isArray(items)) {
+      return res.status(400).json({ error: "Missing required fields" });
     }
 
-    res.status(201).json({ message: "Orders submitted successfully" });
+    // Update quantityToDonation for each item
+    for (const { itemId, orderedQuantity } of items) {
+      const foodItem = await FoodItem.findById(itemId);
+      if (!foodItem) continue;
+
+      foodItem.quantityToDonation = Math.max(foodItem.quantityToDonation - orderedQuantity, 0);
+      await foodItem.save();
+    }
+
+    const order = new Order({
+      recipientId,
+      location,
+      items,
+      status: "pending",
+    });
+
+    await order.save();
+    res.status(201).json({ message: "Order submitted successfully", order });
   } catch (err) {
     console.error("[CREATE ORDER ERROR]", err);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
-// GET /api/orders/:recipientId
+// GET /api/orders/recipient/:recipientId
 export const getOrdersByRecipient = async (req, res) => {
-    try {
-      const { recipientId } = req.params;
-      const orders = await Order.find({ recipientId }).populate("itemId");
-      res.status(200).json(orders);
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: "Server error" });
-    }
-  };
+  try {
+    const { recipientId } = req.params;
+    const orders = await Order.find({ recipientId })
+      .populate("items.itemId")
+      .sort({ createdAt: -1 });
 
-
+    res.status(200).json(orders);
+  } catch (err) {
+    console.error("[GET ORDERS ERROR]", err);
+    res.status(500).json({ error: "Server error" });
+  }
+};

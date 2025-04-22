@@ -22,12 +22,14 @@ const Cart: React.FC = () => {
     }
 
     try {
-      const orderPayload = cartItems.map(item => ({
-        itemId: item._id,
-        orderedQuantity: item.quantity,
+      const orderPayload = {
         recipientId: user?._id,
         location: `${latLng.lat},${latLng.lng}`,
-      }));
+        items: cartItems.map(item => ({
+          itemId: item._id,
+          orderedQuantity: item.quantity,
+        })),
+      };
 
       const response = await fetch("http://localhost:5000/api/orders", {
         method: "POST",
@@ -140,7 +142,7 @@ const Cart: React.FC = () => {
                     : "bg-green-600 text-white hover:bg-green-700"
                 }`}
               >
-                <CheckCircle className="w-4 h-4" />
+                <CheckCircle className="w-5 h-5" />
                 <span>Submit Request</span>
               </button>
             </div>
