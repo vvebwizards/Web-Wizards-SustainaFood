@@ -4,6 +4,7 @@ import {
   TileLayer,
   Marker,
   useMap,
+  useMapEvent,
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -23,9 +24,7 @@ const LocationPicker: React.FC<Props> = ({ onSelect }) => {
     if (!query.trim()) return;
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
-          query
-        )}&format=json`
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json`
       );
       const data = await response.json();
       if (data && data.length > 0) {
@@ -48,6 +47,15 @@ const LocationPicker: React.FC<Props> = ({ onSelect }) => {
   function MapUpdater() {
     const map = useMap();
     mapRef.current = map;
+    return null;
+  }
+
+  function ClickHandler() {
+    useMapEvent("click", (e) => {
+      const newPos: [number, number] = [e.latlng.lat, e.latlng.lng];
+      setPosition(newPos);
+      onSelect(newPos[0], newPos[1]);
+    });
     return null;
   }
 
@@ -74,10 +82,18 @@ const LocationPicker: React.FC<Props> = ({ onSelect }) => {
         style={{ height: "300px", width: "100%" }}
       >
         <MapUpdater />
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        {position && <Marker position={position} icon={L.icon({ iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png", iconSize: [25, 41], iconAnchor: [12, 41] })} />}
+        <ClickHandler />
+        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        {position && (
+          <Marker
+            position={position}
+            icon={L.icon({
+              iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+              iconSize: [25, 41],
+              iconAnchor: [12, 41],
+            })}
+          />
+        )}
       </MapContainer>
     </div>
   );
