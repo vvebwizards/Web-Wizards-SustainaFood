@@ -2,21 +2,23 @@ import React, { useState, useEffect } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useNotifications } from "../context/NotificationContext";
+import { useCart } from "../context/CartContext";
 import {
-  Menu, Heart, User, History, Settings, Truck, Bell, Building2, LineChart, Gauge, UserCog,
-  Package, Calendar, MapPin, Users, Clock, MessageSquare, AlertTriangle, Database, ScrollText
+  Menu, Bell, ShoppingCart, Building2, UserCog, Package, Truck, LineChart,
+  ScrollText, Database, AlertTriangle, User, Heart, Calendar, MapPin,
+  History, Settings, Users, Clock, MessageSquare, Gauge
 } from "lucide-react";
 
 import defaultProfileImage from "../assets/images/default_user_img.jpg";
 
-const roleNames = {
+const roleNames: Record<string, string> = {
   admin: "Administrator",
   donor: "Food Donor",
   recipient: "Food Recipient",
   volunteer: "Delivery Volunteer",
 };
 
-const roleConfigs = {
+const roleConfigs: Record<string, any> = {
   admin: {
     theme: {
       primary: "red",
@@ -117,31 +119,37 @@ const roleConfigs = {
   },
 };
 
-const Layout = () => {
+const Layout: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { notifications, fetchNotifications, markAsRead } = useNotifications();
+  const { cartItems } = useCart();
+
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [profileImage, setProfileImage] = useState(defaultProfileImage); // Set default here
+  const [profileImage, setProfileImage] = useState<string>(defaultProfileImage);
 
-  const userRole = user?.role && roleConfigs[user.role] ? user.role : "donor";
+  const userRole = user?.role ?? "donor";
   const roleConfig = roleConfigs[userRole];
-  const displayRoleName = roleNames[userRole] || "Food Donor";
+
+  if (!roleConfig) {
+    return (
+      <div className="p-6 text-red-600">
+        ❌ Unknown user role: <strong>{userRole}</strong>. Please check your role configuration.
+      </div>
+    );
+  }
+
+  const displayRoleName = roleNames[userRole] || "User";
 
   useEffect(() => {
     if (user?.profileImage) {
-      console.log("User profileImage from context:", user.profileImage);
-      const isAbsolute = user.profileImage.startsWith("http");
-      const imageUrl = isAbsolute
+      const imageUrl = user.profileImage.startsWith("http")
         ? user.profileImage
         : `http://localhost:5000${user.profileImage}`;
-      const finalUrl = `${imageUrl}?t=${Date.now()}`;
-      console.log("Final profile image URL:", finalUrl);
-      setProfileImage(finalUrl);
+      setProfileImage(`${imageUrl}?t=${Date.now()}`);
     } else {
-      console.log("No profile image found, using default");
-      setProfileImage(defaultProfileImage); // Explicitly set default
+      setProfileImage(defaultProfileImage);
     }
   }, [user]);
 
@@ -163,48 +171,37 @@ const Layout = () => {
             <Menu className="h-6 w-6" />
           </button>
           <div className="flex items-center space-x-2">
-            <roleConfig.theme.icon
-              className={`h-6 w-6 ${roleConfig.theme.colors.header}`}
-            />
-            <span className="text-xl font-semibold text-gray-900">
-              {displayRoleName}
-            </span>
+            <roleConfig.theme.icon className={`h-6 w-6 ${roleConfig.theme.colors.header}`} />
+            <span className="text-xl font-semibold text-gray-900">{displayRoleName}</span>
           </div>
         </div>
 
         <div className="flex items-center space-x-6">
+          {/* Notifications */}
           <div className="relative">
             <button
               onClick={() => setIsNotificationOpen(!isNotificationOpen)}
               className="relative p-2 text-gray-600 hover:text-gray-900"
             >
               <Bell className="h-6 w-6" />
-              {notifications.filter((notif) => !notif.isRead).length > 0 && (
+              {notifications.filter(n => !n.isRead).length > 0 && (
                 <span className="absolute top-0 right-0 bg-red-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full">
-                  {notifications.filter((notif) => !notif.isRead).length}
+                  {notifications.filter(n => !n.isRead).length}
                 </span>
               )}
             </button>
             {isNotificationOpen && (
               <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                <div className="p-4">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    Notifications
-                  </h3>
-                </div>
                 <ul className="max-h-60 overflow-y-auto">
                   {notifications.map((notif) => (
                     <li
                       key={notif._id}
+                      onClick={() => markAsRead(notif._id)}
                       className={`px-4 py-2 hover:bg-gray-50 cursor-pointer ${
                         notif.isRead ? "bg-gray-100" : "bg-white"
                       }`}
-                      onClick={() => markAsRead(notif._id)}
                     >
                       <p className="text-sm text-gray-700">{notif.message}</p>
-                      <small className="text-xs text-gray-500">
-                        {new Date(notif.createdAt).toLocaleString()}
-                      </small>
                     </li>
                   ))}
                 </ul>
@@ -212,14 +209,25 @@ const Layout = () => {
             )}
           </div>
 
+          {/* Cart Icon (Recipients Only) */}
+          {userRole === "recipient" && (
+            <NavLink to="/dashboard/cart" className="relative p-2 text-gray-600 hover:text-gray-900">
+              <ShoppingCart className="h-6 w-6" />
+              {cartItems.length > 0 && (
+                <span className="absolute top-0 right-0 bg-blue-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full">
+                  {cartItems.length}
+                </span>
+              )}
+            </NavLink>
+          )}
+
           <span className="text-gray-900 font-medium">Welcome, {user?.username}</span>
           <img
             src={profileImage}
             alt="Profile"
-            className="h-8 w-8 rounded-full border border-gray-300"
+            className="h-8 w-8 rounded-full border"
             onError={(e) => {
-              console.log("Image load failed, reverting to default");
-              e.currentTarget.src = defaultProfileImage; // Fallback to default if URL fails
+              e.currentTarget.src = defaultProfileImage;
             }}
           />
           <button
@@ -232,17 +240,13 @@ const Layout = () => {
       </header>
 
       <div className="flex mt-16">
-        <nav
-          className={`w-64 bg-white shadow-lg p-5 flex flex-col transition-all duration-300 ${
-            sidebarOpen ? "block" : "hidden"
-          }`}
-        >
-          <ul className="w-full">
-            {roleConfig.navigation.map((item) => (
+        <nav className={`w-64 bg-white shadow-lg p-5 ${sidebarOpen ? "block" : "hidden"}`}>
+          <ul>
+            {roleConfig.navigation.map((item: any) => (
               <li key={item.to}>
                 <NavLink
                   to={item.to}
-                  className={`flex items-center p-3 rounded-lg ${roleConfig.theme.colors.hover}`}
+                  className={`flex items-center p-3 rounded-md ${roleConfig.theme.colors.hover}`}
                 >
                   <item.icon className="h-6 w-6" />
                   <span className="ml-3">{item.label}</span>

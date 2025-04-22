@@ -19,32 +19,27 @@ import { NotificationProvider } from "./context/NotificationContext";
 import { AdminProvider } from "./context/AdminContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
-import PublicRoute from "./components/PublicRoute"; // Import the PublicRoute component
+import PublicRoute from "./components/PublicRoute";
 import Inventory from "./pages/Inventory";
 import { InventoryProvider } from "./context/InventoryContext";
 import { SettingsProvider } from "./context/SettingsContext";
 import FoodBank from "./pages/FoodBank";
 import { FoodBankProvider } from "./context/FoodBankContext";
-        import VerifyEmail from "./pages/VerifyEmail";
+import VerifyEmail from "./pages/VerifyEmail";
 import ConfirmEmail from "./pages/ConfirmEmail";
+import { CartProvider } from "./context/CartContext"; // ✅ Import CartProvider
+import Cart from "./pages/Cart"; // ✅ Import Cart page
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user } = useAuth();
   if (user === undefined) {
     return <div>Loading...</div>;
   }
-
-
-
-
   if (user === null) {
     return <Navigate to="/signin" replace />;
   }
-
   return children;
 }
-
 
 function App() {
   return (
@@ -53,11 +48,9 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/get-involved" element={<GetInvolved />} />
-
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/confirm-email" element={<ConfirmEmail />} />
 
- 
         <Route
           path="/signup"
           element={
@@ -78,36 +71,57 @@ function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/2fa" element={<TwoFactorAuth />} />
 
-        <Route 
-          path="/dashboard" 
+        <Route
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <NotificationProvider>
-                <Layout />
+                <CartProvider>
+                  <Layout />
+                </CartProvider>
               </NotificationProvider>
             </ProtectedRoute>
           }
         >
           <Route index element={<WelcomePage />} />
           <Route path="profile" element={<Profile />} />
-          <Route 
-            path="UsersManagement" 
+          <Route
+            path="UsersManagement"
             element={
               <AdminProvider>
                 <Users />
               </AdminProvider>
-            } 
+            }
           />
           <Route path="statistics" element={<Statistics />} />
-          <Route path="settings" element={<SettingsProvider><Settings /></SettingsProvider>}></Route>
+          <Route
+            path="settings"
+            element={
+              <SettingsProvider>
+                <Settings />
+              </SettingsProvider>
+            }
+          />
           <Route path="notifications" element={<Notifications />} />
           <Route path="UpdateProfile/:userId" element={<UpdateProfile />} />
-          <Route path="inventory" element={ <InventoryProvider><Inventory /> </InventoryProvider> } />
-          <Route path="available" element={
-            <FoodBankProvider>
-              <FoodBank />
-            </FoodBankProvider>
-          } />
+          <Route
+            path="inventory"
+            element={
+              <InventoryProvider>
+                <Inventory />
+              </InventoryProvider>
+            }
+          />
+          <Route
+            path="available"
+            element={
+              <FoodBankProvider>
+                <FoodBank />
+              </FoodBankProvider>
+            }
+          />
+          {/* ✅ Cart route for recipients */}
+          <Route path="cart" element={<Cart />} />
         </Route>
       </Routes>
     </>
