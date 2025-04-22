@@ -32,16 +32,27 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const addToCart = (item: FoodItem) => {
     const exists = cartItems.find(i => i._id === item._id);
     if (exists) {
-      updateQuantity(item._id, exists.quantityToDonation + 1);
+      updateQuantity(item._id as string, exists.quantity + 1);
     } else {
-      setCartItems(prev => [...prev, { ...item, quantityToDonation: 1 }]);
+      setCartItems(prev => [
+        ...prev,
+        { ...item, quantity: 1 }, // quantity = selected quantity
+      ]);
     }
   };
 
   const updateQuantity = (id: string, newQuantity: number) => {
     setCartItems(prev =>
       prev.map(item =>
-        item._id === id ? { ...item, quantityToDonation: newQuantity } : item
+        item._id === id
+          ? {
+              ...item,
+              quantity:
+                newQuantity > item.quantityToDonation
+                  ? item.quantityToDonation
+                  : Math.max(newQuantity, 1),
+            }
+          : item
       )
     );
   };
