@@ -4,6 +4,11 @@ import { createOrders, getOrdersByRecipient } from "../controllers/orderControll
 const router = express.Router();
 
 router.post("/", createOrders);                // POST /api/orders
-router.get("/:recipientId", getOrdersByRecipient); // GET /api/orders/:recipientId
+ // GET /api/orders/:recipientId
+// in routes/orderRoutes.js
+router.get("/recipient/:recipientId", getOrdersByRecipient);
+
+// in controllers/orderController.js
+
 
 export default router;

@@ -29,7 +29,7 @@ import VerifyEmail from "./pages/VerifyEmail";
 import ConfirmEmail from "./pages/ConfirmEmail";
 import { CartProvider } from "./context/CartContext"; // ✅ Import CartProvider
 import Cart from "./pages/Cart"; // ✅ Import Cart page
-
+import MyRequests from "./pages/MyRequests"
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user } = useAuth();
   if (user === undefined) {
@@ -102,6 +102,7 @@ function App() {
               </SettingsProvider>
             }
           />
+          <Route path="my-requests" element={<MyRequests />} />
           <Route path="notifications" element={<Notifications />} />
           <Route path="UpdateProfile/:userId" element={<UpdateProfile />} />
           <Route

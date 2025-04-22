@@ -31,15 +31,14 @@ export const createOrders = async (req, res) => {
 
 // GET /api/orders/:recipientId
 export const getOrdersByRecipient = async (req, res) => {
-  try {
-    const { recipientId } = req.params;
-    const orders = await Order.find({ recipientId })
-      .populate("item")
-      .sort({ createdAt: -1 });
+    try {
+      const { recipientId } = req.params;
+      const orders = await Order.find({ recipientId }).populate("itemId");
+      res.status(200).json(orders);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Server error" });
+    }
+  };
 
-    res.status(200).json(orders);
-  } catch (err) {
-    console.error("[GET ORDERS ERROR]", err);
-    res.status(500).json({ message: "Failed to fetch orders" });
-  }
-};
+

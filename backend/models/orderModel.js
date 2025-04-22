@@ -1,18 +1,18 @@
 import mongoose from "mongoose";
 
 const orderSchema = new mongoose.Schema({
-  item: {
+  itemId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "FoodItem",
-    required: true,
-  },
-  quantity: {
-    type: Number,
+    ref: "FoodItem", // ✅ Must match your FoodItem model name
     required: true,
   },
   recipientId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
+    required: true,
+  },
+  orderedQuantity: {
+    type: Number,
     required: true,
   },
   location: {
@@ -24,11 +24,6 @@ const orderSchema = new mongoose.Schema({
     enum: ["pending", "delivered"],
     default: "pending",
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+}, { timestamps: true });
 
-const Order = mongoose.model("Order", orderSchema);
-export default Order;
+export default mongoose.model("Order", orderSchema);

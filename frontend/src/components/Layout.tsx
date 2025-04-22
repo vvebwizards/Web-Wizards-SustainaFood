@@ -85,7 +85,7 @@ const roleConfigs: Record<string, any> = {
     navigation: [
       { to: "/dashboard/profile", icon: User, label: "Profile" },
       { to: "/dashboard/available", icon: Package, label: "Available Food" },
-      { to: "/dashboard/requests", icon: Heart, label: "My Requests" },
+      { to: "/dashboard/my-requests", icon: Heart, label: "My Requests" },
       { to: "/dashboard/location", icon: MapPin, label: "Delivery Location" },
       { to: "/dashboard/statistics", icon: LineChart, label: "Received Items" },
       { to: "/dashboard/history", icon: History, label: "History" },
