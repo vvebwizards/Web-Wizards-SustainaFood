@@ -33,8 +33,9 @@ const Cart: React.FC = () => {
                     Expires: {new Date(item.expirationDate).toLocaleDateString()}
                   </p>
                   <p className="text-xs text-red-600">
-                    Max available: {item.quantityToDonation}
-                  </p>
+                    Available quantity: {item.quantityToDonation} {item.unit}
+                    </p>
+
                 </div>
 
                 <div className="flex items-center gap-2">
