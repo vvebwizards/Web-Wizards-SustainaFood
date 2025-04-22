@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
-import { Trash, Calendar, CheckCircle, X } from "lucide-react";
+import { Trash, Calendar, CheckCircle, X, MapPin } from "lucide-react";
 import LocationPicker from "../components/LocationPicker"; // New component
 
 const Cart: React.FC = () => {
@@ -156,8 +156,8 @@ const Cart: React.FC = () => {
                 >
                   <X className="w-5 h-5" />
                 </button>
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                  🗺️ Choose Delivery Location
+                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-blue-600" /> Choose Delivery Location
                 </h3>
                 <LocationPicker onSelect={(lat, lng) => setLatLng({ lat, lng })} />
                 {latLng && (
