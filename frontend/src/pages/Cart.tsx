@@ -2,21 +2,22 @@ import React, { useState } from "react";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { Trash, Calendar, CheckCircle, X } from "lucide-react";
+import LocationPicker from "../components/LocationPicker"; // New component
 
 const Cart: React.FC = () => {
   const { cartItems, clearCart, updateQuantity, removeFromCart } = useCart();
   const { user } = useAuth();
 
   const [showModal, setShowModal] = useState(false);
-  const [deliveryLocation, setDeliveryLocation] = useState("");
+  const [latLng, setLatLng] = useState<{ lat: number; lng: number } | null>(null);
 
   const handleSubmitClick = () => {
     setShowModal(true);
   };
 
   const handleOrderConfirm = async () => {
-    if (!deliveryLocation.trim()) {
-      alert("📍 Please enter your delivery location.");
+    if (!latLng) {
+      alert("📍 Please select your delivery location on the map.");
       return;
     }
 
@@ -25,7 +26,7 @@ const Cart: React.FC = () => {
         itemId: item._id,
         orderedQuantity: item.quantity,
         recipientId: user?._id,
-        location: deliveryLocation,
+        location: `${latLng.lat},${latLng.lng}`,
       }));
 
       const response = await fetch("http://localhost:5000/api/orders", {
@@ -39,7 +40,7 @@ const Cart: React.FC = () => {
       alert("✅ Your request has been submitted!");
       clearCart();
       setShowModal(false);
-      setDeliveryLocation("");
+      setLatLng(null);
     } catch (error) {
       console.error("Order error:", error);
       alert("❌ Something went wrong while submitting your request.");
@@ -121,7 +122,6 @@ const Cart: React.FC = () => {
             ))}
           </div>
 
-          {/* Action Buttons */}
           <div className="mt-10 bg-white shadow-md rounded-lg p-6 border border-gray-200">
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
               <button
@@ -157,18 +157,18 @@ const Cart: React.FC = () => {
                   <X className="w-5 h-5" />
                 </button>
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                  📍 Enter Delivery Location
+                  🗺️ Choose Delivery Location
                 </h3>
-                <input
-                  type="text"
-                  value={deliveryLocation}
-                  onChange={(e) => setDeliveryLocation(e.target.value)}
-                  placeholder="e.g., 123 Main Street, City"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md mb-4"
-                />
+                <LocationPicker onSelect={(lat, lng) => setLatLng({ lat, lng })} />
+                {latLng && (
+                  <p className="text-sm text-gray-600 mt-2">
+                    Selected: <strong>{latLng.lat.toFixed(5)}</strong>, {" "}
+                    <strong>{latLng.lng.toFixed(5)}</strong>
+                  </p>
+                )}
                 <button
                   onClick={handleOrderConfirm}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md flex justify-center items-center gap-2"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 mt-4 rounded-md flex justify-center items-center gap-2"
                 >
                   <CheckCircle className="w-5 h-5" />
                   Confirm & Submit
