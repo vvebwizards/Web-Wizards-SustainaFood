@@ -123,10 +123,10 @@ const Layout: React.FC = () => {
   const navigate = useNavigate();
   const { notifications, fetchNotifications, markAsRead } = useNotifications();
   const { cartItems } = useCart();
-  const [isPrizeModalOpen, setPrizeModalOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [profileImage, setProfileImage] = useState<string>(defaultProfileImage);
+
 
   const userRole = user?.role ?? "donor";
   const roleConfig = roleConfigs[userRole];
@@ -178,12 +178,16 @@ const Layout: React.FC = () => {
         <div className="flex items-center space-x-6">
           {/* Prize Wheel Icon (All roles or specific roles) */}
           <NavLink
-              to="/dashboard/**"
-                   className="relative p-2 text-gray-600 hover:text-gray-900"
-                  title="Prize Wheel"
-            >
-              <Gift className="h-6 w-6" />
-          </NavLink>
+  to="/dashboard/prize-wheel"
+  className="flex items-center space-x-1 p-2 text-gray-600 hover:text-gray-900"
+  title="Prize Wheel"
+>
+  <span className={`font-semibold text-sm ${roleConfig.theme.colors.text}`}>
+    {user?.points ?? 0} pts
+  </span>
+  <Gift className="h-6 w-6" />
+</NavLink>
+
           {/* Game Center Icon (All roles or specific roles) */}
           <NavLink
             to="/dashboard/game-center"

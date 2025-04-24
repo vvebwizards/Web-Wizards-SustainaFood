@@ -26,6 +26,10 @@ const userSchema = new mongoose.Schema({
   verified: { type: Boolean, default: false },
   verificationToken: { type: String },
   lastActive: { type: Date, default: Date.now },
+  points: {
+    type: Number,
+    default: 0,
+  },
   isDeleted: { type: Boolean, default: false },
   googleId: { type: String, default: null },
   

@@ -105,4 +105,25 @@ export const updatePassword = async (req, res) => {
     res.status(500).json({ message: "Internal server error." });
   }
 };
+export const addPointsToUser = async (req, res) => {
+  const { id } = req.params;
+  const { points } = req.body;
+
+  if (typeof points !== "number") {
+    return res.status(400).json({ message: "Points must be a number" });
+  }
+
+  try {
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.points = (user.points || 0) + points;
+    await user.save();
+
+    return res.status(200).json({ message: "Points added", newPoints: user.points });
+  } catch (err) {
+    console.error("❌ Error in addPointsToUser:", err);
+    return res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
 
