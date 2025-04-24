@@ -6,7 +6,7 @@ import { useCart } from "../context/CartContext";
 import {
   Menu, Bell, ShoppingCart, Building2, UserCog, Package, Truck, LineChart,
   ScrollText, Database, AlertTriangle, User, Heart, Calendar, MapPin,
-  History, Settings, Users, Clock, MessageSquare, Gauge
+  History, Settings, Users, Clock, MessageSquare, Gauge , Gamepad2
 } from "lucide-react";
 
 import defaultProfileImage from "../assets/images/default_user_img.jpg";
@@ -177,6 +177,15 @@ const Layout: React.FC = () => {
         </div>
 
         <div className="flex items-center space-x-6">
+          {/* Game Center Icon (All roles or specific roles) */}
+          <NavLink
+            to="/dashboard/game-center"
+              className="relative p-2 text-gray-600 hover:text-gray-900"
+               title="Game Center"
+                          >
+              <Gamepad2 className="h-6 w-6" />
+          </NavLink>
+
           {/* Notifications */}
           <div className="relative">
             <button
