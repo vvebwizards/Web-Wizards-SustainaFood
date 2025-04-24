@@ -4,6 +4,7 @@ import Home from "./pages/HomePage";
 import SignUp from "./pages/signup";
 import GetInvolved from "./pages/GetInvolved";
 import Login from "./pages/SignIn";
+import GameCenter from "./pages/GameCenter";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import TwoFactorAuth from "./pages/TwoFactorAuth";
@@ -124,7 +125,8 @@ function App() {
           />
           {/* ✅ Cart route for recipients */}
           <Route path="cart" element={<Cart />} />
-          <Route path="game-center" element={<SpinWheel />} />
+          <Route path="game-center" element={<GameCenter />} />
+          <Route path="prize-wheel" element={<SpinWheel />} />
         </Route>
       </Routes>
     </>
