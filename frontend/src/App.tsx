@@ -26,6 +26,7 @@ import { SettingsProvider } from "./context/SettingsContext";
 import FoodBank from "./pages/FoodBank";
 import { FoodBankProvider } from "./context/FoodBankContext";
 import VerifyEmail from "./pages/VerifyEmail";
+import SpinWheel from "./games/SpinWheel";
 import ConfirmEmail from "./pages/ConfirmEmail";
 import { CartProvider } from "./context/CartContext"; // ✅ Import CartProvider
 import Cart from "./pages/Cart"; // ✅ Import Cart page
@@ -123,6 +124,7 @@ function App() {
           />
           {/* ✅ Cart route for recipients */}
           <Route path="cart" element={<Cart />} />
+          <Route path="game-center" element={<SpinWheel />} />
         </Route>
       </Routes>
     </>
