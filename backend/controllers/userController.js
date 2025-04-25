@@ -118,6 +118,7 @@ export const addPointsToUser = async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found" });
 
     user.points = (user.points || 0) + points;
+    user.lastSpinDate = new Date();
     await user.save();
 
     return res.status(200).json({ message: "Points added", newPoints: user.points });

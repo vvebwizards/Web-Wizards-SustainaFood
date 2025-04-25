@@ -15,8 +15,18 @@ const SpinWheel: React.FC = () => {
     points: number;
   } | null>(null);
 
+  // 🔁 Helper to compare dates
+  const isSameDay = (d1: Date, d2: Date) =>
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate();
+
+  const alreadySpunToday =
+    user?.lastSpinDate &&
+    isSameDay(new Date(user.lastSpinDate), new Date());
+
   const spin = async () => {
-    if (isSpinning || !user) return;
+    if (isSpinning || alreadySpunToday || !user) return;
 
     setIsSpinning(true);
 
@@ -26,7 +36,6 @@ const SpinWheel: React.FC = () => {
 
     const selectedIndex = Math.floor(Math.random() * prizeCount);
     const targetAngle = 360 * 5 + selectedIndex * anglePerPrize + offset;
-
     setRotation(targetAngle);
 
     setTimeout(async () => {
@@ -38,21 +47,24 @@ const SpinWheel: React.FC = () => {
       setSelectedPrize(result);
       setIsSpinning(false);
 
-      if (result.points > 0 && user._id) {
-        try {
-          const res = await axios.put(
-            `http://localhost:5000/api/users/${user._id}/add-points`,
-            { points: result.points },
-            { withCredentials: true }
-          );
+      // ✅ Send request to backend to add points & update lastSpinDate
+      try {
+        const res = await axios.put(
+          `http://localhost:5000/api/users/${user._id}/add-points`,
+          { points: result.points },
+          { withCredentials: true }
+        );
 
-          // ✅ update frontend copy of user with new points
-          const updatedUser = { ...user, points: res.data.newPoints };
-          setUser(updatedUser);
-          localStorage.setItem("user", JSON.stringify(updatedUser));
-        } catch (err) {
-          console.error("❌ Error adding points:", err);
-        }
+        // ✅ Update user object with new points & spin date
+        const updatedUser = {
+          ...user,
+          points: res.data.newPoints,
+          lastSpinDate: new Date().toISOString(),
+        };
+        setUser(updatedUser);
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+      } catch (err) {
+        console.error("❌ Error updating points:", err);
       }
     }, 4000);
   };
@@ -103,13 +115,19 @@ const SpinWheel: React.FC = () => {
 
       <button
         onClick={spin}
-        disabled={isSpinning}
-        className="spin-button"
+        disabled={isSpinning || alreadySpunToday}
+        className={`spin-button ${
+          alreadySpunToday ? "opacity-50 cursor-not-allowed" : ""
+        }`}
         style={{
           backgroundColor: colors.primary,
         }}
       >
-        {isSpinning ? "Spinning..." : "SPIN"}
+        {alreadySpunToday
+          ? "Come back tomorrow!"
+          : isSpinning
+          ? "Spinning..."
+          : "SPIN"}
       </button>
 
       {selectedPrize && (

@@ -19,6 +19,7 @@ interface User {
   profileImage: string;
   twofa: boolean;
   points: number;
+  lastSpinDate?: string | null;
 }
 
 interface AuthContextType {
