@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import Lottie from "lottie-react";
 import wheelAnimation from "../animations/prize-wheel.json"; 
+import quizzAnimation from "../animations/quizz.json"; 
 const games = [
     {
         title: "🎡 Prize Wheel",
@@ -11,12 +12,13 @@ const games = [
         lottie: wheelAnimation
       },
       
-  {
-    title: "🧠 Quiz Challenge",
-    description: "Test your food waste knowledge.",
-    route: "/dashboard/quiz-challenge",
-    bg: "bg-yellow-100"
-  },
+      {
+        title: "🧠 Quiz Challenge",
+        description: "Test your food waste knowledge.",
+        route: "/dashboard/quiz-challenge",
+        bg: "bg-yellow-100",
+        lottie: quizzAnimation,            // ← add this
+      },
   {
     title: "🚛 Delivery Dash",
     description: "Match donations to recipients fast!",
