@@ -126,8 +126,8 @@ function App() {
           />
           {/* ✅ Cart route for recipients */}
           <Route path="cart" element={<Cart />} />
-          <Route path="quiz" element={<QuizChallenge />} />
           <Route path="game-center" element={<GameCenter />} />
+          <Route path="quiz-challenge" element={<QuizChallenge />} />
           <Route path="prize-wheel" element={<SpinWheel />} />
         </Route>
       </Routes>

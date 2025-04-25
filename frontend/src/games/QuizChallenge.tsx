@@ -1,63 +1,85 @@
 import React, { useEffect, useState } from "react";
-import { generateFoodWasteQuiz } from "./quizService";
+import { fetchQuiz } from "./quizService";
 
-const QuizChallenge = () => {
-  const [question, setQuestion] = useState("");
-  const [options, setOptions] = useState<string[]>([]);
-  const [correctAnswer, setCorrectAnswer] = useState("");
+interface QuizItem {
+  question: string;
+  options: string[];
+  answer: string;
+}
+
+const QuizChallenge: React.FC = () => {
+  const [quiz, setQuiz] = useState<QuizItem[]>([]);
+  const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
-  const [result, setResult] = useState("");
+  const [score, setScore] = useState(0);
+  const [showResult, setShowResult] = useState(false);
 
-  const fetchQuiz = async () => {
-    const quizText = await generateFoodWasteQuiz();
+  useEffect(() => {
+    const loadQuiz = async () => {
+      try {
+        const data = await fetchQuiz();
+        setQuiz(data);
+      } catch (err) {
+        console.error("Failed to fetch quiz", err);
+      }
+    };
 
-    const questionMatch = quizText.match(/Question:\s*(.*)/);
-    const optionsMatch = quizText.match(/Options:\s*(.*)/);
-    const answerMatch = quizText.match(/Answer:\s*([A-D])/);
+    loadQuiz();
+  }, []);
 
-    if (questionMatch && optionsMatch && answerMatch) {
-      setQuestion(questionMatch[1]);
-      setOptions(optionsMatch[1].split(/,\s*/)); // A) ..., B) ...
-      setCorrectAnswer(answerMatch[1]);
+  const handleSelect = (option: string) => {
+    setSelected(option);
+  };
+
+  const handleNext = () => {
+    if (selected === quiz[current].answer) {
+      setScore((prev) => prev + 1);
+    }
+
+    if (current + 1 < quiz.length) {
+      setCurrent((prev) => prev + 1);
+      setSelected(null);
+    } else {
+      setShowResult(true);
     }
   };
 
-  useEffect(() => {
-    fetchQuiz();
-  }, []);
+  if (!quiz.length) return <p className="p-4">Loading quiz...</p>;
 
-  const handleAnswer = (letter: string) => {
-    setSelected(letter);
-    setResult(letter === correctAnswer ? "✅ Correct!" : "❌ Wrong answer");
-  };
+  if (showResult) {
+    return (
+      <div className="p-6 text-center">
+        <h2 className="text-2xl font-bold mb-4">Quiz Completed!</h2>
+        <p className="text-lg">Your Score: {score} / {quiz.length}</p>
+      </div>
+    );
+  }
+
+  const q = quiz[current];
 
   return (
-    <div className="p-4 bg-white rounded shadow-md">
-      <h2 className="text-xl font-bold mb-4">Quiz Challenge: Food Waste</h2>
-      <p className="mb-3">{question}</p>
-      <ul>
-        {options.map((opt) => {
-          const letter = opt.trim().charAt(0);
-          return (
-            <li key={letter}>
-              <button
-                className={`my-1 p-2 border rounded w-full text-left ${
-                  selected === letter
-                    ? letter === correctAnswer
-                      ? "bg-green-100 border-green-400"
-                      : "bg-red-100 border-red-400"
-                    : "hover:bg-gray-50"
-                }`}
-                onClick={() => handleAnswer(letter)}
-                disabled={!!selected}
-              >
-                {opt}
-              </button>
-            </li>
-          );
-        })}
+    <div className="max-w-2xl mx-auto p-6 bg-white rounded shadow">
+      <h2 className="text-xl font-semibold mb-4">{q.question}</h2>
+      <ul className="space-y-2">
+        {q.options.map((opt, index) => (
+          <li
+            key={index}
+            className={`border p-3 rounded cursor-pointer ${
+              selected === opt ? "bg-blue-200" : "hover:bg-gray-100"
+            }`}
+            onClick={() => handleSelect(opt)}
+          >
+            {opt}
+          </li>
+        ))}
       </ul>
-      {selected && <p className="mt-3 font-semibold">{result}</p>}
+      <button
+        onClick={handleNext}
+        disabled={!selected}
+        className="mt-4 bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+      >
+        {current === quiz.length - 1 ? "Finish" : "Next"}
+      </button>
     </div>
   );
 };

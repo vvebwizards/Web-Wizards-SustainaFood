@@ -14,7 +14,7 @@ const games = [
   {
     title: "🧠 Quiz Challenge",
     description: "Test your food waste knowledge.",
-    route: "/dashboard/quiz",
+    route: "/dashboard/quiz-challenge",
     bg: "bg-yellow-100"
   },
   {
