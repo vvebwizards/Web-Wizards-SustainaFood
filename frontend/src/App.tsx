@@ -32,6 +32,7 @@ import ConfirmEmail from "./pages/ConfirmEmail";
 import { CartProvider } from "./context/CartContext"; // ✅ Import CartProvider
 import Cart from "./pages/Cart"; // ✅ Import Cart page
 import MyRequests from "./pages/MyRequests"
+import QuizChallenge from "./games/QuizChallenge";
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user } = useAuth();
   if (user === undefined) {
@@ -125,6 +126,7 @@ function App() {
           />
           {/* ✅ Cart route for recipients */}
           <Route path="cart" element={<Cart />} />
+          <Route path="quiz" element={<QuizChallenge />} />
           <Route path="game-center" element={<GameCenter />} />
           <Route path="prize-wheel" element={<SpinWheel />} />
         </Route>
