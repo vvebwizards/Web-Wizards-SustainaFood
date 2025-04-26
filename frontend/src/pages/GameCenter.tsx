@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Lottie from "lottie-react";
 import wheelAnimation from "../animations/prize-wheel.json"; 
 import quizzAnimation from "../animations/quizz.json"; 
+import memory from "../animations/memory.json"; 
 const games = [
     {
         title: "🎡 Prize Wheel",
@@ -19,12 +20,14 @@ const games = [
         bg: "bg-yellow-100",
         lottie: quizzAnimation,            // ← add this
       },
-  {
-    title: "🚛 Delivery Dash",
-    description: "Match donations to recipients fast!",
-    route: "/dashboard/delivery-dash",
-    bg: "bg-blue-100"
-  },
+      {
+        title: "🧠 Memory Match",
+        description: "Flip cards to match pairs of food items before time runs out!",
+        route: "/dashboard/memory",
+        bg: "bg-blue-100",
+        lottie: memory,
+      }
+      
 ];
 
 const GameCenter = () => {

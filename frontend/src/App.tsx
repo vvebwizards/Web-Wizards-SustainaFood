@@ -7,6 +7,7 @@ import Login from "./pages/SignIn";
 import GameCenter from "./pages/GameCenter";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import MemoryGame from "./games/MemoryGame";
 import TwoFactorAuth from "./pages/TwoFactorAuth";
 import Layout from "./components/Layout";
 import Profile from "./pages/Profile";
@@ -129,6 +130,8 @@ function App() {
           <Route path="game-center" element={<GameCenter />} />
           <Route path="quiz-challenge" element={<QuizChallenge />} />
           <Route path="prize-wheel" element={<SpinWheel />} />
+          <Route path="/dashboard/memory" element={<MemoryGame />} />
+
         </Route>
       </Routes>
     </>
