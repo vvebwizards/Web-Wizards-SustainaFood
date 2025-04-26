@@ -178,7 +178,7 @@ const Layout: React.FC = () => {
         <div className="flex items-center space-x-6">
           {/* Prize Wheel Icon (All roles or specific roles) */}
           <NavLink
-  to="/dashboard/prize-wheel"
+  to="/dashboard/**"
   className="flex items-center space-x-1 p-2 text-gray-600 hover:text-gray-900"
   title="Prize Wheel"
 >

@@ -96,9 +96,9 @@ const QuizChallenge: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[300px]">
-        <Lottie animationData={loadingAnimation} loop={true} style={{ height: 180 }} />
-      </div>
+        <div className="flex justify-center items-center min-h-[300px]">
+        <Lottie animationData={loadingAnimation} loop={true} style={{ height: 360 }} />
+    </div>
     );
   }
 
