@@ -4,9 +4,29 @@ import { useAuth } from "../context/AuthContext";
 import { useNotifications } from "../context/NotificationContext";
 import { useCart } from "../context/CartContext";
 import {
-  Menu, Bell, ShoppingCart, Building2, UserCog, Package, Truck, LineChart,
-  ScrollText, Database, AlertTriangle, User, Heart, Calendar, MapPin,
-  History, Settings, Users, Clock, MessageSquare, Gauge , Gamepad2 , Gift
+  Menu,
+  Bell,
+  ShoppingCart,
+  Building2,
+  UserCog,
+  Package,
+  Truck,
+  LineChart,
+  ScrollText,
+  Database,
+  AlertTriangle,
+  User,
+  Heart,
+  Calendar,
+  MapPin,
+  History,
+  Settings,
+  Users,
+  Clock,
+  MessageSquare,
+  Gauge,
+  Gamepad2,
+  Gift,
 } from "lucide-react";
 import defaultProfileImage from "../assets/images/default_user_img.jpg";
 
@@ -33,14 +53,26 @@ const roleConfigs: Record<string, any> = {
     },
     navigation: [
       { to: "/dashboard/overview", icon: Gauge, label: "System Overview" },
-      { to: "/dashboard/UsersManagement", icon: UserCog, label: "User Management" },
-      { to: "/dashboard/organizations", icon: Building2, label: "Organizations" },
+      {
+        to: "/dashboard/UsersManagement",
+        icon: UserCog,
+        label: "User Management",
+      },
+      {
+        to: "/dashboard/organizations",
+        icon: Building2,
+        label: "Organizations",
+      },
       { to: "/dashboard/donations", icon: Package, label: "Donations" },
       { to: "/dashboard/deliveries", icon: Truck, label: "Deliveries" },
       { to: "/dashboard/reports", icon: LineChart, label: "Analytics" },
       { to: "/dashboard/logs", icon: ScrollText, label: "System Logs" },
       { to: "/dashboard/database", icon: Database, label: "Database" },
-      { to: "/dashboard/notifications", icon: AlertTriangle, label: "System Alerts" },
+      {
+        to: "/dashboard/notifications",
+        icon: AlertTriangle,
+        label: "System Alerts",
+      },
       { to: "/dashboard/settings", icon: Settings, label: "System Settings" },
     ],
   },
@@ -107,7 +139,11 @@ const roleConfigs: Record<string, any> = {
     },
     navigation: [
       { to: "/dashboard/profile", icon: User, label: "Profile" },
-      { to: "/dashboard/deliveries", icon: Truck, label: "Available Deliveries" },
+      {
+        to: "/dashboard/orders",
+        icon: Truck,
+        label: "Available Deliveries",
+      },
       { to: "/dashboard/schedule", icon: Calendar, label: "My Schedule" },
       { to: "/dashboard/active", icon: Clock, label: "Active Deliveries" },
       { to: "/dashboard/chat", icon: MessageSquare, label: "Communications" },
@@ -127,14 +163,14 @@ const Layout: React.FC = () => {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [profileImage, setProfileImage] = useState<string>(defaultProfileImage);
 
-
   const userRole = user?.role ?? "donor";
   const roleConfig = roleConfigs[userRole];
 
   if (!roleConfig) {
     return (
       <div className="p-6 text-red-600">
-        ❌ Unknown user role: <strong>{userRole}</strong>. Please check your role configuration.
+        ❌ Unknown user role: <strong>{userRole}</strong>. Please check your
+        role configuration.
       </div>
     );
   }
@@ -170,31 +206,37 @@ const Layout: React.FC = () => {
             <Menu className="h-6 w-6" />
           </button>
           <div className="flex items-center space-x-2">
-            <roleConfig.theme.icon className={`h-6 w-6 ${roleConfig.theme.colors.header}`} />
-            <span className="text-xl font-semibold text-gray-900">{displayRoleName}</span>
+            <roleConfig.theme.icon
+              className={`h-6 w-6 ${roleConfig.theme.colors.header}`}
+            />
+            <span className="text-xl font-semibold text-gray-900">
+              {displayRoleName}
+            </span>
           </div>
         </div>
 
         <div className="flex items-center space-x-6">
           {/* Prize Wheel Icon (All roles or specific roles) */}
           <NavLink
-  to="/dashboard/**"
-  className="flex items-center space-x-1 p-2 text-gray-600 hover:text-gray-900"
-  title="Prize Wheel"
->
-  <span className={`font-semibold text-sm ${roleConfig.theme.colors.text}`}>
-    {user?.points ?? 0} pts
-  </span>
-  <Gift className="h-6 w-6" />
-</NavLink>
+            to="/dashboard/**"
+            className="flex items-center space-x-1 p-2 text-gray-600 hover:text-gray-900"
+            title="Prize Wheel"
+          >
+            <span
+              className={`font-semibold text-sm ${roleConfig.theme.colors.text}`}
+            >
+              {user?.points ?? 0} pts
+            </span>
+            <Gift className="h-6 w-6" />
+          </NavLink>
 
           {/* Game Center Icon (All roles or specific roles) */}
           <NavLink
             to="/dashboard/game-center"
-              className="relative p-2 text-gray-600 hover:text-gray-900"
-               title="Game Center"
-                          >
-              <Gamepad2 className="h-6 w-6" />
+            className="relative p-2 text-gray-600 hover:text-gray-900"
+            title="Game Center"
+          >
+            <Gamepad2 className="h-6 w-6" />
           </NavLink>
 
           {/* Notifications */}
@@ -204,9 +246,9 @@ const Layout: React.FC = () => {
               className="relative p-2 text-gray-600 hover:text-gray-900"
             >
               <Bell className="h-6 w-6" />
-              {notifications.filter(n => !n.isRead).length > 0 && (
+              {notifications.filter((n) => !n.isRead).length > 0 && (
                 <span className="absolute top-0 right-0 bg-red-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full">
-                  {notifications.filter(n => !n.isRead).length}
+                  {notifications.filter((n) => !n.isRead).length}
                 </span>
               )}
             </button>
@@ -231,7 +273,10 @@ const Layout: React.FC = () => {
 
           {/* Cart Icon (Recipients Only) */}
           {userRole === "recipient" && (
-            <NavLink to="/dashboard/cart" className="relative p-2 text-gray-600 hover:text-gray-900">
+            <NavLink
+              to="/dashboard/cart"
+              className="relative p-2 text-gray-600 hover:text-gray-900"
+            >
               <ShoppingCart className="h-6 w-6" />
               {cartItems.length > 0 && (
                 <span className="absolute top-0 right-0 bg-blue-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full">
@@ -241,7 +286,9 @@ const Layout: React.FC = () => {
             </NavLink>
           )}
 
-          <span className="text-gray-900 font-medium">Welcome, {user?.username}</span>
+          <span className="text-gray-900 font-medium">
+            Welcome, {user?.username}
+          </span>
           <img
             src={profileImage}
             alt="Profile"
@@ -260,7 +307,11 @@ const Layout: React.FC = () => {
       </header>
 
       <div className="flex mt-16">
-        <nav className={`w-64 bg-white shadow-lg p-5 ${sidebarOpen ? "block" : "hidden"}`}>
+        <nav
+          className={`w-64 bg-white shadow-lg p-5 ${
+            sidebarOpen ? "block" : "hidden"
+          }`}
+        >
           <ul>
             {roleConfig.navigation.map((item: any) => (
               <li key={item.to}>

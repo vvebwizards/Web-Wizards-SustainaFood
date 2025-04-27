@@ -32,8 +32,10 @@ import SpinWheel from "./games/SpinWheel";
 import ConfirmEmail from "./pages/ConfirmEmail";
 import { CartProvider } from "./context/CartContext"; // ✅ Import CartProvider
 import Cart from "./pages/Cart"; // ✅ Import Cart page
-import MyRequests from "./pages/MyRequests"
+import MyRequests from "./pages/MyRequests";
 import QuizChallenge from "./games/QuizChallenge";
+import OrdersList from "./pages/OrdersList";
+import OrderDetails from "./pages/OrderDetails";
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user } = useAuth();
   if (user === undefined) {
@@ -74,7 +76,6 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/2fa" element={<TwoFactorAuth />} />
-
         <Route
           path="/dashboard"
           element={
@@ -109,6 +110,7 @@ function App() {
           <Route path="my-requests" element={<MyRequests />} />
           <Route path="notifications" element={<Notifications />} />
           <Route path="UpdateProfile/:userId" element={<UpdateProfile />} />
+
           <Route
             path="inventory"
             element={
@@ -131,7 +133,8 @@ function App() {
           <Route path="quiz-challenge" element={<QuizChallenge />} />
           <Route path="prize-wheel" element={<SpinWheel />} />
           <Route path="/dashboard/memory" element={<MemoryGame />} />
-
+          <Route path="orders" element={<OrdersList />} />
+          <Route path="orders/:id" element={<OrderDetails />} />
         </Route>
       </Routes>
     </>
