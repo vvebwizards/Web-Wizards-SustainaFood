@@ -1,55 +1,36 @@
-import React, { useEffect, useState } from "react";
-import { fetchQuiz } from "./quizService";
+// src/games/QuizChallenge.tsx
+import React, { useState } from "react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
-import Lottie from "lottie-react";
-import loadingAnimation from "../animations/thinking.json";
-import { CheckCircle, XCircle } from "lucide-react";
-
-interface QuizItem {
-  question: string;
-  options: string[];
-  answer: string;
-}
+import { quizData, QuizItem } from "./quizService";
 
 const QUESTIONS_PER_LEVEL = 3;
+const LEVEL_BONUS = 10; // bonus points per passed level
 
-const QuizChallenge: React.FC = () => {
-  const [quiz, setQuiz] = useState<QuizItem[]>([]);
+export default function QuizChallenge() {
+  const { user, setUser } = useAuth();
   const [level, setLevel] = useState(1);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
   const [score, setScore] = useState(0);
+  const [points, setPoints] = useState(0); // total points accumulator
   const [showResult, setShowResult] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const { user, setUser } = useAuth();
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const data = await fetchQuiz();
-        setQuiz(data);
-        setLoading(false);
-      } catch (err) {
-        console.error("Failed to fetch quiz:", err);
-        setLoading(false);
-      }
-    })();
-  }, []);
+  // questions for current level
+  const levelQuiz: QuizItem[] = quizData[level - 1];
+  const progress = ((currentIndex) / QUESTIONS_PER_LEVEL) * 100;
 
   const handleSelect = (opt: string) => {
-    setSelected(opt);
+    if (!showResult) setSelected(opt);
   };
 
   const handleNext = () => {
-    const question = quiz[currentIndex];
-    if (selected?.trim().startsWith(question.answer)) {
-      setScore((prev) => prev + 1);
+    const q = levelQuiz[currentIndex];
+    if (selected?.startsWith(q.answer)) {
+      setScore(s => s + 1);
     }
-
-    const nextIndex = currentIndex + 1;
-    if (nextIndex < QUESTIONS_PER_LEVEL) {
-      setCurrentIndex(nextIndex);
+    if (currentIndex + 1 < QUESTIONS_PER_LEVEL) {
+      setCurrentIndex(i => i + 1);
       setSelected(null);
     } else {
       setShowResult(true);
@@ -59,119 +40,108 @@ const QuizChallenge: React.FC = () => {
   const handleNextLevel = async () => {
     const passed = score >= 2;
     if (passed) {
-      try {
-        const resPts = await axios.put(
-          `http://localhost:5000/api/users/${user!._id}/add-points`,
-          { points: 30 },
-          { withCredentials: true }
-        );
-        const updatedUser = { ...user!, points: resPts.data.newPoints };
-        setUser(updatedUser);
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-      } catch (err) {
-        console.error("❌ Error awarding level bonus:", err);
+      const earned = LEVEL_BONUS + score;
+      setPoints(prev => prev + earned);
+      // send earned points to backend
+      if (user?._id && earned > 0) {
+        try {
+          const res = await axios.put(
+            `http://localhost:5000/api/users/${user._id}/add-points`,
+            { points: earned },
+            { withCredentials: true }
+          );
+          // update Auth context
+          const updatedUser = { ...user, points: res.data.newPoints };
+          setUser(updatedUser);
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+        } catch (err) {
+          console.error("❌ Error awarding level points", err);
+        }
       }
-
-      try {
-        setLoading(true);
-        const newQuiz = await fetchQuiz();
-        setQuiz(newQuiz);
-        setLevel((prev) => prev + 1);
-        setCurrentIndex(0);
-        setScore(0);
-        setShowResult(false);
-        setSelected(null);
-        setLoading(false);
-      } catch (err) {
-        console.error("❌ Failed to fetch next level quiz:", err);
-        setLoading(false);
-      }
-    } else {
-      setCurrentIndex(0);
-      setScore(0);
-      setShowResult(false);
-      setSelected(null);
     }
+    // advance or retry
+    if (passed && level < quizData.length) {
+      setLevel(l => l + 1);
+    }
+    setCurrentIndex(0);
+    setScore(0);
+    setSelected(null);
+    setShowResult(false);
   };
 
-  if (loading) {
-    return (
-        <div className="flex justify-center items-center min-h-[300px]">
-        <Lottie animationData={loadingAnimation} loop={true} style={{ height: 360 }} />
-    </div>
-    );
-  }
-
+  // Result screen
   if (showResult) {
     const passed = score >= 2;
     return (
-      <div className="p-8 max-w-xl mx-auto text-center bg-white rounded-lg shadow-lg mt-10">
-        {passed ? (
-          <CheckCircle className="text-green-500 w-12 h-12 mx-auto mb-2" />
-        ) : (
-          <XCircle className="text-red-500 w-12 h-12 mx-auto mb-2" />
-        )}
-        <h2 className="text-3xl font-bold mb-4">Level {level} Completed</h2>
-        <p className="text-lg mb-4">Score: {score} / {QUESTIONS_PER_LEVEL}</p>
-        <p className={`mb-6 ${passed ? "text-green-600" : "text-red-600"}`}>
-          {passed ? "✅ You passed!" : "❌ You need at least 2 correct."}
+      <div className="p-8 max-w-lg mx-auto bg-gray-50 rounded-xl shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Level {level} Complete</h2>
+        <p className="text-lg mb-2">
+          You scored <span className="font-mono">{score}</span> / {QUESTIONS_PER_LEVEL}
         </p>
-        <button
-          onClick={handleNextLevel}
-          className={`px-5 py-2 rounded text-white font-semibold ${passed ? "bg-green-600 hover:bg-green-700" : "bg-blue-600 hover:bg-blue-700"}`}
-        >
-          {passed ? "Next Level" : "Retry Level"}
-        </button>
+        <p className="text-md mb-4">
+          Total Points: <span className="font-mono">{points}</span>
+        </p>
+        {passed ? (
+          level < quizData.length ? (
+            <button
+              onClick={handleNextLevel}
+              className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
+            >
+              Next Level →
+            </button>
+          ) : (
+            <p className="text-green-600 text-xl font-semibold">
+              🎉 You've completed all levels with {points} points! 🎉
+            </p>
+          )
+        ) : (
+          <button
+            onClick={handleNextLevel}
+            className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+          >
+            Retry Level 🔄
+          </button>
+        )}
       </div>
     );
   }
 
-  const q = quiz[currentIndex];
-
+  // Question screen
+  const q = levelQuiz[currentIndex];
   return (
-    <div className="max-w-3xl mx-auto p-6 mt-10 bg-gradient-to-br from-white via-blue-50 to-blue-100 rounded-xl shadow-xl">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-blue-800">Level {level}</h2>
-        <div className="mt-2 w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+    <div className="p-6 max-w-xl mx-auto">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xl font-semibold">Level {level}</h3>
+        <div className="w-1/2 h-2 bg-gray-200 rounded-full overflow-hidden">
           <div
-            className="bg-blue-600 h-full"
-            style={{ width: `${((currentIndex + 1) / QUESTIONS_PER_LEVEL) * 100}%` }}
-          ></div>
+            className="h-2 bg-blue-500"
+            style={{ width: `${progress + (100/QUESTIONS_PER_LEVEL)}%` }}
+          />
         </div>
-        <p className="text-gray-600 mt-1 text-sm">
-          Question {currentIndex + 1} of {QUESTIONS_PER_LEVEL}
-        </p>
       </div>
-
-      <h3 className="text-xl font-medium mb-6">{q.question}</h3>
-
-      <ul className="grid gap-4">
-        {q.options.map((opt, i) => (
-          <li
-            key={i}
-            className={`p-4 border rounded-lg text-left shadow-sm transition-all cursor-pointer ${
-              selected === opt
-                ? "bg-blue-100 border-blue-400 scale-[1.02]"
-                : "hover:bg-gray-100"
-            }`}
-            onClick={() => handleSelect(opt)}
-          >
-            {opt}
-          </li>
-        ))}
-      </ul>
-
-      <div className="text-center mt-6">
+      <div className="bg-white p-6 rounded-lg shadow">
+        <h4 className="text-lg font-medium mb-4">{q.question}</h4>
+        <ul className="grid grid-cols-1 gap-3">
+          {q.options.map(opt => (
+            <li
+              key={opt}
+              onClick={() => handleSelect(opt)}
+              className={`p-3 border rounded-lg cursor-pointer transition
+                ${selected === opt ? "border-blue-500 bg-blue-50" : "hover:bg-gray-100"}
+              `}
+            >
+              {opt}
+            </li>
+          ))}
+        </ul>
         <button
           onClick={handleNext}
           disabled={!selected}
-          className="bg-blue-600 text-white px-6 py-2 mt-4 rounded-md font-semibold disabled:opacity-50"
+          className="mt-6 w-full py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50 transition hover:bg-blue-600"
         >
-          {currentIndex === QUESTIONS_PER_LEVEL - 1 ? "Finish Level" : "Next"}
+          {currentIndex + 1 === QUESTIONS_PER_LEVEL ? "Finish Level" : "Next Question"}
         </button>
       </div>
     </div>
   );
-};
-
-export default QuizChallenge;
+}
