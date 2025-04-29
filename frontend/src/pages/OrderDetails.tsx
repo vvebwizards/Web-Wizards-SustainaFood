@@ -117,7 +117,7 @@ const OrderDetails: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6">
         <div>
           <Link
-            to="/orders"
+            to="/dashboard/orders"
             className="inline-flex items-center text-blue-600 hover:text-blue-800"
           >
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Orders

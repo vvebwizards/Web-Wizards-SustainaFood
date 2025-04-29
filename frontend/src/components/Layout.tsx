@@ -139,10 +139,11 @@ const roleConfigs: Record<string, any> = {
     },
     navigation: [
       { to: "/dashboard/profile", icon: User, label: "Profile" },
+      { to: "/dashboard/orders", icon: Package, label: "Orders" },
       {
-        to: "/dashboard/orders",
+        to: "/dashboard/deliveries",
         icon: Truck,
-        label: "Available Deliveries",
+        label: "Deliveries",
       },
       { to: "/dashboard/schedule", icon: Calendar, label: "My Schedule" },
       { to: "/dashboard/active", icon: Clock, label: "Active Deliveries" },

@@ -36,6 +36,7 @@ import MyRequests from "./pages/MyRequests";
 import QuizChallenge from "./games/QuizChallenge";
 import OrdersList from "./pages/OrdersList";
 import OrderDetails from "./pages/OrderDetails";
+import Deliveries from "./pages/Deliveries";
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user } = useAuth();
   if (user === undefined) {
@@ -135,6 +136,7 @@ function App() {
           <Route path="/dashboard/memory" element={<MemoryGame />} />
           <Route path="orders" element={<OrdersList />} />
           <Route path="orders/:id" element={<OrderDetails />} />
+          <Route path="deliveries" element={<Deliveries />} />
         </Route>
       </Routes>
     </>
