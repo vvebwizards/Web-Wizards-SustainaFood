@@ -85,9 +85,9 @@ export default function MemoryGame() {
       });
       setPoints(p => p + award);
       // persist points
-      if (user?._id) {
+      if (user?.id) {
         axios.put(
-          `http://localhost:5000/api/users/${user._id}/add-points`,
+          `http://localhost:5000/api/users/${user.id}/add-points`,
           { points: award },
           { withCredentials: true }
         )

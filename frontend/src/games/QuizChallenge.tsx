@@ -43,10 +43,10 @@ export default function QuizChallenge() {
       const earned = LEVEL_BONUS + score;
       setPoints(prev => prev + earned);
       // send earned points to backend
-      if (user?._id && earned > 0) {
+      if (user?.id && earned > 0) {
         try {
           const res = await axios.put(
-            `http://localhost:5000/api/users/${user._id}/add-points`,
+            `http://localhost:5000/api/users/${user.id}/add-points`,
             { points: earned },
             { withCredentials: true }
           );

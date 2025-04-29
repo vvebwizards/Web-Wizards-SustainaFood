@@ -47,10 +47,16 @@ const SpinWheel: React.FC = () => {
       setSelectedPrize(result);
       setIsSpinning(false);
 
+      // ✅ Ensure user._id exists before making the request
+      if (!user || !user.id) {
+        console.error("User ID is missing!");
+        return; // Don't continue if user._id is not available
+      }
+
       // ✅ Send request to backend to add points & update lastSpinDate
       try {
         const res = await axios.put(
-          `http://localhost:5000/api/users/${user._id}/add-points`,
+          `http://localhost:5000/api/users/${user.id}/add-points`,
           { points: result.points },
           { withCredentials: true }
         );
