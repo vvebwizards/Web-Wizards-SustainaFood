@@ -4,8 +4,10 @@ import Home from "./pages/HomePage";
 import SignUp from "./pages/signup";
 import GetInvolved from "./pages/GetInvolved";
 import Login from "./pages/SignIn";
+import GameCenter from "./pages/GameCenter";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import MemoryGame from "./games/MemoryGame";
 import TwoFactorAuth from "./pages/TwoFactorAuth";
 import Layout from "./components/Layout";
 import Profile from "./pages/Profile";
@@ -19,32 +21,32 @@ import { NotificationProvider } from "./context/NotificationContext";
 import { AdminProvider } from "./context/AdminContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
-import PublicRoute from "./components/PublicRoute"; // Import the PublicRoute component
+import PublicRoute from "./components/PublicRoute";
 import Inventory from "./pages/Inventory";
 import { InventoryProvider } from "./context/InventoryContext";
 import { SettingsProvider } from "./context/SettingsContext";
 import FoodBank from "./pages/FoodBank";
 import { FoodBankProvider } from "./context/FoodBankContext";
-        import VerifyEmail from "./pages/VerifyEmail";
+import VerifyEmail from "./pages/VerifyEmail";
+import SpinWheel from "./games/SpinWheel";
 import ConfirmEmail from "./pages/ConfirmEmail";
-
+import { CartProvider } from "./context/CartContext"; // ✅ Import CartProvider
+import Cart from "./pages/Cart"; // ✅ Import Cart page
+import MyRequests from "./pages/MyRequests";
+import QuizChallenge from "./games/QuizChallenge";
+import OrdersList from "./pages/OrdersList";
+import OrderDetails from "./pages/OrderDetails";
+import Deliveries from "./pages/Deliveries";
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user } = useAuth();
   if (user === undefined) {
     return <div>Loading...</div>;
   }
-
-
-
-
   if (user === null) {
     return <Navigate to="/signin" replace />;
   }
-
   return children;
 }
-
 
 function App() {
   return (
@@ -53,11 +55,9 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/get-involved" element={<GetInvolved />} />
-
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/confirm-email" element={<ConfirmEmail />} />
 
- 
         <Route
           path="/signup"
           element={
@@ -77,37 +77,66 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/2fa" element={<TwoFactorAuth />} />
-
-        <Route 
-          path="/dashboard" 
+        <Route
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <NotificationProvider>
-                <Layout />
+                <CartProvider>
+                  <Layout />
+                </CartProvider>
               </NotificationProvider>
             </ProtectedRoute>
           }
         >
           <Route index element={<WelcomePage />} />
           <Route path="profile" element={<Profile />} />
-          <Route 
-            path="UsersManagement" 
+          <Route
+            path="UsersManagement"
             element={
               <AdminProvider>
                 <Users />
               </AdminProvider>
-            } 
+            }
           />
           <Route path="statistics" element={<Statistics />} />
-          <Route path="settings" element={<SettingsProvider><Settings /></SettingsProvider>}></Route>
+          <Route
+            path="settings"
+            element={
+              <SettingsProvider>
+                <Settings />
+              </SettingsProvider>
+            }
+          />
+          <Route path="my-requests" element={<MyRequests />} />
           <Route path="notifications" element={<Notifications />} />
           <Route path="UpdateProfile/:userId" element={<UpdateProfile />} />
-          <Route path="inventory" element={ <InventoryProvider><Inventory /> </InventoryProvider> } />
-          <Route path="available" element={
-            <FoodBankProvider>
-              <FoodBank />
-            </FoodBankProvider>
-          } />
+
+          <Route
+            path="inventory"
+            element={
+              <InventoryProvider>
+                <Inventory />
+              </InventoryProvider>
+            }
+          />
+          <Route
+            path="available"
+            element={
+              <FoodBankProvider>
+                <FoodBank />
+              </FoodBankProvider>
+            }
+          />
+          {/* ✅ Cart route for recipients */}
+          <Route path="cart" element={<Cart />} />
+          <Route path="game-center" element={<GameCenter />} />
+          <Route path="quiz-challenge" element={<QuizChallenge />} />
+          <Route path="prize-wheel" element={<SpinWheel />} />
+          <Route path="/dashboard/memory" element={<MemoryGame />} />
+          <Route path="orders" element={<OrdersList />} />
+          <Route path="orders/:id" element={<OrderDetails />} />
+          <Route path="deliveries" element={<Deliveries />} />
         </Route>
       </Routes>
     </>

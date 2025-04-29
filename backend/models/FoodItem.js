@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const FoodItemSchema = new mongoose.Schema({
   id: { type: String },
+
   title: { type: String , required : true},
   category: { type: String ,required : true},
   quantityInStock: { type: Number ,required : true},
@@ -13,18 +14,20 @@ const FoodItemSchema = new mongoose.Schema({
   status: { 
     type: String, 
    enum: ['In Stock', 'Pending Donation', 'Scheduled', 'Donated', 'Expired', 'Damaged'],
+
     default: 'In Stock'
   },
-  donorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, 
-  imageUrl: { type: String, required: false },
+  donorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  imageUrl: { type: String },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
-  type : {
-    type : String ,
-    enum : ["free","reduced"]
+  type: {
+    type: String,
+    enum: ["free", "reduced"]
   },
-  quantityToDonation : { type: Number,default: 0, min: 0  },
+  quantityToDonation: { type: Number, default: 0, min: 0 },
   freshness: { type: String, default: "Unknown" },
 });
 
-export default mongoose.model("FoodItem",FoodItemSchema)
+
+export default mongoose.models.FoodItem || mongoose.model("FoodItem", FoodItemSchema);

@@ -25,7 +25,15 @@ const userSchema = new mongoose.Schema({
   otpExpires: { type: Date, default: null },
   verified: { type: Boolean, default: false },
   verificationToken: { type: String },
+  lastSpinDate: {
+    type: Date,
+    default: null,
+  },
   lastActive: { type: Date, default: Date.now },
+  points: {
+    type: Number,
+    default: 0,
+  },
   isDeleted: { type: Boolean, default: false },
   googleId: { type: String, default: null },
   

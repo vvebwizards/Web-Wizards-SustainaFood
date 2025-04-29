@@ -16,6 +16,9 @@ import path from "path";
 import { fileURLToPath } from "url";
 import CategoryRoutes from "./routes/CategoryRoutes.js"
 import {refreshUserCronJobs} from './utils/scheduler.js';
+import orderRoutes from "./routes/orderRoutes.js";
+import quizRoutes from './routes/quizRoutes.js';
+
 // Import and initialize Passport for Google Auth
 import passport from "passport";
 import "./passport.js"; // This file contains your Passport Google strategy configuration
@@ -66,8 +69,10 @@ app.use("/api/auth", authRoutes);
 app.use("/api/auth/me", getMe);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/orders", orderRoutes);
 app.use("/api/foodItem",FoodItemRoutes);
 app.use("/api/category",CategoryRoutes);
+app.use('/api', quizRoutes);
 app.use("/api/settings", settingsRoutes);
 app.get("/", (req, res) => {
   res.send("Backend connected to frontend");
