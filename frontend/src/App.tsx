@@ -12,6 +12,7 @@ import TwoFactorAuth from "./pages/TwoFactorAuth";
 import Layout from "./components/Layout";
 import Profile from "./pages/Profile";
 import Statistics from "./pages/Statistics";
+import TicTacToe from "./games/TicTacToe";
 import Settings from "./pages/Settings";
 import Notifications from "./pages/Notifications";
 import Users from "./pages/UserManagement";
@@ -131,7 +132,7 @@ function App() {
           <Route path="quiz-challenge" element={<QuizChallenge />} />
           <Route path="prize-wheel" element={<SpinWheel />} />
           <Route path="/dashboard/memory" element={<MemoryGame />} />
-
+          <Route path="/dashboard/tic-tac-toe" element={<TicTacToe />} />
         </Route>
       </Routes>
     </>

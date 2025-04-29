@@ -4,6 +4,8 @@ import Lottie from "lottie-react";
 import wheelAnimation from "../animations/prize-wheel.json"; 
 import quizzAnimation from "../animations/quizz.json"; 
 import memory from "../animations/memory.json"; 
+import TicTacToe from "../animations/TicTacToe.json"; 
+
 const games = [
     {
         title: "🎡 Prize Wheel",
@@ -26,7 +28,15 @@ const games = [
         route: "/dashboard/memory",
         bg: "bg-blue-100",
         lottie: memory,
+      },
+      {
+        title: "🎮 Tic-Tac-Toe",
+        description: "Play Tic-Tac-Toe against AI or your friends! Choose your symbol and difficulty.",
+        route: "/dashboard/tictactoe",
+        bg: "bg-red-100", 
+        lottie: TicTacToe, 
       }
+      
       
 ];
 
