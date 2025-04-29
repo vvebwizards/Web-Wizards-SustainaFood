@@ -1,11 +1,14 @@
 import React from 'react';
 import { Heart, X } from 'lucide-react';
-import { toast } from 'react-toastify';
-import { FoodItem } from '../components/FoodItemModal';
 
 interface DonationItem {
-  item: FoodItem;
-  quantity: number;
+  item: {
+    id: string;
+    title: string;
+    quantityToDonation: number;
+    unit?: string; // Unit is optional as it's missing in the data
+  };
+  quantityInStock?: number;
   quantityToDonation: number;
 }
 
@@ -17,12 +20,14 @@ interface DonationZoneProps {
 }
 
 const DonationZone: React.FC<DonationZoneProps> = ({ donationItems, setDonationItems, handleDrop, handleDragOver }) => {
+  // Log the entire donationItems array to the console
+  console.log('DonationZone donationItems:', donationItems);
+
   const handleDonationInputChange = (index: number, value: number) => {
     setDonationItems(prev => {
       const updated = [...prev];
-      const maxQuantity = updated[index].item.quantity + updated[index].quantityToDonation;
+      const maxQuantity = updated[index].quantityToDonation;
       updated[index].quantityToDonation = value > maxQuantity ? maxQuantity : value < 0 ? 0 : value;
-      updated[index].quantity = maxQuantity - updated[index].quantityToDonation;
       return updated;
     });
   };
@@ -45,10 +50,13 @@ const DonationZone: React.FC<DonationZoneProps> = ({ donationItems, setDonationI
           <p className="text-gray-500 text-sm text-center">No items available for donation</p>
         ) : (
           donationItems.map((donation, index) => (
-            <div key={index} className="mb-4 p-3 bg-white border border-green-600 rounded-lg">
+            <div
+              key={donation.item.id || `donation-${index}`} // Use item.id as the key
+              className="mb-4 p-3 bg-white border border-green-600 rounded-lg"
+            >
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium text-gray-900">
-                  {`${donation.item.title} to donate - ${donation.quantityToDonation} ${donation.item.unit} (Remaining: ${donation.quantity} ${donation.item.unit})`}
+                  {`${donation.item.title || 'Unknown Item'} to donate - ${donation.quantityToDonation} ${donation.item.unit || 'units'}`}
                 </span>
                 <button onClick={() => handleRemoveDonationItem(index)} className="text-red-600 hover:text-red-900">
                   <X size={16} />
@@ -58,7 +66,7 @@ const DonationZone: React.FC<DonationZoneProps> = ({ donationItems, setDonationI
                 <input
                   type="number"
                   min="0"
-                  max={donation.quantity + donation.quantityToDonation}
+                  max={donation.quantityToDonation}
                   value={donation.quantityToDonation}
                   onChange={(e) => handleDonationInputChange(index, parseInt(e.target.value) || 0)}
                   className="w-full px-2 py-1 border border-gray-300 rounded-md text-sm"

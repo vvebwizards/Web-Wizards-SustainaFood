@@ -54,7 +54,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const formData = new FormData();
       formData.append('title', item.title);
       formData.append('category', item.category);
-      formData.append('quantity', item.quantity.toString());
+      formData.append('quantityInStock', item.quantityInStock.toString());
       formData.append('unit', item.unit);
       formData.append('expirationDate', item.expirationDate);
       if (item.nutritionalInfo) formData.append('nutritionalInfo', item.nutritionalInfo);
@@ -88,7 +88,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const formData = new FormData();
       if (item.title !== undefined) formData.append('title', item.title);
       if (item.category !== undefined) formData.append('category', item.category);
-      if (item.quantity !== undefined) formData.append('quantity', item.quantity.toString());
+      if (item.quantityInStock !== undefined) formData.append('quantity', item.quantityInStock.toString());
       if (item.unit !== undefined) formData.append('unit', item.unit);
       if (item.expirationDate !== undefined) formData.append('expirationDate', item.expirationDate);
       if (item.nutritionalInfo !== undefined) formData.append('nutritionalInfo', item.nutritionalInfo);
@@ -211,7 +211,7 @@ const fetchFoodAvailableForDonation = async (): Promise<FoodItem[]> => {
     }
 
     const data = await response.json();
-    return data.foodItems; // Return the array of food items
+    return data.foodItems; 
   } catch (err) {
     setError(err.message || 'Error fetching food items for donation');
     console.warn('Error:', err);

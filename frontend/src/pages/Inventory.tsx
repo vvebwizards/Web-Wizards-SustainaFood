@@ -14,7 +14,7 @@ interface Category {
 
 interface DonationItem {
   item: FoodItem;
-  quantity: number;
+  quantityInStock: number;
   quantityToDonation: number;
 }
 
@@ -45,7 +45,7 @@ const Inventory: React.FC = () => {
           }
           return {
             item: foodItem,
-            quantity: foodItem.quantity,
+            quantityInStock: foodItem.quantityInStock,
             quantityToDonation: foodItem.quantityToDonation || 0
           };
         });
@@ -109,7 +109,7 @@ const Inventory: React.FC = () => {
     }
     const donationItem: DonationItem = {
       item: itemData,
-      quantity: itemData.quantity,
+      quantityInStock: itemData.quantityInStock,
       quantityToDonation: itemData.quantityToDonation || 0
     };
     setPendingDonation(donationItem);
@@ -124,25 +124,33 @@ const Inventory: React.FC = () => {
   const handleConfirmDonation = async () => {
     if (!pendingDonation) return;
 
-    if (donationQuantity <= 0 || donationQuantity > pendingDonation.item.quantity) {
+    if (donationQuantity <= 0 || donationQuantity > pendingDonation.item.quantityInStock) {
       toast.error('Please enter a valid quantity (greater than 0 and not exceeding available amount)');
       return;
     }
 
     try {
-      const response = await donateFoodItem(pendingDonation.item._id, donationQuantity);
-      const updatedFoodItem = response.foodItem;
+      await donateFoodItem(pendingDonation.item._id, donationQuantity);
+
+      // Manually update the FoodItem based on donation logic
+      const updatedFoodItem = {
+        ...pendingDonation.item,
+        quantityToDonation: (pendingDonation.item.quantityToDonation || 0) + donationQuantity,
+        quantityInStock: pendingDonation.item.quantityInStock - donationQuantity,
+        status: pendingDonation.item.quantityInStock - donationQuantity === 0 ? 'Pending Donation' : pendingDonation.item.status
+      };
 
       setDonationItems(prev => {
         const updated = prev.filter(d => d.item._id !== pendingDonation.item._id);
         return [...updated, {
           item: updatedFoodItem,
-          quantity: updatedFoodItem.quantity,
-          quantityToDonation: updatedFoodItem.quantityToDonation
+          quantityInStock: updatedFoodItem.quantityInStock,
+          quantityToDonation: updatedFoodItem.quantityToDonation || 0
         }];
       });
-      toast.success(response.message || 'Item marked for donation successfully');
+      toast.success('Item marked for donation successfully');
     } catch (err: any) {
+      console.error('Error in handleConfirmDonation:', err);
       toast.error(err.message || 'Failed to mark item for donation');
     } finally {
       setShowConfirmModal(false);
@@ -269,14 +277,14 @@ const Inventory: React.FC = () => {
                           ) : (
                             <div className="h-8 w-8 bg-gray-200 rounded flex items-center justify-center text-gray-500 text-xs">
                               N/A
-arky-                            </div>
+                            </div>
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {item.title || 'Untitled'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {item.quantity} {item.unit}
+                          {item.quantityInStock} {item.unit}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                           {item.expirationDate ? new Date(item.expirationDate).toLocaleDateString() : 'N/A'}
@@ -382,12 +390,12 @@ arky-                            </div>
             </p>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Quantity to Donate (Max: {pendingDonation.item.quantity} {pendingDonation.item.unit})
+                Quantity to Donate (Max: {pendingDonation.item.quantityInStock} {pendingDonation.item.unit || ''})
               </label>
               <input
                 type="number"
                 min="1"
-                max={pendingDonation.item.quantity}
+                max={pendingDonation.item.quantityInStock}
                 value={donationQuantity}
                 onChange={(e) => setDonationQuantity(parseInt(e.target.value) || 0)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"

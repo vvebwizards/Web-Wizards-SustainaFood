@@ -2,7 +2,7 @@ export interface FoodItem {
     _id?: Key | null | undefined;
     title: string;
     category: string;
-    quantity: number;
+    quantityInStock: number;
     unit: string;
     expirationDate: string;
     nutritionalInfo?: string;

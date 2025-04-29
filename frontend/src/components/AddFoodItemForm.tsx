@@ -20,7 +20,7 @@ const AddFoodItemForm: React.FC<AddFoodItemFormProps> = ({ categories, editingIt
   const [formData, setFormData] = useState<Omit<FoodItem, '_id' | 'createdAt' | 'updatedAt'> & { imageFile?: File }>({
     title: editingItem?.title || '',
     category: editingItem?.category || categories[0]?.name || 'produce',
-    quantity: editingItem?.quantity || 0,
+    quantityInStock: editingItem?.quantityInStock || 0,
     unit: editingItem?.unit || 'kg',
     expirationDate: editingItem?.expirationDate || '',
     nutritionalInfo: editingItem?.nutritionalInfo || '',
@@ -41,7 +41,7 @@ const AddFoodItemForm: React.FC<AddFoodItemFormProps> = ({ categories, editingIt
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    if (name === 'quantity' || name === 'quantityToDonation') {
+    if (name === 'quantityInStock' || name === 'quantityToDonation') {
       setFormData(prev => ({ ...prev, [name]: parseInt(value) || 0 }));
     } else if (name === 'image' && e.target instanceof HTMLInputElement && e.target.files) {
       setFormData(prev => ({ ...prev, imageFile: e.target.files[0] }));
@@ -54,7 +54,7 @@ const AddFoodItemForm: React.FC<AddFoodItemFormProps> = ({ categories, editingIt
     e.preventDefault();
     setIsFoodRotten(false);
 
-    if (formData.quantity <= 0) {
+    if (formData.quantityInStock <= 0) {
       toast.error('The quantity must be greater than 0');
       return;
     }
@@ -188,8 +188,8 @@ const AddFoodItemForm: React.FC<AddFoodItemFormProps> = ({ categories, editingIt
               <label className="block text-sm font-medium text-gray-700 mb-1">Quantity*</label>
               <input
                 type="number"
-                name="quantity"
-                value={formData.quantity}
+                name="quantityInStock"
+                value={formData.quantityInStock}
                 onChange={handleInputChange}
                 required
                 min="0"

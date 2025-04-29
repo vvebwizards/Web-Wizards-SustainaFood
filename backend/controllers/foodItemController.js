@@ -7,6 +7,7 @@ import axios from "axios";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import Donation  from "../models/Donation.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,7 +30,7 @@ export async function addFoodItem(req, res) {
       const {
         title,
         category,
-        quantity,
+        quantityInStock,
         unit,
         expirationDate,
         nutritionalInfo,
@@ -92,7 +93,7 @@ export async function addFoodItem(req, res) {
       const newFoodItem = new FoodItem({
         title,
         category,
-        quantity,
+        quantityInStock,
         unit,
         expirationDate,
         nutritionalInfo,
@@ -211,35 +212,65 @@ export async function donate(req, res) {
     const { id } = req.params;
     const user = await getAuthenticatedUser(req);
     const donorId = user._id;
+
     const foodItemToBeDonated = await FoodItem.findOne({ _id: id, donorId: donorId });
     if (!foodItemToBeDonated) {
       return res.status(404).json({ error: 'Food item not found or you are not authorized to donate it' });
     }
-     if (foodItemToBeDonated.status !== 'In Stock') {
+
+    if (foodItemToBeDonated.status !== 'In Stock') {
       return res.status(400).json({ error: 'Only items In Stock can be donated' });
     }
+
     const { quantityToDonation } = req.body;
-      if (quantityToDonation > foodItemToBeDonated.quantity) {
+
+    if (quantityToDonation > foodItemToBeDonated.quantityInStock) {
       return res.status(400).json({ error: 'Donation quantity cannot exceed available quantity' });
     }
-    foodItemToBeDonated.quantityToDonation = Number(quantityToDonation);
-    if (foodItemToBeDonated.quantityToDonation < foodItemToBeDonated.quantity) {
 
-      foodItemToBeDonated.quantity -= foodItemToBeDonated.quantityToDonation;
-    } else if (foodItemToBeDonated.quantityToDonation === foodItemToBeDonated.quantity) {
+    foodItemToBeDonated.quantityToDonation = (foodItemToBeDonated.quantityToDonation || 0) + Number(quantityToDonation);
+    foodItemToBeDonated.quantityInStock -= quantityToDonation;
+
+    if (foodItemToBeDonated.quantityInStock === 0) {
       foodItemToBeDonated.status = 'Pending Donation';
-      foodItemToBeDonated.quantity = 0;
     }
+
+    let existingDonation = await Donation.findOne({
+      foodItemId: foodItemToBeDonated._id,
+      donorId: donorId,
+      status: 'Pending Donation',
+    });
+
+    if (existingDonation) {
+    
+      existingDonation.quantityToDonation += Number(quantityToDonation);
+      await existingDonation.save();
+    } else {
+    
+      const newDonation = new Donation({
+        foodItemId: foodItemToBeDonated._id,
+        title: foodItemToBeDonated.title,
+        quantityToDonation: Number(quantityToDonation),
+        unit: foodItemToBeDonated.unit,
+        status: 'Pending Donation',
+        donorId: donorId,
+      });
+      await newDonation.save();
+    }
+
     await foodItemToBeDonated.save();
+
     const message = foodItemToBeDonated.status === 'Pending Donation'
       ? 'Item marked as Pending Donation'
       : 'Partial donation processed';
+
     return res.status(200).json({ message, foodItem: foodItemToBeDonated });
   } catch (err) {
     console.error('Error updating food item status:', err);
     return res.status(500).json({ error: 'Internal server error while updating food item status' });
   }
 }
+
 
 export async function toBedonatedFoodByDonor(req, res) {
   try {
@@ -249,8 +280,7 @@ export async function toBedonatedFoodByDonor(req, res) {
     }
     const donorId = user._id;
 
-    const donatedFoodItems = await FoodItem.find({ 
-      status:'Pending Donation',
+    const donatedFoodItems = await Donation.find({ 
       donorId: donorId 
     });
 
@@ -290,7 +320,7 @@ export async function removeFromDonation(req, res) {
     }
 
 
-    foodItem.quantity += foodItem.quantityToDonation;
+    foodItem.quantityInStock += foodItem.quantityToDonation;
     foodItem.quantityToDonation = 0;
 
     foodItem.updatedAt = new Date();
