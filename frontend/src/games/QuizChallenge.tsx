@@ -1,4 +1,3 @@
-// src/games/QuizChallenge.tsx
 import React, { useState } from "react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
@@ -43,10 +42,11 @@ export default function QuizChallenge() {
       const earned = LEVEL_BONUS + score;
       setPoints(prev => prev + earned);
       // send earned points to backend
-      if (user?.id && earned > 0) {
+      const userId = user?._id || user?.id; // Correct user ID handling
+      if (userId && earned > 0) {
         try {
           const res = await axios.put(
-            `http://localhost:5000/api/users/${user.id}/add-points`,
+            `http://localhost:5000/api/users/${userId}/add-points`,
             { points: earned },
             { withCredentials: true }
           );
@@ -115,7 +115,7 @@ export default function QuizChallenge() {
         <div className="w-1/2 h-2 bg-gray-200 rounded-full overflow-hidden">
           <div
             className="h-2 bg-blue-500"
-            style={{ width: `${progress + (100/QUESTIONS_PER_LEVEL)}%` }}
+            style={{ width: `${progress + (100 / QUESTIONS_PER_LEVEL)}%` }}
           />
         </div>
       </div>
@@ -127,8 +127,7 @@ export default function QuizChallenge() {
               key={opt}
               onClick={() => handleSelect(opt)}
               className={`p-3 border rounded-lg cursor-pointer transition
-                ${selected === opt ? "border-blue-500 bg-blue-50" : "hover:bg-gray-100"}
-              `}
+                ${selected === opt ? "border-blue-500 bg-blue-50" : "hover:bg-gray-100"}`}
             >
               {opt}
             </li>
