@@ -137,7 +137,8 @@ function App() {
           <Route path="/dashboard/memory" element={<MemoryGame />} />
           <Route path="orders" element={<OrdersList />} />
           <Route path="orders/:id" element={<OrderDetails />} />
-          <Route path="deliveries" element={<Deliveries />} />          <Route path="/dashboard/tic-tac-toe" element={<TicTacToe />} />
+          <Route path="deliveries" element={<Deliveries />} />  
+          <Route path="/dashboard/tictactoe" element={<TicTacToe />} />        
         </Route>
       </Routes>
     </>
