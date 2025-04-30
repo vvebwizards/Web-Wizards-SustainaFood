@@ -136,6 +136,19 @@ export async function getAll (req,res){
       
 }
 
+export async function getFoodBank (req,res){
+  try {
+      const user = await getAuthenticatedUser(req); 
+      const donorId = user._id;
+      const foodItems = await Donation.find();
+      
+      res.status(200).json(foodItems);
+    } catch (error) {
+      console.error('Error fetching food items:', error);
+      res.status(500).json({ error: 'Error fetching food items' });
+    }
+    
+}
 export async function deleteOne (req,res) {
     try {
         const { id } = req.params; 
@@ -250,7 +263,10 @@ export async function donate(req, res) {
       const newDonation = new Donation({
         foodItemId: foodItemToBeDonated._id,
         title: foodItemToBeDonated.title,
+        imageUrl: foodItemToBeDonated.imageUrl,
         quantityToDonation: Number(quantityToDonation),
+        category: foodItemToBeDonated.category,
+        expirationDate: foodItemToBeDonated.expirationDate,
         unit: foodItemToBeDonated.unit,
         status: 'Pending Donation',
         donorId: donorId,
@@ -291,7 +307,7 @@ export async function toBedonatedFoodByDonor(req, res) {
   }
 }
 
-export async function removeFromDonation(req, res) {
+export async function cancelDonation(req, res) {
   try {
     const { id } = req.params; 
     const user = await getAuthenticatedUser(req);
@@ -300,34 +316,33 @@ export async function removeFromDonation(req, res) {
     }
     const donorId = user._id;
 
-    const foodItem = await FoodItem.findOne({ _id: id, donorId });
-    if (!foodItem) {
-      return res.status(404).json({ error: "Food item not found or you are not authorized to modify it" });
-    }
-
-    if (foodItem.status !== "Pending Donation") {
-      return res.status(400).json({ error: "Only items with 'Pending Donation' status can be removed" });
+    const ToDonation = await Donation.findOne({ _id: id, donorId });
+    if (!ToDonation) {
+      return res.status(404).json({ error: "Donation not found or you are not authorized to modify it" });
     }
 
     const currentDate = new Date();
-    const expirationDate = new Date(foodItem.expirationDate);
-
+    const expirationDate = new Date(ToDonation.expirationDate);
    
     if (currentDate > expirationDate) {
-      foodItem.status = "Expired";
+      ToDonation.status = "Expired";
+      await ToDonation.save();
     } else {
-      foodItem.status = "Damaged";
+      await Donation.deleteOne({ _id: id, donorId })
     }
-
-
-    foodItem.quantityInStock += foodItem.quantityToDonation;
+    const foodItem = await FoodItem.findById(ToDonation.foodItemId);
+    if (!foodItem) {
+      return res.status(404).json({ error: "Food item not found" });
+    }
     foodItem.quantityToDonation = 0;
+    foodItem.quantityInStock += ToDonation.quantityToDonation;
+    foodItem.status = "In Stock";
 
     foodItem.updatedAt = new Date();
     await foodItem.save();
 
     return res.status(200).json({
-      message: `Item status updated to '${foodItem.status}' and removed from donation`,
+      message: `Item removed from donation`,
       foodItem,
     });
   } catch (err) {

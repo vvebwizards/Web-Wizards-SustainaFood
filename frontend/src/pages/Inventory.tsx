@@ -132,21 +132,22 @@ const Inventory: React.FC = () => {
     try {
       await donateFoodItem(pendingDonation.item._id, donationQuantity);
 
-      // Refresh donationItems from the backend to ensure sync
-      const availableFoodItems = await fetchFoodAvailableForDonation();
-      setDonationItems(prev => {
-        const updatedDonationItems = availableFoodItems.map(foodItem => ({
-          item: foodItem,
-          quantityInStock: foodItem.quantityInStock,
-          quantityToDonation: foodItem.quantityToDonation || 0
-        }));
-        // Preserve any local items that aren't in the backend fetch (if needed)
-        const localItems = prev.filter(localItem =>
-          !updatedDonationItems.some(d => d.item._id === localItem.item._id)
-        );
-        return [...updatedDonationItems, ...localItems];
-      });
+      // Manually update the FoodItem based on donation logic
+      const updatedFoodItem = {
+        ...pendingDonation.item,
+        quantityToDonation: (pendingDonation.item.quantityToDonation || 0) + donationQuantity,
+        quantityInStock: pendingDonation.item.quantityInStock - donationQuantity,
+        status: pendingDonation.item.quantityInStock - donationQuantity === 0 ? 'Pending Donation' : pendingDonation.item.status
+      };
 
+      setDonationItems(prev => {
+        const updated = prev.filter(d => d.item._id !== pendingDonation.item._id);
+        return [...updated, {
+          item: updatedFoodItem,
+          quantityInStock: updatedFoodItem.quantityInStock,
+          quantityToDonation: updatedFoodItem.quantityToDonation || 0
+        }];
+      });
       toast.success('Item marked for donation successfully');
     } catch (err: any) {
       console.error('Error in handleConfirmDonation:', err);

@@ -1,5 +1,5 @@
 import Order from "../models/orderModel.js";
-import FoodItem from "../models/foodItem.js";
+import FoodItem from "../models/FoodItem.js";
 
 // POST /api/orders
 export const createOrder = async (req, res) => {

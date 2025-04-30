@@ -23,7 +23,7 @@ const Cart: React.FC = () => {
 
     try {
       const orderPayload = {
-        recipientId: user?._id,
+        recipientId: user?.id,
         location: `${latLng.lat},${latLng.lng}`,
         items: cartItems.map(item => ({
           itemId: item._id,

@@ -1,12 +1,14 @@
 import React from 'react';
 import { Heart, X } from 'lucide-react';
+import { useInventory } from '../context/InventoryContext';
+import { toast } from 'react-toastify';
 
 interface DonationItem {
   item: {
-    id: string;
+    _id: string;
     title: string;
     quantityToDonation: number;
-    unit?: string; // Unit is optional as it's missing in the data
+    unit?: string;
   };
   quantityInStock?: number;
   quantityToDonation: number;
@@ -17,10 +19,12 @@ interface DonationZoneProps {
   setDonationItems: React.Dispatch<React.SetStateAction<DonationItem[]>>;
   handleDrop: (e: React.DragEvent<HTMLDivElement>) => void;
   handleDragOver: (e: React.DragEvent<HTMLDivElement>) => void;
+  onCancel?: (itemId: string) => void;
 }
 
-const DonationZone: React.FC<DonationZoneProps> = ({ donationItems, setDonationItems, handleDrop, handleDragOver }) => {
-  // Log the entire donationItems array to the console
+const DonationZone: React.FC<DonationZoneProps> = ({ donationItems, setDonationItems, handleDrop, handleDragOver, onCancel }) => {
+  const { cancelDonation, fetchFoodAvailableForDonation } = useInventory();
+
   console.log('DonationZone donationItems:', donationItems);
 
   const handleDonationInputChange = (index: number, value: number) => {
@@ -32,8 +36,30 @@ const DonationZone: React.FC<DonationZoneProps> = ({ donationItems, setDonationI
     });
   };
 
-  const handleRemoveDonationItem = (index: number) => {
-    setDonationItems(prev => prev.filter((_, i) => i !== index));
+  const handleRemoveDonationItem = async (index: number) => {
+    const donation = donationItems[index];
+    if (!donation.item._id) {
+      console.error('Cannot cancel donation: item._id is undefined', donation);
+      setDonationItems(prev => prev.filter((_, i) => i !== index));
+      return;
+    }
+    try {
+      await cancelDonation(donation.item._id);
+      const availableFoodItems = await fetchFoodAvailableForDonation();
+      const updatedDonationItems = availableFoodItems.map(foodItem => ({
+        item: foodItem,
+        quantityInStock: foodItem.quantityInStock,
+        quantityToDonation: foodItem.quantityToDonation || 0,
+      }));
+      setDonationItems(updatedDonationItems);
+      console.log('Updated donationItems after removal:', updatedDonationItems);
+      if (onCancel) {
+        onCancel(donation.item._id);
+      }
+    } catch (err) {
+      console.error('Error cancelling donation:', err);
+      toast.error('Failed to cancel donation');
+    }
   };
 
   return (
@@ -51,7 +77,7 @@ const DonationZone: React.FC<DonationZoneProps> = ({ donationItems, setDonationI
         ) : (
           donationItems.map((donation, index) => (
             <div
-              key={donation.item.id || `donation-${index}`} // Use item.id as the key
+              key={donation.item._id || `donation-${index}`}
               className="mb-4 p-3 bg-white border border-green-600 rounded-lg"
             >
               <div className="flex justify-between items-center">

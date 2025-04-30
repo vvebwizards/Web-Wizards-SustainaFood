@@ -1,20 +1,21 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { FoodItem } from '../components/FoodItemModal';
-import { Category } from '../components/CategoryModal'; 
+import { Category } from '../components/CategoryModal';
 
 const FOOD_ITEM_API_URL = "http://localhost:5000/api/foodItem";
-const CATEGORY_API_URL = "http://localhost:5000/api/category"; 
+const CATEGORY_API_URL = "http://localhost:5000/api/category";
 
 interface InventoryContextType {
   inventory: FoodItem[];
   categories: Category[];
   addFoodItem: (item: Omit<FoodItem, '_id' | 'createdAt' | 'updatedAt'> & { imageFile?: File }) => Promise<void>;
-  addCategory: (category: Omit<Category, '_id' | 'createdAt' | 'updatedAt'>) => Promise<void>; 
+  addCategory: (category: Omit<Category, '_id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateFoodItem: (id: string, item: Partial<Omit<FoodItem, '_id' | 'createdAt' | 'updatedAt'>> & { imageFile?: File }) => Promise<void>;
   deleteFoodItem: (id: string) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
-  donateFoodItem: (id: string, quantityToDonation: number) => Promise<void>; 
+  donateFoodItem: (id: string, quantityToDonation: number) => Promise<void>;
   fetchFoodAvailableForDonation: () => Promise<FoodItem[]>;
+  cancelDonation: (id: string) => Promise<void>; // Added for cancellation
   error: string | null;
 }
 
@@ -40,7 +41,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         const categoryData = await categoryResponse.json();
 
         setInventory(foodItemData);
-        setCategories(categoryData); 
+        setCategories(categoryData);
       } catch (err) {
         setError(err.message || 'Error fetching data');
         console.error('Error:', err);
@@ -191,32 +192,81 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
+  const fetchFoodAvailableForDonation = async (): Promise<FoodItem[]> => {
+    try {
+      const response = await fetch(`${FOOD_ITEM_API_URL}/toBedonatedFoodByDonor`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to fetch food items for donation: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      return data.foodItems;
+    } catch (err) {
+      setError(err.message || 'Error fetching food items for donation');
+      console.warn('Error:', err);
+      throw err;
+    }
+  };
+
+  const cancelDonation = async (id: string) => {
+    try {
+      const response = await fetch(`${FOOD_ITEM_API_URL}/cancelDonation/${id}`, {
+        method: 'PUT',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to cancel donation: ${response.status}`);
+      }
+
+      // Fetch inventory
+      const foodItemResponse = await fetch(`${FOOD_ITEM_API_URL}/getAll`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      if (!foodItemResponse.ok) throw new Error(`Failed to fetch inventory: ${foodItemResponse.status}`);
+      const foodItemData = await foodItemResponse.json();
+      setInventory(foodItemData);
+
+      // Fetch donation items
+      const donationResponse = await fetch(`${FOOD_ITEM_API_URL}/toBeDonatedFoodByDonor`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      if (!donationResponse.ok) throw new Error(`Failed to fetch donation items: ${donationResponse.status}`);
+      const donationData = await donationResponse.json();
+      return donationData; // Return donation items for DonationZone to update
+    } catch (err) {
+      setError(err.message || 'Error cancelling donation');
+      console.warn('Error:', err);
+      throw err;
+    }
+  };
+
   return (
-    <InventoryContext.Provider value={{ inventory, categories, addFoodItem, addCategory, updateFoodItem, deleteFoodItem, deleteCategory, donateFoodItem,fetchFoodAvailableForDonation, error }}>
+    <InventoryContext.Provider
+      value={{
+        inventory,
+        categories,
+        addFoodItem,
+        addCategory,
+        updateFoodItem,
+        deleteFoodItem,
+        deleteCategory,
+        donateFoodItem,
+        fetchFoodAvailableForDonation,
+        cancelDonation,
+        error,
+      }}
+    >
       {children}
     </InventoryContext.Provider>
   );
-};
-
-const fetchFoodAvailableForDonation = async (): Promise<FoodItem[]> => {
-  try {
-    const response = await fetch(`${FOOD_ITEM_API_URL}/toBedonatedFoodByDonor`, {
-      method: 'GET',
-      credentials: 'include',
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to fetch food items for donation: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json();
-    return data.foodItems; 
-  } catch (err) {
-    setError(err.message || 'Error fetching food items for donation');
-    console.warn('Error:', err);
-    throw err;
-  }
 };
 
 export const useInventory = () => {
