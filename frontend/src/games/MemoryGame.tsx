@@ -1,4 +1,3 @@
-// src/components/MemoryGame.tsx
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
@@ -85,9 +84,10 @@ export default function MemoryGame() {
       });
       setPoints(p => p + award);
       // persist points
-      if (user?._id) {
+      const userId = user?._id || user?.id; // Use the correct user ID (either _id or id)
+      if (userId) {
         axios.put(
-          `http://localhost:5000/api/users/${user._id}/add-points`,
+          `http://localhost:5000/api/users/${userId}/add-points`,
           { points: award },
           { withCredentials: true }
         )
