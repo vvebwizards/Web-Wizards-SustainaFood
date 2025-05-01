@@ -224,7 +224,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         throw new Error(errorData.error || `Failed to cancel donation: ${response.status}`);
       }
 
-      // Fetch inventory
+     
       const foodItemResponse = await fetch(`${FOOD_ITEM_API_URL}/getAll`, {
         method: 'GET',
         credentials: 'include',
@@ -233,14 +233,14 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const foodItemData = await foodItemResponse.json();
       setInventory(foodItemData);
 
-      // Fetch donation items
+      
       const donationResponse = await fetch(`${FOOD_ITEM_API_URL}/toBeDonatedFoodByDonor`, {
         method: 'GET',
         credentials: 'include',
       });
       if (!donationResponse.ok) throw new Error(`Failed to fetch donation items: ${donationResponse.status}`);
       const donationData = await donationResponse.json();
-      return donationData; // Return donation items for DonationZone to update
+      return donationData; 
     } catch (err) {
       setError(err.message || 'Error cancelling donation');
       console.warn('Error:', err);

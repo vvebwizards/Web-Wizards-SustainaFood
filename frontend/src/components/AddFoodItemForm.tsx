@@ -148,24 +148,19 @@ const AddFoodItemForm: React.FC<AddFoodItemFormProps> = ({ categories, editingIt
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Image*{editingItem ? ' (Optional)' : ''}</label>
               <div className="relative">
-                <input
-                  type="file"
-                  name="image"
-                  onChange={handleInputChange}
-                  className="absolute inset-0 w-full h-full opacity/webapp/0 cursor-pointer"
-                  required={!editingItem}
-                />
-                <div className="flex items-center space-x-2">
-                  <div className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-gray-600 text-white hover:bg-gray-50">
-                    Choisir un fichier
+                  <input
+                    type="file"
+                    name="image"
+                    onChange={handleInputChange}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    required={!editingItem}
+                  />
+                  <div className="flex items-center space-x-2">
+                    <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-600 text-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 z-0">
+                      {formData.imageFile ? formData.imageFile.name : "choose file"}
+                    </div>
                   </div>
-                  {formData.imageFile && (
-                    <span className="text-sm text-gray-600">
-                      {formData.imageFile.name}
-                    </span>
-                  )}
                 </div>
-              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Category*</label>

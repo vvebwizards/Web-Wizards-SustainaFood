@@ -8,6 +8,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import Donation  from "../models/Donation.js";
+import cron from 'node-cron';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -150,20 +151,20 @@ export async function getFoodBank (req,res){
     
 }
 export async function deleteOne (req,res) {
-    try {
-        const { id } = req.params; 
-        const user = await getAuthenticatedUser(req); 
-        const donorId = user._id;
-        const deletedItem = await FoodItem.findOneAndDelete({ _id: id, donorId: donorId });
+  try {
+      const { id } = req.params; 
+      const user = await getAuthenticatedUser(req); 
+      const donorId = user._id;
+      const deletedItem = await FoodItem.findOneAndDelete({ _id: id, donorId: donorId });
 
-        if (!deletedItem) {
-          return res.status(404).json({ error: 'Food item not found' });
-        }
-        res.status(200).json({ message: 'Food item deleted successfully' });
-      } catch (error) {
-        console.error('Error deleting food item:', error);
-        res.status(500).json({ error: 'Error deleting food item' });
+      if (!deletedItem) {
+        return res.status(404).json({ error: 'Food item not found' });
       }
+      res.status(200).json({ message: 'Food item deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting food item:', error);
+      res.status(500).json({ error: 'Error deleting food item' });
+    }
 }
 
 export async function updateOne(req, res) {
@@ -177,25 +178,18 @@ export async function updateOne(req, res) {
       const updateData = req.body;
       const user = await getAuthenticatedUser(req);
       const donorId = user._id;
-
-    
       const uploadedFile = req.files?.profileImage?.[0] || req.files?.imageUrl?.[0];
-
-
       if (uploadedFile) {
         updateData.imageUrl = `/uploads/${uploadedFile.filename}`;
       }
-
       const updatedItem = await FoodItem.findOneAndUpdate(
         { _id: id, donorId: donorId }, 
         updateData,                   
         { new: true, runValidators: true } 
       );
-
       if (!updatedItem) {
         return res.status(404).json({ error: 'Food item not found' });
       }
-
       res.status(200).json({
         message: 'Food item updated successfully',
         foodItem: updatedItem,
@@ -297,7 +291,7 @@ export async function toBedonatedFoodByDonor(req, res) {
     const donorId = user._id;
 
     const donatedFoodItems = await Donation.find({ 
-      donorId: donorId 
+      donorId: donorId ,
     });
 
     return res.status(200).json({ foodItems: donatedFoodItems });
@@ -309,7 +303,7 @@ export async function toBedonatedFoodByDonor(req, res) {
 
 export async function cancelDonation(req, res) {
   try {
-    const { id } = req.params; 
+    const { id } = req.params;
     const user = await getAuthenticatedUser(req);
     if (!user) {
       return res.status(401).json({ error: "Unauthorized: No authenticated user found" });
@@ -323,30 +317,63 @@ export async function cancelDonation(req, res) {
 
     const currentDate = new Date();
     const expirationDate = new Date(ToDonation.expirationDate);
-   
+
     if (currentDate > expirationDate) {
       ToDonation.status = "Expired";
       await ToDonation.save();
     } else {
-      await Donation.deleteOne({ _id: id, donorId })
+      await Donation.deleteOne({ _id: id, donorId });
     }
-    const foodItem = await FoodItem.findById(ToDonation.foodItemId);
-    if (!foodItem) {
-      return res.status(404).json({ error: "Food item not found" });
-    }
-    foodItem.quantityToDonation = 0;
-    foodItem.quantityInStock += ToDonation.quantityToDonation;
-    foodItem.status = "In Stock";
 
-    foodItem.updatedAt = new Date();
-    await foodItem.save();
+    const foodItem = await FoodItem.findById(ToDonation.foodItemId);
+    if (foodItem) {
+      foodItem.quantityToDonation = 0;
+      foodItem.quantityInStock += ToDonation.quantityToDonation;
+
+      if (foodItem.status === "Pending Donation") {
+        foodItem.status = "In Stock";
+      }
+
+      foodItem.updatedAt = new Date();
+      await foodItem.save();
+    } else {
+      console.warn("Food item not found. Donation was still removed.");
+    }
 
     return res.status(200).json({
-      message: `Item removed from donation`,
-      foodItem,
+      message: "Item removed from donation",
+      ...(foodItem ? { foodItem } : {}),
     });
   } catch (err) {
     console.error("Error removing item from donation:", err);
     return res.status(500).json({ error: "Internal server error while removing item from donation" });
   }
 }
+
+
+cron.schedule('0 0 * * *', async () => {
+  console.log('Checking for expired food items...');
+  const currentDate = new Date().toISOString().split('T')[0];
+  console.log('Current date:', currentDate);
+
+  try {
+    const foodItemsToExpire = await FoodItem.find({ expirationDate: currentDate, status: { $ne: 'Expired' } });
+    if (foodItemsToExpire.length === 0) {
+      console.log('No food items to expire.');
+      return;
+    }
+    const foodItemIds = foodItemsToExpire.map(item => item._id);
+    const updatedFoodItems = await FoodItem.updateMany(
+      { _id: { $in: foodItemIds } },
+      { status: 'Expired' }
+    );
+    console.log(`${updatedFoodItems.modifiedCount || updatedFoodItems.nModified} food items marked as expired.`);
+    const updatedDonations = await Donation.updateMany(
+      { foodItemId: { $in: foodItemIds } },
+      { status: 'Expired' }
+    );
+    console.log(`${updatedDonations.modifiedCount || updatedDonations.nModified} donations marked as expired.`);
+  } catch (error) {
+    console.error('Error updating food items and donations:', error);
+  }
+});
