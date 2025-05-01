@@ -65,8 +65,7 @@ const roleConfigs: Record<string, any> = {
       },
       { to: "/dashboard/donations", icon: Package, label: "Donations" },
       { to: "/dashboard/deliveries", icon: Truck, label: "Deliveries" },
-      { to: "/dashboard/reports", icon: LineChart, label: "Analytics" },
-      { to: "/dashboard/logs", icon: ScrollText, label: "System Logs" },
+      { to: "/dashboard/StatsDashboard", icon: LineChart, label: "Analytics" },
       { to: "/dashboard/database", icon: Database, label: "Database" },
       {
         to: "/dashboard/notifications",
@@ -114,7 +113,7 @@ const roleConfigs: Record<string, any> = {
       name: "Food Recipient",
     },
     navigation: [
-      { to: "/dashboard/profile", icon: User, label: "Profile" },
+      { to: "/dashboard/UpdateProfile/:userId", icon: User, label: "Profile Settings" },
       { to: "/dashboard/available", icon: Package, label: "Available Food" },
       { to: "/dashboard/my-requests", icon: Heart, label: "My Requests" },
       { to: "/dashboard/location", icon: MapPin, label: "Delivery Location" },
@@ -138,7 +137,7 @@ const roleConfigs: Record<string, any> = {
       name: "Delivery Volunteer",
     },
     navigation: [
-      { to: "/dashboard/profile", icon: User, label: "Profile" },
+      { to: "/dashboard/UpdateProfile/:userId", icon: User, label: "Profile Settings" },
       { to: "/dashboard/orders", icon: Package, label: "Orders" },
       {
         to: "/dashboard/deliveries",
@@ -217,7 +216,7 @@ const Layout: React.FC = () => {
         </div>
 
         <div className="flex items-center space-x-6">
-          {/* Prize Wheel Icon (All roles or specific roles) */}
+      
           <NavLink
             to="/dashboard/**"
             className="flex items-center space-x-1 p-2 text-gray-600 hover:text-gray-900"
@@ -231,7 +230,6 @@ const Layout: React.FC = () => {
             <Gift className="h-6 w-6" />
           </NavLink>
 
-          {/* Game Center Icon (All roles or specific roles) */}
           <NavLink
             to="/dashboard/game-center"
             className="relative p-2 text-gray-600 hover:text-gray-900"
@@ -240,7 +238,7 @@ const Layout: React.FC = () => {
             <Gamepad2 className="h-6 w-6" />
           </NavLink>
 
-          {/* Notifications */}
+     
           <div className="relative">
             <button
               onClick={() => setIsNotificationOpen(!isNotificationOpen)}
@@ -272,7 +270,7 @@ const Layout: React.FC = () => {
             )}
           </div>
 
-          {/* Cart Icon (Recipients Only) */}
+     
           {userRole === "recipient" && (
             <NavLink
               to="/dashboard/cart"

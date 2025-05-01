@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Mail, Lock } from "lucide-react";
-import { FcGoogle } from "react-icons/fc"; // Import the Google icon
+import { FcGoogle } from "react-icons/fc";
 import { useAuth } from "../context/AuthContext";
 import ReCAPTCHA from "react-google-recaptcha";
 
@@ -32,7 +32,7 @@ function Login() {
   };
 
   const handleGoogleSignIn = () => {
-    // Redirect to your backend's Google auth route to initiate the OAuth flow
+   
     window.location.href = "http://localhost:5000/api/auth/google";
   };
 
@@ -63,7 +63,7 @@ function Login() {
             </div>
           )}
 
-          {/* Email/Password Sign-in Form */}
+         
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label className="block text-sm font-medium text-gray-700">Email address</label>
@@ -140,7 +140,6 @@ function Login() {
             </div>
           </form>
 
-          {/* Divider */}
           <div className="mt-6 relative">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300" />
@@ -150,7 +149,7 @@ function Login() {
             </div>
           </div>
 
-          {/* Sign in with Google Button */}
+        
           <div className="mt-6">
             <button
               onClick={handleGoogleSignIn}

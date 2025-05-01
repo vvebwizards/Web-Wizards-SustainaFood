@@ -12,6 +12,7 @@ import TwoFactorAuth from "./pages/TwoFactorAuth";
 import Layout from "./components/Layout";
 import Profile from "./pages/Profile";
 import Statistics from "./pages/Statistics";
+import { StatsDashboard } from './components/StatsDashboard';
 import TicTacToe from "./games/TicTacToe";
 import Settings from "./pages/Settings";
 import Notifications from "./pages/Notifications";
@@ -39,6 +40,7 @@ import OrdersList from "./pages/OrdersList";
 import OrderDetails from "./pages/OrderDetails";
 import Deliveries from "./pages/Deliveries";
 import { StatisticsProvider } from "./context/StatisticsContext";
+import {Overview} from "./pages/overview";
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user } = useAuth();
   if (user === undefined) {
@@ -147,7 +149,9 @@ function App() {
           <Route path="orders" element={<OrdersList />} />
           <Route path="orders/:id" element={<OrderDetails />} />
           <Route path="deliveries" element={<Deliveries />} />  
-          <Route path="/dashboard/tictactoe" element={<TicTacToe />} />        
+          <Route path="/dashboard/tictactoe" element={<TicTacToe />} />
+          <Route path="/dashboard/StatsDashboard" element={<StatsDashboard />} />       
+          <Route path="/dashboard/overview" element={<Overview />} />     
         </Route>
       </Routes>
     </>

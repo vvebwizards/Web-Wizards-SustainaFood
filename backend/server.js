@@ -19,6 +19,8 @@ import {refreshUserCronJobs} from './utils/scheduler.js';
 import orderRoutes from "./routes/orderRoutes.js";
 import quizRoutes from './routes/quizRoutes.js';
 import statistics from './routes/statisticRoute.js';
+import statsApi from './routes/adminStats.js';
+
 
 import passport from "passport";
 import "./passport.js"; 
@@ -71,6 +73,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/foodItem",FoodItemRoutes);
+app.use('/api', statsApi);
 app.use("/api/category",CategoryRoutes);
 app.use('/api', quizRoutes);
 app.use('/api/statistics', statistics);

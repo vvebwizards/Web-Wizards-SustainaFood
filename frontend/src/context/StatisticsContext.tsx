@@ -15,11 +15,7 @@ interface Statistics {
   donationCountsByFoodItem: { foodItem: string; count: number }[];
 }
 
-interface StatisticsContextType {
-  totalDonations: number;
-  averageShelfLife: number;
-  expiredQuantity: number;
-  donationCountsByFoodItem: { foodItem: string; count: number }[];
+interface StatisticsContextType extends Statistics {
   loading: boolean;
   error: string | null;
 }
@@ -55,25 +51,18 @@ export const StatisticsProvider: React.FC<StatisticsProviderProps> = ({ children
         setError(null);
 
         const [totalDonationsRes, avgShelfLifeRes, expiredQuantityRes, donationCountsRes] = await Promise.all([
-          fetch(`${STATISTICS_API_URL}/countTotalDonations`, {
-            method: 'GET',
-            credentials: 'include',
-          }),
-          fetch(`${STATISTICS_API_URL}/averageShelfLife`, {
-            method: 'GET',
-            credentials: 'include',
-          }),
-          fetch(`${STATISTICS_API_URL}/expiredQuantityByUnit`, {
-            method: 'GET',
-            credentials: 'include',
-          }),
-          fetch(`${STATISTICS_API_URL}/countDonationsByFoodItem`, {
-            method: 'GET',
-            credentials: 'include',
-          }),
+          fetch(`${STATISTICS_API_URL}/countTotalDonations`, { method: 'GET', credentials: 'include' }),
+          fetch(`${STATISTICS_API_URL}/averageShelfLife`, { method: 'GET', credentials: 'include' }),
+          fetch(`${STATISTICS_API_URL}/expiredQuantityByUnit`, { method: 'GET', credentials: 'include' }),
+          fetch(`${STATISTICS_API_URL}/countDonationsByFoodItem`, { method: 'GET', credentials: 'include' }),
         ]);
 
-        if (totalDonationsRes.status === 401 || avgShelfLifeRes.status === 401 || expiredQuantityRes.status === 401 || donationCountsRes.status === 401) {
+        if (
+          totalDonationsRes.status === 401 ||
+          avgShelfLifeRes.status === 401 ||
+          expiredQuantityRes.status === 401 ||
+          donationCountsRes.status === 401
+        ) {
           throw new Error('Authentication failed. Please log in again.');
         }
 
@@ -89,20 +78,25 @@ export const StatisticsProvider: React.FC<StatisticsProviderProps> = ({ children
           donationCountsRes.json(),
         ]);
 
-      
-        const totalDonations = totalDonationsData.reduce((sum: number, item: { totalQuantity: number }) => sum + item.totalQuantity, 0);
+        const totalDonations = Array.isArray(totalDonationsData)
+          ? totalDonationsData.reduce((sum: number, item: { totalQuantity: number }) => sum + (item?.totalQuantity || 0), 0)
+          : 0;
 
-        
-        const expiredQuantity = expiredQuantityData.reduce((sum: number, item: { totalExpiredQuantity: number }) => sum + item.totalExpiredQuantity, 0);
+        const expiredQuantity = Array.isArray(expiredQuantityData)
+          ? expiredQuantityData.reduce((sum: number, item: { totalExpiredQuantity: number }) => sum + (item?.totalExpiredQuantity || 0), 0)
+          : 0;
 
-    
-        const averageShelfLife = parseFloat(avgShelfLifeData.averageShelfLife.replace(' days', ''));
+        const averageShelfLife =
+          typeof avgShelfLifeData?.averageShelfLife === 'string'
+            ? parseFloat(avgShelfLifeData.averageShelfLife.replace(' days', ''))
+            : 0;
 
-       
-        const donationCountsByFoodItem = donationCountsData.map((item: DonationCount) => ({
-          foodItem: item.foodItemTitle,
-          count: item.totalDonations,
-        }));
+        const donationCountsByFoodItem = Array.isArray(donationCountsData)
+          ? donationCountsData.map((item: DonationCount) => ({
+              foodItem: item.foodItemTitle || 'Unknown',
+              count: item.totalDonations || 0,
+            }))
+          : [];
 
         setStatistics({
           totalDonations,
@@ -110,10 +104,16 @@ export const StatisticsProvider: React.FC<StatisticsProviderProps> = ({ children
           expiredQuantity,
           donationCountsByFoodItem,
         });
-      } catch (err) {
+      } catch (err: any) {
         const errorMessage = err.message || 'Error fetching statistics';
         setError(errorMessage);
         console.error('Error:', err);
+        setStatistics({
+          totalDonations: 0,
+          averageShelfLife: 0,
+          expiredQuantity: 0,
+          donationCountsByFoodItem: [],
+        });
       } finally {
         setLoading(false);
       }

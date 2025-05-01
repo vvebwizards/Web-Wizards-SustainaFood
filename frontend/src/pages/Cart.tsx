@@ -22,8 +22,16 @@ const Cart: React.FC = () => {
     }
 
     try {
+      // Check if user._id (Google users) or user.id (manual users) is available
+      const userId = user?._id || user?.id;
+      
+      if (!userId) {
+        alert("❌ User ID is missing.");
+        return;
+      }
+
       const orderPayload = {
-        recipientId: user?.id,
+        recipientId: userId,
         location: `${latLng.lat},${latLng.lng}`,
         items: cartItems.map(item => ({
           itemId: item._id,

@@ -164,7 +164,7 @@ const Profile = () => {
             <Heart className="h-6 w-6 text-green-600" />
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">Total Donations</h3>
-          <p className="text-2xl font-semibold text-green-600">{totalDonations} lbs</p>
+          <p className="text-2xl font-semibold text-green-600">{totalDonations} kg</p>
         </div>
 
         <div className="p-6 bg-green-50 rounded-lg shadow hover:shadow-lg transform hover:-translate-y-1 transition">

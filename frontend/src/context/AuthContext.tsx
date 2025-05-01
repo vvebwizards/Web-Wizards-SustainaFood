@@ -161,7 +161,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(response.data.user);
       localStorage.setItem("user", JSON.stringify(response.data.user));
 
-      // ✅ Store profile image separately for easy access
+    
       if (response.data.user.profileImage) {
         const imageUrl = `http://localhost:5000${
           response.data.user.profileImage
