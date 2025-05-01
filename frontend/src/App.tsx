@@ -31,13 +31,14 @@ import { FoodBankProvider } from "./context/FoodBankContext";
 import VerifyEmail from "./pages/VerifyEmail";
 import SpinWheel from "./games/SpinWheel";
 import ConfirmEmail from "./pages/ConfirmEmail";
-import { CartProvider } from "./context/CartContext"; // ✅ Import CartProvider
-import Cart from "./pages/Cart"; // ✅ Import Cart page
+import { CartProvider } from "./context/CartContext"; 
+import Cart from "./pages/Cart"; 
 import MyRequests from "./pages/MyRequests";
 import QuizChallenge from "./games/QuizChallenge";
 import OrdersList from "./pages/OrdersList";
 import OrderDetails from "./pages/OrderDetails";
 import Deliveries from "./pages/Deliveries";
+import { StatisticsProvider } from "./context/StatisticsContext";
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user } = useAuth();
   if (user === undefined) {
@@ -91,7 +92,15 @@ function App() {
           }
         >
           <Route index element={<WelcomePage />} />
-          <Route path="profile" element={<Profile />} />
+          <Route
+              path="profile"
+              element={
+                <StatisticsProvider>
+                  <Profile />
+                </StatisticsProvider>
+              }
+            />
+
           <Route
             path="UsersManagement"
             element={
@@ -129,7 +138,7 @@ function App() {
               </FoodBankProvider>
             }
           />
-          {/* ✅ Cart route for recipients */}
+          
           <Route path="cart" element={<Cart />} />
           <Route path="game-center" element={<GameCenter />} />
           <Route path="quiz-challenge" element={<QuizChallenge />} />

@@ -18,10 +18,10 @@ import CategoryRoutes from "./routes/CategoryRoutes.js"
 import {refreshUserCronJobs} from './utils/scheduler.js';
 import orderRoutes from "./routes/orderRoutes.js";
 import quizRoutes from './routes/quizRoutes.js';
+import statistics from './routes/statisticRoute.js';
 
-// Import and initialize Passport for Google Auth
 import passport from "passport";
-import "./passport.js"; // This file contains your Passport Google strategy configuration
+import "./passport.js"; 
 
 dotenv.config();
 
@@ -33,13 +33,13 @@ const server = http.createServer(app);
 
 connectDB();
 
-// Serve static files from the uploads directory
+
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use(express.json());
 app.use(cookieParser());
 
-// ✅ CORS Middleware
+
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -49,7 +49,7 @@ app.use(
   })
 );
 
-// ✅ Handle Preflight Requests for All Routes
+
 app.options("*", (req, res) => {
   res.header("Access-Control-Allow-Origin", "http://localhost:5173");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
@@ -64,7 +64,7 @@ app.use(passport.initialize());
 
 refreshUserCronJobs();
 
-// Routes
+
 app.use("/api/auth", authRoutes);
 app.use("/api/auth/me", getMe);
 app.use("/api/notifications", notificationRoutes);
@@ -73,6 +73,7 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/foodItem",FoodItemRoutes);
 app.use("/api/category",CategoryRoutes);
 app.use('/api', quizRoutes);
+app.use('/api/statistics', statistics);
 app.use("/api/settings", settingsRoutes);
 app.get("/", (req, res) => {
   res.send("Backend connected to frontend");

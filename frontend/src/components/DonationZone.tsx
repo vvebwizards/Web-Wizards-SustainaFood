@@ -25,7 +25,6 @@ interface DonationZoneProps {
 const DonationZone: React.FC<DonationZoneProps> = ({ donationItems, setDonationItems, handleDrop, handleDragOver, onCancel }) => {
   const { cancelDonation, fetchFoodAvailableForDonation } = useInventory();
 
-  console.log('DonationZone donationItems:', donationItems);
 
   const handleDonationInputChange = (index: number, value: number) => {
     setDonationItems(prev => {
