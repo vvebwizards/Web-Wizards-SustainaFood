@@ -65,8 +65,7 @@ const roleConfigs: Record<string, any> = {
       },
       { to: "/dashboard/donations", icon: Package, label: "Donations" },
       { to: "/dashboard/deliveries", icon: Truck, label: "Deliveries" },
-      { to: "/dashboard/reports", icon: LineChart, label: "Analytics" },
-      { to: "/dashboard/logs", icon: ScrollText, label: "System Logs" },
+      { to: "/dashboard/StatsDashboard", icon: LineChart, label: "Analytics" },
       { to: "/dashboard/database", icon: Database, label: "Database" },
       {
         to: "/dashboard/notifications",
