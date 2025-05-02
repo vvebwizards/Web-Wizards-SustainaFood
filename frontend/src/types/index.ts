@@ -17,17 +17,26 @@ export interface Order {
   status: OrderStatus;
   totalAmount: number;
   paymentStatus: PaymentStatus;
+  delivery?: {
+    method?: string;
+    scheduledDate?: string; // ISO date string
+    scheduledTime?: string;
+    notes?: string;
+    trackingNumber?: string;
+    estimatedDelivery?: string; // ISO date string
+  };
   createdAt: string;
   updatedAt: string;
   estimatedDelivery?: string;
   trackingNumber?: string;
   notes?: string;
+  
 }
 
 export interface OrderItem {
   productId: string;
   name: string;
-  quantity: number;
+  orderedQuantity: number;
   price: number;
   sku?: string;
   weight?: number;

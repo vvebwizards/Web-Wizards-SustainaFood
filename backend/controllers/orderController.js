@@ -1,29 +1,49 @@
-import Order from "../models/orderModel.js";
+import { Order } from '../models/order.js';
 import FoodItem from "../models/FoodItem.js";
+import { v4 as uuidv4 } from 'uuid'; // For generating unique order numbers
 
-// POST /api/orders
 export const createOrder = async (req, res) => {
   try {
-    const { recipientId, location, items } = req.body;
+    const { recipientId, location, items ,userName,userEmail} = req.body;
 
     if (!recipientId || !location || !items || !Array.isArray(items)) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
     // Update quantityToDonation for each item
-    for (const { itemId, orderedQuantity } of items) {
+    const formattedItems = [];
+    let totalAmount = 0;
+
+    for (const { itemId, orderedQuantity,name } of items) {
       const foodItem = await FoodItem.findById(itemId);
       if (!foodItem) continue;
 
       foodItem.quantityToDonation = Math.max(foodItem.quantityToDonation - orderedQuantity, 0);
       await foodItem.save();
+
     }
+    console.log("formattedItems", formattedItems);
 
     const order = new Order({
+      orderNumber: uuidv4(),
       recipientId,
       location,
       items,
       status: "pending",
+      totalAmount,
+      paymentStatus: "paid", 
+      customer: {
+        name: userName,
+        email: userEmail,
+        phone: "26762772",
+      },
+      shippingAddress: {
+        street: "123 Main St",
+        city: "Cityville",
+        state: "StateX",
+        zipCode: "12345",
+        country: "Wonderland",
+      },
     });
 
     await order.save();

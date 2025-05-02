@@ -3,13 +3,16 @@ import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { Trash, Calendar, CheckCircle, X, MapPin } from "lucide-react";
 import LocationPicker from "../components/LocationPicker"; // New component
+import { s } from "framer-motion/client";
 
 const Cart: React.FC = () => {
   const { cartItems, clearCart, updateQuantity, removeFromCart } = useCart();
   const { user } = useAuth();
 
   const [showModal, setShowModal] = useState(false);
-  const [latLng, setLatLng] = useState<{ lat: number; lng: number } | null>(null);
+  const [latLng, setLatLng] = useState<{ lat: number; lng: number } | null>(
+    null
+  );
 
   const handleSubmitClick = () => {
     setShowModal(true);
@@ -24,7 +27,9 @@ const Cart: React.FC = () => {
     try {
       // Check if user._id (Google users) or user.id (manual users) is available
       const userId = user?._id || user?.id;
-      
+      const userName = user?.username || user?.username;
+      const userEmail = user?.email || user?.email;
+
       if (!userId) {
         alert("❌ User ID is missing.");
         return;
@@ -32,10 +37,13 @@ const Cart: React.FC = () => {
 
       const orderPayload = {
         recipientId: userId,
+        userName,
+        userEmail,
         location: `${latLng.lat},${latLng.lng}`,
-        items: cartItems.map(item => ({
-          itemId: item._id,
+        items: cartItems.map((item) => ({
+          productId: item._id,
           orderedQuantity: item.quantity,
+          name: item.title,
         })),
       };
 
@@ -85,7 +93,8 @@ const Cart: React.FC = () => {
                     </h3>
                     <p className="text-sm text-gray-600">
                       <Calendar className="w-4 h-4 inline-block mr-1 mb-1" />
-                      Expires: {new Date(item.expirationDate).toLocaleDateString()}
+                      Expires:{" "}
+                      {new Date(item.expirationDate).toLocaleDateString()}
                     </p>
                     <p className="text-sm text-gray-500 capitalize">
                       Category: {item.category}
@@ -101,7 +110,10 @@ const Cart: React.FC = () => {
                     <button
                       className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-lg font-bold"
                       onClick={() =>
-                        updateQuantity(item._id as string, Math.max(item.quantity - 1, 1))
+                        updateQuantity(
+                          item._id as string,
+                          Math.max(item.quantity - 1, 1)
+                        )
                       }
                     >
                       -
@@ -167,12 +179,15 @@ const Cart: React.FC = () => {
                   <X className="w-5 h-5" />
                 </button>
                 <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                  <MapPin className="w-5 h-5 text-blue-600" /> Choose Delivery Location
+                  <MapPin className="w-5 h-5 text-blue-600" /> Choose Delivery
+                  Location
                 </h3>
-                <LocationPicker onSelect={(lat, lng) => setLatLng({ lat, lng })} />
+                <LocationPicker
+                  onSelect={(lat, lng) => setLatLng({ lat, lng })}
+                />
                 {latLng && (
                   <p className="text-sm text-gray-600 mt-2">
-                    Selected: <strong>{latLng.lat.toFixed(5)}</strong>, {" "}
+                    Selected: <strong>{latLng.lat.toFixed(5)}</strong>,{" "}
                     <strong>{latLng.lng.toFixed(5)}</strong>
                   </p>
                 )}

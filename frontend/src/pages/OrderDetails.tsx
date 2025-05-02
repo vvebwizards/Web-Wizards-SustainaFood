@@ -160,12 +160,12 @@ const OrderDetails: React.FC = () => {
               </dd>
             </div>
             <div className="sm:col-span-1">
-              <dt className="text-sm font-medium text-gray-500">
-                Total Amount
-              </dt>
-              <dd className="mt-1 text-sm text-gray-900">
-                ${order.totalAmount.toFixed(2)}
-              </dd>
+              <dt className="text-sm font-medium text-gray-500">Quantity</dt>
+              {order.items.map((item, index) => (
+                <dd className="mt-1 text-sm text-gray-900">
+                  {item.orderedQuantity}
+                </dd>
+              ))}
             </div>
             <div className="sm:col-span-1">
               <dt className="text-sm font-medium text-gray-500">
@@ -193,13 +193,13 @@ const OrderDetails: React.FC = () => {
                 </span>
               </dd>
             </div>
-            {order.trackingNumber && (
+            {order.delivery?.trackingNumber && (
               <div className="sm:col-span-1">
                 <dt className="text-sm font-medium text-gray-500">
                   Tracking Number
                 </dt>
                 <dd className="mt-1 text-sm text-blue-600 hover:text-blue-800">
-                  <a href="#">{order.trackingNumber}</a>
+                  <a href="#">{order.delivery?.trackingNumber}</a>
                 </dd>
               </div>
             )}
@@ -474,18 +474,12 @@ const OrderDetails: React.FC = () => {
                   >
                     Quantity
                   </th>
-                  <th
+                  {/* <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
                     Price
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Total
-                  </th>
+                  </th> */}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -498,50 +492,24 @@ const OrderDetails: React.FC = () => {
                       {item.sku || "N/A"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {item.quantity}
+                      {item.orderedQuantity}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       ${item.price.toFixed(2)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       ${(item.price * item.quantity).toFixed(2)}
-                    </td>
+                    </td> */}
                   </tr>
                 ))}
               </tbody>
-              <tfoot className="bg-gray-50">
-                <tr>
-                  <th
-                    scope="row"
-                    colSpan={4}
-                    className="px-6 py-3 text-right text-sm font-medium text-gray-500"
-                  >
-                    Subtotal
-                  </th>
-                  <td className="px-6 py-3 text-sm text-gray-500">
-                    ${order.totalAmount.toFixed(2)}
-                  </td>
-                </tr>
-                <tr>
-                  <th
-                    scope="row"
-                    colSpan={4}
-                    className="px-6 py-3 text-right text-sm font-medium text-gray-900"
-                  >
-                    Total
-                  </th>
-                  <td className="px-6 py-3 text-sm font-medium text-gray-900">
-                    ${order.totalAmount.toFixed(2)}
-                  </td>
-                </tr>
-              </tfoot>
             </table>
           </div>
         </div>
       </div>
 
       {/* Notes */}
-      {order.notes && (
+      {order.delivery?.notes && (
         <div className="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
           <div className="px-4 py-5 sm:px-6">
             <h3 className="text-lg leading-6 font-medium text-gray-900">
@@ -549,7 +517,7 @@ const OrderDetails: React.FC = () => {
             </h3>
           </div>
           <div className="border-t border-gray-200 px-4 py-5 sm:p-6">
-            <p className="text-sm text-gray-900">{order.notes}</p>
+            <p className="text-sm text-gray-900">{order.delivery?.notes}</p>
           </div>
         </div>
       )}
