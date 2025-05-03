@@ -8,7 +8,8 @@ import {
 const router = express.Router();
 
 router.post("/", createOrder);
-router.get("/recipient/:recipientId", getOrdersByRecipient);
+router.get('/my', getOrdersByRecipient);
+
 
 
 

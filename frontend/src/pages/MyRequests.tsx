@@ -3,12 +3,11 @@ import { useAuth } from "../context/AuthContext";
 import { MapPin, PackageCheck, Clock, ClipboardList, Eye } from "lucide-react";
 
 interface OrderItem {
-  itemId: {
-    title: string;
-    expirationDate: string;
-    imageUrl?: string;
-  };
+  productId: string;  // Just the ID
+  name: string;
   orderedQuantity: number;
+  imageUrl?: string;
+  title?: string;
 }
 
 interface Order {
@@ -28,35 +27,37 @@ const MyRequests: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
   useEffect(() => {
-    if (!user?._id) return;
-
     const fetchOrders = async () => {
       try {
-        console.log("📦 Fetching orders for user:", user._id);
-        const response = await fetch(`http://localhost:5000/api/orders/recipient/${user._id}`);
+        console.log("📦 Fetching orders for the authenticated user");
+        const response = await fetch(`http://localhost:5000/api/orders/my`, {
+          credentials: "include",
+        });
 
         if (!response.ok) {
           throw new Error(`Failed to fetch orders: ${response.status}`);
         }
 
-        const data = await response.json();
+        const data: Order[] = await response.json();
         setOrders(data);
-        setLoading(false);
+        console.log("✅ Orders fetched:", data);
       } catch (err) {
         console.error("❌ Failed to fetch orders:", err);
+      } finally {
         setLoading(false);
       }
     };
 
     fetchOrders();
-  }, [user]);
+  }, []);
 
   const filteredOrders =
     filterStatus === "all"
       ? orders
       : orders.filter((order) => order.status === filterStatus);
 
-  if (loading) return <div className="p-6 text-center">Loading your requests...</div>;
+  if (loading)
+    return <div className="p-6 text-center">Loading your requests...</div>;
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -65,7 +66,10 @@ const MyRequests: React.FC = () => {
       </h2>
 
       <div className="mb-6">
-        <label htmlFor="status" className="text-sm font-medium text-gray-700 mr-2">
+        <label
+          htmlFor="status"
+          className="text-sm font-medium text-gray-700 mr-2"
+        >
           Filter by status:
         </label>
         <select
@@ -93,7 +97,8 @@ const MyRequests: React.FC = () => {
                 <div>
                   <h3 className="text-md font-semibold text-gray-800 flex items-center gap-2 mb-1">
                     <PackageCheck className="w-5 h-5 text-green-600" />
-                    Order ID: <span className="text-gray-700">{order._id}</span>
+                    Order ID:{" "}
+                    <span className="text-gray-700">{order._id}</span>
                   </h3>
                   <p className="text-sm text-gray-700 flex items-center gap-1">
                     <MapPin className="w-4 h-4" />
@@ -101,7 +106,8 @@ const MyRequests: React.FC = () => {
                   </p>
                   <p className="text-sm text-gray-700 flex items-center gap-1">
                     <Clock className="w-4 h-4" />
-                    Submitted: {new Date(order.createdAt).toLocaleString()}
+                    Submitted:{" "}
+                    {new Date(order.createdAt).toLocaleString()}
                   </p>
                   <span
                     className={`text-sm font-medium mt-2 inline-block px-3 py-1 rounded-full ${
@@ -110,12 +116,15 @@ const MyRequests: React.FC = () => {
                         : "bg-yellow-100 text-yellow-800"
                     }`}
                   >
-                    {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                    {order.status.charAt(0).toUpperCase() +
+                      order.status.slice(1)}
                   </span>
                 </div>
                 <button
                   onClick={() =>
-                    setExpandedOrderId((prev) => (prev === order._id ? null : order._id))
+                    setExpandedOrderId((prev) =>
+                      prev === order._id ? null : order._id
+                    )
                   }
                   className="text-sm text-blue-600 hover:underline flex items-center gap-1"
                 >
@@ -133,16 +142,23 @@ const MyRequests: React.FC = () => {
                         key={index}
                         className="flex items-center gap-4 bg-gray-50 border border-gray-200 p-3 rounded-md"
                       >
-                        {item.itemId?.imageUrl && (
+                        {item.imageUrl ? (
                           <img
-                            src={`http://localhost:5000${item.itemId.imageUrl}`}
-                            alt={item.itemId.title}
+                            src={`http://localhost:5000${item.imageUrl}`}
+                            alt={item.title || item.name || "No Title"}
                             className="w-16 h-16 object-cover rounded"
+                            onError={(e) =>
+                              (e.currentTarget.src = "/placeholder-image.jpg")
+                            }
                           />
+                        ) : (
+                          <div className="w-16 h-16 flex items-center justify-center bg-gray-200 rounded text-gray-500 text-xs">
+                            No Image
+                          </div>
                         )}
                         <div>
                           <p className="text-sm font-medium text-gray-800">
-                            {item.itemId?.title || "Untitled item"}
+                            {item.title || item.name || "Untitled item"}
                           </p>
                           <p className="text-xs text-gray-600">
                             Quantity: {item.orderedQuantity}
