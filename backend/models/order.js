@@ -6,6 +6,11 @@ const orderSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+      recipientId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
   customer: {
     name: { type: String, required: true },
     email: { type: String, required: true },
@@ -18,14 +23,33 @@ const orderSchema = new mongoose.Schema({
     zipCode: { type: String, required: true },
     country: { type: String, required: true }
   },
-  items: [{
-    productId: { type: String, required: true },
-    name: { type: String, required: true },
-    quantity: { type: Number, required: true },
-    price: { type: Number, required: true },
-    sku: String,
-    weight: Number
-  }],
+  // items: [{
+
+  //   productId: {
+  //               type: mongoose.Schema.Types.ObjectId,
+  //               ref: "FoodItem",
+  //               required: true,
+  //             },
+  //   name: { type: String, required: true },
+  //   quantity: { type: Number, required: true },
+  //   price: { type: Number, required: true },
+  //   sku: String,
+  //   weight: Number
+  // }],
+      items: [
+        {
+          productId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "FoodItem",
+            required: true,
+          },
+          name: { type: String, required: true },
+          orderedQuantity: {
+            type: Number,
+            required: true,
+          },
+        },
+      ],
   status: {
     type: String,
     enum: ['pending', 'processing', 'packed', 'shipped', 'delivered', 'cancelled', 'returned'],
@@ -44,9 +68,13 @@ const orderSchema = new mongoose.Schema({
     notes: String,
     trackingNumber: String,
     estimatedDelivery: Date
-  }
+  },
+  location: {
+    type: String,
+    required: true,
+  },
 }, {
   timestamps: true
 });
 
-export const Order = mongoose.model('Orderr', orderSchema);
+export const Order = mongoose.model('Orders', orderSchema);

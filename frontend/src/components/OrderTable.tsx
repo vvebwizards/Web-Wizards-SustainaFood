@@ -162,7 +162,7 @@ const OrderTable: React.FC<OrderTableProps> = ({
                     )}
                   </div>
                 </th>
-                <th
+                {/* <th
                   scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                   onClick={() => handleSort("totalAmount")}
@@ -177,7 +177,7 @@ const OrderTable: React.FC<OrderTableProps> = ({
                       />
                     )}
                   </div>
-                </th>
+                </th> */}
                 <th
                   scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
@@ -247,11 +247,11 @@ const OrderTable: React.FC<OrderTableProps> = ({
                     <td className="px-6 py-4 whitespace-nowrap">
                       <OrderStatusBadge status={order.status} />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    {/* <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
                         ${order.totalAmount.toFixed(2)}
                       </div>
-                    </td>
+                    </td> */}
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {formatDate(order.createdAt)}
                     </td>

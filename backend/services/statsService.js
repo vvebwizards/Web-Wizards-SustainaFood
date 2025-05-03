@@ -3,7 +3,7 @@ import User from '../models/User.js';
 import Category from '../models/Category.js';
 import FoodItem from '../models/FoodItem.js';
 import Donation from '../models/Donation.js';
-import Order from '../models/orderModel.js';
+import {Order} from '../models/order.js';
 import Notification from '../models/Notification.js';
 import Settings from '../models/Settings.js';
 
