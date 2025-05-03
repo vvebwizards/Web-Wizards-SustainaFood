@@ -163,14 +163,26 @@ const Layout: React.FC = () => {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [profileImage, setProfileImage] = useState<string>(defaultProfileImage);
 
+  // points from localStorage
+  const [points, setPoints] = useState<number>(() =>
+    user?.points ?? parseInt(localStorage.getItem("points") || "0", 10)
+  );
+  useEffect(() => {
+    if (user?.points != null) {
+      setPoints(user.points);
+    } else {
+      const p = localStorage.getItem("points");
+      if (p) setPoints(parseInt(p, 10));
+    }
+  }, [user]);
+
   const userRole = user?.role ?? "donor";
   const roleConfig = roleConfigs[userRole];
 
   if (!roleConfig) {
     return (
       <div className="p-6 text-red-600">
-        ❌ Unknown user role: <strong>{userRole}</strong>. Please check your
-        role configuration.
+        ❌ Unknown user role: <strong>{userRole}</strong>. Please check your role configuration.
       </div>
     );
   }
@@ -216,7 +228,6 @@ const Layout: React.FC = () => {
         </div>
 
         <div className="flex items-center space-x-6">
-      
           <NavLink
             to="/dashboard/**"
             className="flex items-center space-x-1 p-2 text-gray-600 hover:text-gray-900"
@@ -225,7 +236,7 @@ const Layout: React.FC = () => {
             <span
               className={`font-semibold text-sm ${roleConfig.theme.colors.text}`}
             >
-              {user?.points ?? 0} pts
+              {points} pts
             </span>
             <Gift className="h-6 w-6" />
           </NavLink>
@@ -238,7 +249,6 @@ const Layout: React.FC = () => {
             <Gamepad2 className="h-6 w-6" />
           </NavLink>
 
-     
           <div className="relative">
             <button
               onClick={() => setIsNotificationOpen(!isNotificationOpen)}
@@ -270,7 +280,6 @@ const Layout: React.FC = () => {
             )}
           </div>
 
-     
           {userRole === "recipient" && (
             <NavLink
               to="/dashboard/cart"
