@@ -282,24 +282,28 @@ export async function donate(req, res) {
 }
 
 
-export async function toBedonatedFoodByDonor(req, res) {
+async function handleDonationFetchByStatus(req, res, status) {
   try {
     const user = await getAuthenticatedUser(req);
     if (!user) {
       return res.status(401).json({ error: 'Unauthorized: No authenticated user found' });
     }
-    const donorId = user._id;
 
-    const donatedFoodItems = await Donation.find({ 
-      donorId: donorId ,
-    });
-
-    return res.status(200).json({ foodItems: donatedFoodItems });
+    const foodItems = await Donation.find({ donorId: user._id, status });
+    return res.status(200).json({ foodItems });
   } catch (err) {
-    console.error('Error fetching donated food items:', err);
-    return res.status(500).json({ error: 'Internal server error while fetching donated food items' });
+    console.error(`Error fetching ${status} items:`, err);
+    return res.status(500).json({ error: `Internal server error while fetching ${status} items` });
   }
 }
+export function toBedonatedFoodByDonor(req, res) {
+  return handleDonationFetchByStatus(req, res, 'Pending Donation');
+}
+
+export function donatedFoodByDonor(req, res) {
+  return handleDonationFetchByStatus(req, res, 'Donated');
+}
+
 
 export async function cancelDonation(req, res) {
   try {
