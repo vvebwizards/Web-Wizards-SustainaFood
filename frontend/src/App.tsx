@@ -41,6 +41,7 @@ import OrderDetails from "./pages/OrderDetails";
 import Deliveries from "./pages/Deliveries";
 import { StatisticsProvider } from "./context/StatisticsContext";
 import {Overview} from "./pages/overview";
+import Leaderboard from "./pages/Leaderboard";
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user } = useAuth();
   if (user === undefined) {
@@ -111,6 +112,7 @@ function App() {
               </AdminProvider>
             }
           />
+          <Route path="leaderboard" element={<Leaderboard />} />
           <Route path="statistics" element={<Statistics />} />
           <Route
             path="settings"
