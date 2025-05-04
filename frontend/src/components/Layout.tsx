@@ -27,6 +27,7 @@ import {
   Gauge,
   Gamepad2,
   Gift,
+  Crown
 } from "lucide-react";
 import defaultProfileImage from "../assets/images/default_user_img.jpg";
 
@@ -58,6 +59,7 @@ const roleConfigs: Record<string, any> = {
         icon: UserCog,
         label: "User Management",
       },
+      { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
       {
         to: "/dashboard/organizations",
         icon: Building2,
@@ -90,6 +92,7 @@ const roleConfigs: Record<string, any> = {
     },
     navigation: [
       { to: "/dashboard/profile", icon: User, label: "Profile" },
+      { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
       { to: "/dashboard/inventory", icon: Package, label: "Inventory" },
       { to: "/dashboard/donations", icon: Heart, label: "My Donations" },
       { to: "/dashboard/schedule", icon: Calendar, label: "Schedule Pickup" },
@@ -114,6 +117,7 @@ const roleConfigs: Record<string, any> = {
     },
     navigation: [
       { to: "/dashboard/UpdateProfile/:userId", icon: User, label: "Profile Settings" },
+      { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
       { to: "/dashboard/available", icon: Package, label: "Available Food" },
       { to: "/dashboard/my-requests", icon: Heart, label: "My Requests" },
       { to: "/dashboard/location", icon: MapPin, label: "Delivery Location" },
@@ -138,6 +142,7 @@ const roleConfigs: Record<string, any> = {
     },
     navigation: [
       { to: "/dashboard/UpdateProfile/:userId", icon: User, label: "Profile Settings" },
+      { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
       { to: "/dashboard/orders", icon: Package, label: "Orders" },
       {
         to: "/dashboard/deliveries",
