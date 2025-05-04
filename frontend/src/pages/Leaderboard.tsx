@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
 import axios from "axios";
 
 const BASE_URL = "http://localhost:5000";
 
 export function Leaderboard() {
+  const { user } = useAuth();
   const [users, setUsers] = useState<any[]>([]);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc"); // Default to "desc"
 
@@ -72,35 +74,37 @@ export function Leaderboard() {
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
-            {users.map((user, index) => (
-              <tr key={user._id} className="hover:bg-gray-100 transition duration-200">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {index + 1}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <img
-                      className="h-10 w-10 rounded-full"
-                      src={getProfileImageUrl(user.profileImage)}
-                      alt={user.username}
-                      onError={(e) => {
-                        e.currentTarget.src = "https://via.placeholder.com/40";
-                      }}
-                    />
-                    <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">
-                        {user.username}
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {user.points}
-                </td>
-              </tr>
-            ))}
-          </tbody>
+        <tbody className="divide-y divide-gray-200">
+        {users.map((userItem, index) => (
+        <tr
+        key={userItem._id}
+        className={`hover:bg-gray-100 transition duration-200 ${
+        user.username === userItem.username ? "bg-blue-300" : ""
+        }`}
+        >
+        <td className="px-6 py-4 whitespace-nowrap">
+        {index + 1}
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap">
+        <div className="flex items-center">
+        <img
+            className="h-10 w-10 rounded-full"
+            src={getProfileImageUrl(userItem.profileImage)}
+            alt={userItem.username}
+        />
+        <div className="ml-4">
+            <div className="text-sm font-medium text-gray-900">
+            {userItem.username}
+            </div>
+        </div>
+        </div>
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap">
+        {userItem.points}
+        </td>
+        </tr>
+        ))}
+        </tbody>
         </table>
       </div>
     </div>
