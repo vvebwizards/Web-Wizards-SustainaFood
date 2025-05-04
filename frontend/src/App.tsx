@@ -42,6 +42,8 @@ import Deliveries from "./pages/Deliveries";
 import { StatisticsProvider } from "./context/StatisticsContext";
 import {Overview} from "./pages/overview";
 import Leaderboard from "./pages/Leaderboard";
+import Redeem from "./pages/Redeem";
+
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user } = useAuth();
   if (user === undefined) {
@@ -103,7 +105,7 @@ function App() {
                 </StatisticsProvider>
               }
             />
-
+          <Route path="redeem" element={<Redeem />} />
           <Route
             path="UsersManagement"
             element={

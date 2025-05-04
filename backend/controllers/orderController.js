@@ -1,7 +1,7 @@
 import { Order } from '../models/order.js';
 import FoodItem from "../models/FoodItem.js";
 import { v4 as uuidv4 } from 'uuid'; // For generating unique order numbers
-
+import { getAuthenticatedUser } from "../utils/helpers.js";
 export const createOrder = async (req, res) => {
   try {
     const { recipientId, location, items ,userName,userEmail} = req.body;
@@ -57,9 +57,10 @@ export const createOrder = async (req, res) => {
 // GET /api/orders/recipient/:recipientId
 export const getOrdersByRecipient = async (req, res) => {
   try {
-    const { recipientId } = req.params;
-    const orders = await Order.find({ recipientId })
-      .populate("items.itemId")
+    const user = await getAuthenticatedUser(req);
+
+    const orders = await Order.find({ recipientId: user._id })
+      .populate("items.productId", "title imageUrl")  // ✅ populate title + imageUrl
       .sort({ createdAt: -1 });
 
     res.status(200).json(orders);
@@ -68,3 +69,4 @@ export const getOrdersByRecipient = async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 };
+

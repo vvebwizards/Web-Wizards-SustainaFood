@@ -1,16 +1,12 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
 axios.defaults.withCredentials = true;
 
+// ----- User & Context Types -----
 interface User {
   id: string;
   username: string;
@@ -24,258 +20,183 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (
-    email: string,
-    password: string,
-    captchaToken: string
-  ) => Promise<void>;
-  signup: (
-    username: string,
-    email: string,
-    password: string,
-    role: string
-  ) => Promise<void>;
+  login: (email: string, password: string, captchaToken: string) => Promise<void>;
+  signup: (username: string, email: string, password: string, role: string) => Promise<void>;
   logout: () => void;
   requestPasswordReset: (email: string) => Promise<void>;
   resetPassword: (token: string, newPassword: string) => Promise<void>;
   verifyTwoFactor: (userId: string, code: string) => Promise<void>;
-  updateUserInfo: (
-    userId: string,
-    username: string,
-   
-    profileImage: File
-  ) => Promise<void>;
+  updateUserInfo: (userId: string, username: string, profileImage: File | null) => Promise<void>;
   sendOtp: (userId: string) => Promise<void>;
-  updateTwoFaStatus: (
-    userId: string,
-    status: boolean,
-    code: string
-  ) => Promise<void>;
-  setUser: (user: User) => void;
+  updateTwoFaStatus: (userId: string, status: boolean, code: string) => Promise<void>;
+  setUser: (user: User | null) => void;
   updatePassword: (userId: string, currentPassword: string, newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// ----- Email Verification Helper -----
 export const verifyEmail = async (token: string) => {
   try {
-    const response = await fetch(
+    const res = await fetch(
       `${process.env.REACT_APP_API_URL}/api/auth/verify-email?token=${token}`,
-      {
-        method: "GET",
-      }
+      { method: "GET" }
     );
-
-    const data = await response.json();
-    console.log("🔍 Réponse de l'API :", data);
-
-    return response.ok;
+    const data = await res.json();
+    console.log("🔍 Email verification response:", data);
+    return res.ok;
   } catch (error) {
-    console.error("❌ Erreur lors de la vérification d'email :", error);
+    console.error("❌ Email verification error:", error);
     return false;
   }
 };
 
+// ----- AuthProvider Component -----
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, _setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Wrap the setter to persist into localStorage & cookies
+  const setUser = (u: User | null) => {
+    _setUser(u);
+    if (u) {
+      localStorage.setItem("user", JSON.stringify(u));
+      localStorage.setItem("points", u.points.toString());
+      Cookies.set("user", JSON.stringify(u), { expires: 7 });
+      Cookies.set("points", u.points.toString(), { expires: 7 });
+    } else {
+      localStorage.removeItem("user");
+      localStorage.removeItem("points");
+      Cookies.remove("user");
+      Cookies.remove("points");
+    }
+  };
+
+  // On mount, restore session or load from localStorage
   useEffect(() => {
     const checkSession = async () => {
-      try {
-        console.log("🔍 Checking session...");
-
-        // Get user from cookies or localStorage first
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-          console.log("✅ Restoring user from localStorage...");
-          setUser(JSON.parse(storedUser));
-          return;
+      const stored = localStorage.getItem("user");
+      const storedPoints = localStorage.getItem("points");
+      if (stored) {
+        const u: User = JSON.parse(stored);
+        if (storedPoints) {
+          u.points = parseInt(storedPoints, 10);
         }
-
-        // Fetch user session from backend
-        const response = await axios.get("http://localhost:5000/api/auth/me", {
-          withCredentials: true,
-        });
-
-        if (
-          !response.data.user ||
-          (!response.data.user.id && !response.data.user._id)
-        ) {
-          console.warn("⚠️ No user data found in session.");
-          setUser(null);
-          return;
-        }
-
-        console.log("✅ Session restored:", response.data.user);
-        setUser(response.data.user);
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-
-        if (response.data.user.profileImage) {
-          const imageUrl = `http://localhost:5000${
-            response.data.user.profileImage
-          }?t=${new Date().getTime()}`;
-          localStorage.setItem("profileImage", imageUrl);
-        }
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          console.warn(
-            "⚠️ No active session found:",
-            error.response?.data || error.message
-          );
-        } else {
-          console.warn("⚠️ No active session found:", error);
-        }
-        setUser(null);
-      }
-    };
-
-    checkSession();
-  }, []);
-
-  const login = async (
-    email: string,
-    password: string,
-    captchaToken: string
-  ) => {
-    try {
-      console.log("📡 Sending login request:", {
-        email,
-        password,
-        captchaToken,
-      });
-
-      const response = await axios.post(
-        "http://localhost:5000/api/auth/login",
-        { email, password, captchaToken },
-        { withCredentials: true }
-      );
-
-      console.log("✅ Login Success:", response.data);
-
-      if (response.data.user.twofa) {
-        await sendOtp(response.data.user.id);
-        window.location.href = `/2fa?userId=${response.data.user.id}`;
+        setUser(u);
+        setLoading(false);
         return;
       }
 
-      setUser(response.data.user);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
-
-    
-      if (response.data.user.profileImage) {
-        const imageUrl = `http://localhost:5000${
-          response.data.user.profileImage
-        }?t=${new Date().getTime()}`;
-        localStorage.setItem("profileImage", imageUrl);
+      try {
+        const res = await axios.get("http://localhost:5000/api/auth/me");
+        if (res.data.user) {
+          setUser(res.data.user);
+        } else {
+          setUser(null);
+        }
+      } catch {
+        setUser(null);
+      } finally {
+        setLoading(false);
       }
+    };
+    checkSession();
+  }, []);
 
-      Cookies.set("user", JSON.stringify(response.data.user), { expires: 7 });
-    } catch (error: any) {
-      console.error("❌ Login Failed:", error);
-      throw error;
+  // ----- Auth Actions -----
+  const login = async (email: string, password: string, captchaToken: string) => {
+    const res = await axios.post(
+      "http://localhost:5000/api/auth/login",
+      { email, password, captchaToken }
+    );
+    const u: User = res.data.user;
+
+    if (u.twofa) {
+      await sendOtp(u.id);
+      window.location.href = `/2fa?userId=${u.id}`;
+      return;
+    }
+
+    setUser(u);
+    if (u.profileImage) {
+      const imageUrl = `http://localhost:5000${u.profileImage}?t=${Date.now()}`;
+      localStorage.setItem("profileImage", imageUrl);
     }
   };
 
-  const signup = async (
-    username: string,
-    email: string,
-    password: string,
-    role: string
-  ) => {
-    try {
-      const response = await axios.post(
-        "http://localhost:5000/api/auth/signup",
-        {
-          username,
-          email,
-          password,
-          role,
-        }
-      );
-      console.log("✅ Signup Success:", response.data);
-      window.location.href = `/verify-email?email=${email}`;
-
-      return response.data;
-    } catch (error: any) {
-      console.error("❌ Signup Failed:", error.response?.data || error.message);
-      throw error;
-    }
+  const signup = async (username: string, email: string, password: string, role: string) => {
+    const res = await axios.post(
+      "http://localhost:5000/api/auth/signup",
+      { username, email, password, role }
+    );
+    window.location.href = `/verify-email?email=${email}`;
+    return res.data;
   };
 
   const logout = async () => {
-    try {
-      await axios.post(
-        "http://localhost:5000/api/auth/logout",
-        {},
-        { withCredentials: true }
-      );
-
-      setUser(null);
-      localStorage.removeItem("user");
-      localStorage.removeItem("profileImage");
-      localStorage.removeItem("token");
-      Cookies.remove("user");
-      Cookies.remove("token");
-
-      console.log("✅ Logout successful");
-    } catch (error) {
-      console.error("❌ Logout Failed:", error);
-    }
+    await axios.post("http://localhost:5000/api/auth/logout");
+    setUser(null);
+    localStorage.removeItem("profileImage");
   };
 
   const updatePassword = async (userId: string, currentPassword: string, newPassword: string) => {
     try {
-      console.log("📡 Sending update password request for user", userId);
-      const response = await axios.put(
+      await axios.put(
         `http://localhost:5000/api/users/update-password/${userId}`,
-        { currentPassword, newPassword },
-        { withCredentials: true }
+        { currentPassword, newPassword }
       );
       toast.success("Password updated successfully!");
-      console.log("✅ Password update successful:", response.data);
-    } catch (error) {
-      console.error("❌ Error updating password:", error);
+    } catch {
       toast.error("Failed to update password. Please try again.");
     }
   };
 
-  const updateUserInfo = async (
-    userId: string | undefined,
-    username: string,
-    profileImage: File | null
-  ) => {
-    if (!userId) {
-      console.error("❌ Cannot update user info: userId is undefined.");
-      return;
-    }
+  const updateUserInfo = async (userId: string, username: string, profileImage: File | null) => {
+    const form = new FormData();
+    form.append("username", username);
+    if (profileImage) form.append("profileImage", profileImage);
 
-    try {
-      const formData = new FormData();
-      formData.append("username", username);
-      if (profileImage) formData.append("profileImage", profileImage);
-
-      console.log(`📡 Sending update request for user ${userId}`);
-
-      const response = await axios.put(
-        `http://localhost:5000/api/auth/update/${userId}`,
-        formData,
-        {
-          withCredentials: true,
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
-
-      console.log("✅ User Info Updated:", response.data.user);
-      setUser(response.data.user);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
-      Cookies.set("user", JSON.stringify(response.data.user), { expires: 7 });
-    } catch (error) {
-      console.error("❌ Error updating user info:", error);
-    }
+    const res = await axios.put(
+      `http://localhost:5000/api/auth/update/${userId}`,
+      form
+    );
+    setUser(res.data.user);
   };
 
   const sendOtp = async (userId: string) => {
     await axios.post(`http://localhost:5000/api/auth/send-otp/${userId}`);
+  };
+
+  const verifyTwoFactor = async (userId: string, code: string) => {
+    const res = await axios.post(
+      `http://localhost:5000/api/auth/verify-2fa/${userId}`,
+      { code }
+    );
+    setUser(res.data.user);
+  };
+
+  const updateTwoFaStatus = async (userId: string, status: boolean, code: string) => {
+    await axios.post(
+      `http://localhost:5000/api/auth/updatetwofa/${userId}`,
+      { twofa: status, code }
+    );
+    toast.success("2FA status updated successfully");
+  };
+
+  const requestPasswordReset = async (email: string) => {
+    await axios.post(
+      "http://localhost:5000/api/auth/request-reset",
+      { email }
+    );
+    toast.success("Password reset email sent!");
+  };
+
+  const resetPassword = async (token: string, newPassword: string) => {
+    await axios.post(
+      "http://localhost:5000/api/auth/reset-password",
+      { token, newPassword }
+    );
+    toast.success("Password successfully changed!");
   };
 
   return (
@@ -285,52 +206,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         login,
         signup,
         logout,
+        updatePassword,
         updateUserInfo,
         sendOtp,
-        updatePassword,
-        requestPasswordReset: async (email) => {
-          await axios.post("http://localhost:5000/api/auth/request-reset", {
-            email,
-          });
-          toast.success(" Password reset email sent!");
-        },
-        resetPassword: async (token, newPassword) => {
-          await axios.post("http://localhost:5000/api/auth/reset-password", {
-            token,
-            newPassword,
-          });
-          toast.success(" Password successfully changed!");
-        },
-        verifyTwoFactor: async (userId, code) => {
-          const response = await axios.post(
-            `http://localhost:5000/api/auth/verify-2fa/${userId}`,
-            { code }
-          );
-          Cookies.set("user", JSON.stringify(response.data.user), {
-            expires: 7,
-          });
-          setUser(response.data.user);
-        },
-        
-        updateTwoFaStatus: async (userId, status, otp) => {
-          await axios.post(
-            `http://localhost:5000/api/auth/updatetwofa/${userId}`,
-            { twofa: status, code: otp }
-          );
-          toast.success("2FA status updated successfully");
-        },
+        verifyTwoFactor,
+        updateTwoFaStatus,
+        requestPasswordReset,
+        resetPassword,
         setUser,
       }}
     >
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   );
 };
 
+// Hook to consume the context
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
 };
