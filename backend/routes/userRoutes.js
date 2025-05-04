@@ -5,7 +5,7 @@ import { isAdmin } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.get("/", isAdmin, getUsers);
+router.get("/", getUsers);
 
 router.put("/block/:id", isAdmin, blockUser);
 

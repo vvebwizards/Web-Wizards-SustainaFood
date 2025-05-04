@@ -7,9 +7,8 @@ const BASE_URL = "http://localhost:5000";
 export function Leaderboard() {
   const { user } = useAuth();
   const [users, setUsers] = useState<any[]>([]);
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc"); // Default to "desc"
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
-  // Fetch users from the backend
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -19,14 +18,13 @@ export function Leaderboard() {
       const response = await axios.get(`${BASE_URL}/api/users`, {
         withCredentials: true,
       });
-      const sortedUsers = response.data.users.sort((a: any, b: any) => b.points - a.points); // Sort descending by default
+      const sortedUsers = response.data.users.sort((a: any, b: any) => b.points - a.points);
       setUsers(sortedUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
     }
   };
 
-  // Handle sorting users by points
   const handleSortByPoints = () => {
     const sortedUsers = [...users].sort((a, b) => {
       if (sortOrder === "asc") {
@@ -39,7 +37,6 @@ export function Leaderboard() {
     setSortOrder(sortOrder === "asc" ? "desc" : "asc");
   };
 
-  // Helper to get the full image URL
   const getProfileImageUrl = (profileImage: string) => {
     if (profileImage && profileImage.trim() !== "") {
       return profileImage.startsWith("/")
