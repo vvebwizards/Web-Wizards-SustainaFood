@@ -229,7 +229,7 @@ const Layout: React.FC = () => {
 
         <div className="flex items-center space-x-6">
           <NavLink
-            to="/dashboard/**"
+            to="/dashboard/redeem"
             className="flex items-center space-x-1 p-2 text-gray-600 hover:text-gray-900"
             title="Prize Wheel"
           >
