@@ -1,7 +1,7 @@
 import User from "../models/User.js";
 import bcrypt from "bcrypt";
 import { getAuthenticatedUser, getAuthenticatedUserwithPassword } from "../utils/helpers.js";
-import {deviceLocationLoginAlert} from "../emailTemplates/deviceLocationLoginAlert.js";
+
 /**
  * @route GET /api/users
  * @desc Get all users (excluding deleted ones)
