@@ -4,9 +4,8 @@ import axios from "axios";
 
 const BASE_URL = "http://localhost:5000";
 
-// Function to calculate level and XP to next level
 const calculateLevel = (points: number) => {
-  const levelThresholds = [500, 1000, 1500, 2000, 5000]; // XP required for each level
+  const levelThresholds = [500, 1000, 1500, 2000, 5000];
   let level = 0;
   let remainingXP = points;
 
@@ -19,7 +18,6 @@ const calculateLevel = (points: number) => {
     }
   }
 
-  // For levels beyond the thresholds, 5000 XP is required for each level
   const xpToNextLevel = 5000 - (remainingXP % 5000);
   level += Math.floor(remainingXP / 5000);
 
@@ -76,7 +74,6 @@ export function Leaderboard() {
         <h2 className="mt-7 text-2xl font-semibold">Leaderboard</h2>
       </div>
 
-      {/* User Profile Section */}
       {connectedUser && (
         <div className="flex items-center bg-white rounded-xl shadow-sm p-6 mb-6">
           <img
@@ -94,9 +91,9 @@ export function Leaderboard() {
                   width: `${(() => {
                     const { level, xpToNextLevel } = calculateLevel(connectedUser.points);
                     const totalXPForCurrentLevel = level < 5 ? [500, 1000, 1500, 2000, 5000][level] : 5000;
-                    const currentLevelXP = totalXPForCurrentLevel - xpToNextLevel; // XP earned in the current level
+                    const currentLevelXP = totalXPForCurrentLevel - xpToNextLevel;
                     const progressPercentage = (currentLevelXP / totalXPForCurrentLevel) * 100;
-                    return Math.min(progressPercentage, 100); // Cap the width at 100%
+                    return Math.min(progressPercentage, 100);
                   })()}%`,
                 }}
               ></div>
