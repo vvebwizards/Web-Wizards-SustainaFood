@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useNotifications } from "../context/NotificationContext";
 import { useCart } from "../context/CartContext";
+import { Link } from 'react-router-dom';
 import {
   Menu,
   Bell,
@@ -223,9 +224,11 @@ const Layout: React.FC = () => {
             <Menu className="h-6 w-6" />
           </button>
           <div className="flex items-center space-x-2">
-            <roleConfig.theme.icon
-              className={`h-6 w-6 ${roleConfig.theme.colors.header}`}
-            />
+          <Link to="/dashboard">
+  <roleConfig.theme.icon
+    className={`h-6 w-6 cursor-pointer ${roleConfig.theme.colors.header}`}
+  />
+</Link>
             <span className="text-xl font-semibold text-gray-900">
               {displayRoleName}
             </span>
