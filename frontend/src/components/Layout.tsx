@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useNotifications } from "../context/NotificationContext";
 import { useCart } from "../context/CartContext";
+import { Link } from 'react-router-dom';
 import {
   Menu,
   Bell,
@@ -27,6 +28,7 @@ import {
   Gauge,
   Gamepad2,
   Gift,
+  Crown
 } from "lucide-react";
 import defaultProfileImage from "../assets/images/default_user_img.jpg";
 
@@ -58,6 +60,7 @@ const roleConfigs: Record<string, any> = {
         icon: UserCog,
         label: "User Management",
       },
+      { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
       {
         to: "/dashboard/organizations",
         icon: Building2,
@@ -90,6 +93,7 @@ const roleConfigs: Record<string, any> = {
     },
     navigation: [
       { to: "/dashboard/profile", icon: User, label: "Profile" },
+      { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
       { to: "/dashboard/inventory", icon: Package, label: "Inventory" },
       { to: "/dashboard/donations", icon: Heart, label: "My Donations" },
       { to: "/dashboard/schedule", icon: Calendar, label: "Schedule Pickup" },
@@ -114,6 +118,7 @@ const roleConfigs: Record<string, any> = {
     },
     navigation: [
       { to: "/dashboard/UpdateProfile/:userId", icon: User, label: "Profile Settings" },
+      { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
       { to: "/dashboard/available", icon: Package, label: "Available Food" },
       { to: "/dashboard/my-requests", icon: Heart, label: "My Requests" },
       { to: "/dashboard/location", icon: MapPin, label: "Delivery Location" },
@@ -138,6 +143,7 @@ const roleConfigs: Record<string, any> = {
     },
     navigation: [
       { to: "/dashboard/UpdateProfile/:userId", icon: User, label: "Profile Settings" },
+      { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
       { to: "/dashboard/orders", icon: Package, label: "Orders" },
       {
         to: "/dashboard/deliveries",
@@ -163,14 +169,26 @@ const Layout: React.FC = () => {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [profileImage, setProfileImage] = useState<string>(defaultProfileImage);
 
+  // points from localStorage
+  const [points, setPoints] = useState<number>(() =>
+    user?.points ?? parseInt(localStorage.getItem("points") || "0", 10)
+  );
+  useEffect(() => {
+    if (user?.points != null) {
+      setPoints(user.points);
+    } else {
+      const p = localStorage.getItem("points");
+      if (p) setPoints(parseInt(p, 10));
+    }
+  }, [user]);
+
   const userRole = user?.role ?? "donor";
   const roleConfig = roleConfigs[userRole];
 
   if (!roleConfig) {
     return (
       <div className="p-6 text-red-600">
-        ❌ Unknown user role: <strong>{userRole}</strong>. Please check your
-        role configuration.
+        ❌ Unknown user role: <strong>{userRole}</strong>. Please check your role configuration.
       </div>
     );
   }
@@ -206,9 +224,11 @@ const Layout: React.FC = () => {
             <Menu className="h-6 w-6" />
           </button>
           <div className="flex items-center space-x-2">
-            <roleConfig.theme.icon
-              className={`h-6 w-6 ${roleConfig.theme.colors.header}`}
-            />
+          <Link to="/dashboard">
+  <roleConfig.theme.icon
+    className={`h-6 w-6 cursor-pointer ${roleConfig.theme.colors.header}`}
+  />
+</Link>
             <span className="text-xl font-semibold text-gray-900">
               {displayRoleName}
             </span>
@@ -216,16 +236,15 @@ const Layout: React.FC = () => {
         </div>
 
         <div className="flex items-center space-x-6">
-      
           <NavLink
-            to="/dashboard/**"
+            to="/dashboard/redeem"
             className="flex items-center space-x-1 p-2 text-gray-600 hover:text-gray-900"
             title="Prize Wheel"
           >
             <span
               className={`font-semibold text-sm ${roleConfig.theme.colors.text}`}
             >
-              {user?.points ?? 0} pts
+              {points} pts
             </span>
             <Gift className="h-6 w-6" />
           </NavLink>
@@ -238,7 +257,6 @@ const Layout: React.FC = () => {
             <Gamepad2 className="h-6 w-6" />
           </NavLink>
 
-     
           <div className="relative">
             <button
               onClick={() => setIsNotificationOpen(!isNotificationOpen)}
@@ -270,7 +288,6 @@ const Layout: React.FC = () => {
             )}
           </div>
 
-     
           {userRole === "recipient" && (
             <NavLink
               to="/dashboard/cart"

@@ -176,6 +176,7 @@ export async function login(req, res) {
       role: user.role,
       phoneNumber: user.phoneNumber,
       profileImage: user.profileImage,
+      points: user.points,
       twofa: user.twofa,
       token: token
     };

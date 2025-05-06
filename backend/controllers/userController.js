@@ -1,7 +1,7 @@
 import User from "../models/User.js";
 import bcrypt from "bcrypt";
 import { getAuthenticatedUser, getAuthenticatedUserwithPassword } from "../utils/helpers.js";
-import {deviceLocationLoginAlert} from "../emailTemplates/deviceLocationLoginAlert.js";
+
 /**
  * @route GET /api/users
  * @desc Get all users (excluding deleted ones)
@@ -127,4 +127,34 @@ export const addPointsToUser = async (req, res) => {
     return res.status(500).json({ message: "Server error", error: err.message });
   }
 };
+   
 
+
+export const redeemPointsFromUser = async (req, res) => {
+  const { userId, points } = req.body;
+
+  console.log("↪️ Requête reçue pour redeem-points:", req.body);
+
+  if (!userId || typeof points !== "number") {
+    return res.status(400).json({ message: "Invalid input" });
+  }
+
+  try {
+    const user = await User.findById(userId);
+    if (!user || user.isDeleted) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.points < points) {
+      return res.status(400).json({ message: "Not enough points to redeem" });
+    }
+
+    user.points -= points;
+    await user.save();
+
+    return res.status(200).json({ message: "Points redeemed", remainingPoints: user.points });
+  } catch (error) {
+    console.error("❌ Error redeeming points:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};

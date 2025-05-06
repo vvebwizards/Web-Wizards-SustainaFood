@@ -1,22 +1,18 @@
-import React, { useState } from "react";
+// src/pages/Cart.tsx
+import React, { useState, FC } from "react";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { Trash, Calendar, CheckCircle, X, MapPin } from "lucide-react";
-import LocationPicker from "../components/LocationPicker"; // New component
-import { s } from "framer-motion/client";
+import LocationPicker from "../components/LocationPicker";
 
-const Cart: React.FC = () => {
+const Cart: FC = () => {
   const { cartItems, clearCart, updateQuantity, removeFromCart } = useCart();
   const { user } = useAuth();
 
   const [showModal, setShowModal] = useState(false);
-  const [latLng, setLatLng] = useState<{ lat: number; lng: number } | null>(
-    null
-  );
+  const [latLng, setLatLng] = useState<{ lat: number; lng: number } | null>(null);
 
-  const handleSubmitClick = () => {
-    setShowModal(true);
-  };
+  const handleSubmitClick = () => setShowModal(true);
 
   const handleOrderConfirm = async () => {
     if (!latLng) {
@@ -24,44 +20,50 @@ const Cart: React.FC = () => {
       return;
     }
 
+    const userId    = user?._id ?? user?.id;
+    const userName  = user?.username ?? user?.name  ?? "Anonymous";
+    const userEmail = user?.email    ?? "";
+
+    if (!userId) {
+      alert("❌ User ID is missing.");
+      return;
+    }
+
+    const orderPayload = {
+      recipientId: userId,
+      userName,
+      userEmail,
+      location: `${latLng.lat},${latLng.lng}`,
+      items: cartItems.map(item => ({
+        productId:       item._id,
+        orderedQuantity: item.quantity,
+        name:            item.title,
+        imageUrl:        item.imageUrl,
+        title:           item.title
+      }))
+    };
+
+    console.log("➡️ POST /api/orders payload:", orderPayload);
+
     try {
-      // Check if user._id (Google users) or user.id (manual users) is available
-      const userId = user?._id || user?.id;
-      const userName = user?.username || user?.username;
-      const userEmail = user?.email || user?.email;
-
-      if (!userId) {
-        alert("❌ User ID is missing.");
-        return;
-      }
-
-      const orderPayload = {
-        recipientId: userId,
-        userName,
-        userEmail,
-        location: `${latLng.lat},${latLng.lng}`,
-        items: cartItems.map((item) => ({
-          productId: item._id,
-          orderedQuantity: item.quantity,
-          name: item.title,
-        })),
-      };
-
       const response = await fetch("http://localhost:5000/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(orderPayload),
       });
 
-      if (!response.ok) throw new Error("Order submission failed");
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Order submission failed");
+      }
 
       alert("✅ Your request has been submitted!");
       clearCart();
       setShowModal(false);
       setLatLng(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Order error:", error);
-      alert("❌ Something went wrong while submitting your request.");
+      alert(`❌ ${error.message}`);
     }
   };
 
@@ -76,14 +78,17 @@ const Cart: React.FC = () => {
       ) : (
         <>
           <div className="space-y-6">
-            {cartItems.map((item, index) => (
+            {cartItems.map(item => (
               <div
-                key={index}
+                key={item._id}
                 className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-white border border-gray-200 shadow-md rounded-lg p-4"
               >
+                {/* Image + Details */}
                 <div className="flex gap-4 w-full sm:w-auto">
                   <img
-                    src={`http://localhost:5000${item.imageUrl}`}
+                    src={`http://localhost:5000${
+                      item.imageUrl.startsWith("/") ? "" : "/"
+                    }${item.imageUrl}`}
                     alt={item.title}
                     className="w-24 h-24 object-cover rounded-lg border"
                   />
@@ -93,8 +98,7 @@ const Cart: React.FC = () => {
                     </h3>
                     <p className="text-sm text-gray-600">
                       <Calendar className="w-4 h-4 inline-block mr-1 mb-1" />
-                      Expires:{" "}
-                      {new Date(item.expirationDate).toLocaleDateString()}
+                      Expires: {new Date(item.expirationDate).toLocaleDateString()}
                     </p>
                     <p className="text-sm text-gray-500 capitalize">
                       Category: {item.category}
@@ -105,18 +109,19 @@ const Cart: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Qty controls + Remove */}
                 <div className="flex flex-col sm:items-end gap-2 w-full sm:w-auto">
                   <div className="flex items-center gap-2">
                     <button
                       className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-lg font-bold"
                       onClick={() =>
                         updateQuantity(
-                          item._id as string,
+                          item._id,
                           Math.max(item.quantity - 1, 1)
                         )
                       }
                     >
-                      -
+                      −
                     </button>
                     <span className="font-semibold text-gray-800">
                       {item.quantity}
@@ -125,7 +130,7 @@ const Cart: React.FC = () => {
                       className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-lg font-bold"
                       onClick={() =>
                         updateQuantity(
-                          item._id as string,
+                          item._id,
                           Math.min(item.quantity + 1, item.quantityToDonation)
                         )
                       }
@@ -134,7 +139,7 @@ const Cart: React.FC = () => {
                     </button>
                   </div>
                   <button
-                    onClick={() => removeFromCart(item._id as string)}
+                    onClick={() => removeFromCart(item._id)}
                     className="text-sm text-red-600 hover:text-red-800 underline flex items-center gap-1"
                   >
                     <Trash className="w-4 h-4" /> Remove
@@ -144,6 +149,7 @@ const Cart: React.FC = () => {
             ))}
           </div>
 
+          {/* Cart Actions */}
           <div className="mt-10 bg-white shadow-md rounded-lg p-6 border border-gray-200">
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
               <button
@@ -179,12 +185,10 @@ const Cart: React.FC = () => {
                   <X className="w-5 h-5" />
                 </button>
                 <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                  <MapPin className="w-5 h-5 text-blue-600" /> Choose Delivery
-                  Location
+                  <MapPin className="w-5 h-5 text-blue-600" />
+                  Choose Delivery Location
                 </h3>
-                <LocationPicker
-                  onSelect={(lat, lng) => setLatLng({ lat, lng })}
-                />
+                <LocationPicker onSelect={(lat, lng) => setLatLng({ lat, lng })} />
                 {latLng && (
                   <p className="text-sm text-gray-600 mt-2">
                     Selected: <strong>{latLng.lat.toFixed(5)}</strong>,{" "}
