@@ -6,10 +6,17 @@ html, body {
   overflow-x: hidden; /* Évite tout décalage horizontal */
 }
 
-/* ✅ Reset hover + focus-visible bg for ALL buttons without custom hover */
+/* ✅ Global reset for ALL buttons: kill hover bg */
 button:hover,
 button:focus,
 button:focus-visible {
   background-color: transparent !important;
-  box-shadow: none !important; /* optional: remove focus ring */
+  box-shadow: none !important;
+}
+
+/* 🚨 Exception: restore hover bg for buttons with .keep-hover */
+button.keep-hover:hover,
+button.keep-hover:focus,
+button.keep-hover:focus-visible {
+  background-color: #15803d !important; /* Tailwind bg-green-700 */
 }
