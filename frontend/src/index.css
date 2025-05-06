@@ -2,9 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
-
 html, body {
-
   overflow-x: hidden; /* Évite tout décalage horizontal */
+}
 
+/* ✅ Reset hover + focus-visible bg for ALL buttons without custom hover */
+button:hover,
+button:focus,
+button:focus-visible {
+  background-color: transparent !important;
+  box-shadow: none !important; /* optional: remove focus ring */
 }
