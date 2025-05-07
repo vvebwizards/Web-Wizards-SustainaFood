@@ -126,17 +126,17 @@ function Login() {
             </div>
 
             <div>
-              <button
-                type="submit"
-                disabled={!captchaToken || !email || !password}
-                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
-                  captchaToken && email && password
-                    ? "bg-green-600 hover:bg-green-700"
-                    : "bg-gray-400 cursor-not-allowed"
-                }`}
-              >
-                Sign in
-              </button>
+            <button
+  type="submit"
+  disabled={!captchaToken || !email || !password}
+  className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white keep-hover ${
+    captchaToken && email && password
+      ? "bg-green-600 hover:bg-green-700"
+      : "bg-gray-400 cursor-not-allowed"
+  }`}
+>
+  Sign in
+</button>
             </div>
           </form>
 

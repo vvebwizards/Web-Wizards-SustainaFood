@@ -155,6 +155,7 @@ const roleConfigs: Record<string, any> = {
       { to: "/dashboard/chat", icon: MessageSquare, label: "Communications" },
       { to: "/dashboard/statistics", icon: LineChart, label: "Impact" },
       { to: "/dashboard/history", icon: History, label: "History" },
+      { to: "/dashboard/notifications", icon: Bell, label: "Notifications" },
       { to: "/dashboard/settings", icon: Settings, label: "Settings" },
     ],
   },
