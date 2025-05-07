@@ -15,7 +15,11 @@ interface InventoryContextType {
   deleteCategory: (id: string) => Promise<void>;
   donateFoodItem: (id: string, quantityToDonation: number) => Promise<void>;
   fetchFoodAvailableForDonation: () => Promise<FoodItem[]>;
-  cancelDonation: (id: string) => Promise<void>; // Added for cancellation
+  cancelDonation: (id: string) => Promise<void>; 
+  predictQuantityRequested: (foodItem: string,
+    startDate: string,
+    endDate: string) => Promise<number>;
+
   error: string | null;
 }
 
@@ -25,7 +29,6 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [inventory, setInventory] = useState<FoodItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState<string | null>(null);
-
   useEffect(() => {
     const fetchInventory = async () => {
       try {
@@ -192,26 +195,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
-  const fetchFoodAvailableForDonation = async (): Promise<FoodItem[]> => {
-    try {
-      const response = await fetch(`${FOOD_ITEM_API_URL}/toBedonatedFoodByDonor`, {
-        method: 'GET',
-        credentials: 'include',
-      });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to fetch food items for donation: ${response.status} - ${errorText}`);
-      }
-
-      const data = await response.json();
-      return data.foodItems;
-    } catch (err) {
-      setError(err.message || 'Error fetching food items for donation');
-      console.warn('Error:', err);
-      throw err;
-    }
-  };
 
   const cancelDonation = async (id: string) => {
     try {
@@ -248,6 +232,58 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
+
+  const fetchFoodAvailableForDonation = async (): Promise<FoodItem[]> => {
+    try {
+      const response = await fetch(`${FOOD_ITEM_API_URL}/toBedonatedFoodByDonor`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+  
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to fetch food items for donation: ${response.status} - ${errorText}`);
+      }
+  
+      const data = await response.json();
+      return data.foodItems; 
+    } catch (err) {
+      setError(err.message || 'Error fetching food items for donation');
+      console.warn('Error:', err);
+      throw err;
+    }
+  };
+
+  const predictQuantityRequested = async (foodItem: string, startDate: string, endDate: string): Promise<number> => {
+    try {
+      const response = await fetch(`${FOOD_ITEM_API_URL}/predict-quantity-requested `, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ foodItem, startDate, endDate }),
+        credentials: 'include',
+      });
+  
+      if (!response.ok) {
+        const errorText = await response.text();
+        if (response.status === 404) {
+          throw new Error('No donation data found in the given time range.');
+        }
+        throw new Error(`Failed to predict quantity requested: ${response.status} - ${errorText}`);
+      }
+  
+      const data = await response.json();
+      if (typeof data.predictedQuantityRequested === 'number') {
+        return data.predictedQuantityRequested;
+      } else {
+        throw new Error('Invalid response from backend');
+      }
+    } catch (err) {
+      console.warn('Error:', err);
+      throw err;
+    }
+  };
+  
+
   return (
     <InventoryContext.Provider
       value={{
@@ -261,6 +297,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         donateFoodItem,
         fetchFoodAvailableForDonation,
         cancelDonation,
+        predictQuantityRequested, 
         error,
       }}
     >
@@ -268,6 +305,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     </InventoryContext.Provider>
   );
 };
+
 
 export const useInventory = () => {
   const context = useContext(InventoryContext);

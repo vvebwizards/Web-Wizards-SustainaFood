@@ -6,11 +6,11 @@ dotenv.config();
 
 export async function classifyFoodFreshness(imagePath) {
   try {
-    // Read the image file and encode it as Base64
+ 
     const imageBuffer = fs.readFileSync(imagePath);
     const imageBase64 = imageBuffer.toString("base64");
 
-    // Send the image to Roboflow for classification
+   
     const response = await axios({
       method: "POST",
       url: `https://detect.roboflow.com/${process.env.ROBOFLOW_MODEL}/${process.env.ROBOFLOW_VERSION}`,
@@ -23,14 +23,14 @@ export async function classifyFoodFreshness(imagePath) {
       },
     });
 
-    // Extract freshness classification from the response
+ 
     if (response.data.predictions.length > 0) {
       return response.data.predictions.reduce((prev, current) =>
         prev.confidence > current.confidence ? prev : current
       ).class;
     }
 
-    return "Unknown"; // Default if no prediction is found
+    return "Unknown";
   } catch (error) {
     console.error("❌ Roboflow API Error:", error.message);
     return "Unknown";

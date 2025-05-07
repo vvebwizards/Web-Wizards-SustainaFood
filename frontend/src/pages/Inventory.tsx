@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import AddCategoryForm from "../components/AddCategoryForm";
 import AddFoodItemForm from '../components/AddFoodItemForm';
 import DonationZone from '../components/DonationZone';
+import PredictionModal from '../components/PredictionModalProps';
 
 interface Category {
   _id: string;
@@ -19,7 +20,7 @@ interface DonationItem {
 }
 
 const Inventory: React.FC = () => {
-  const { inventory, categories, addFoodItem, updateFoodItem, deleteFoodItem, donateFoodItem, fetchFoodAvailableForDonation, addCategory, deleteCategory, error } = useInventory();
+  const { inventory, categories, addFoodItem, updateFoodItem, deleteFoodItem, donateFoodItem, fetchFoodAvailableForDonation, addCategory, deleteCategory,predictQuantityRequested, error } = useInventory();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -30,7 +31,9 @@ const Inventory: React.FC = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingDonation, setPendingDonation] = useState<DonationItem | null>(null);
   const [donationQuantity, setDonationQuantity] = useState<number>(0);
-
+  const [showPredictionModal, setShowPredictionModal] = useState(false);
+  const [selectedPredictionItem, setSelectedPredictionItem] = useState('');
+  const [predictionResult, setPredictionResult] = useState<number | null>(null);
   useEffect(() => {
     const initializeDonationItems = async () => {
       try {
@@ -132,7 +135,6 @@ const Inventory: React.FC = () => {
     try {
       await donateFoodItem(pendingDonation.item._id, donationQuantity);
 
-      // Manually update the FoodItem based on donation logic
       const updatedFoodItem = {
         ...pendingDonation.item,
         quantityToDonation: (pendingDonation.item.quantityToDonation || 0) + donationQuantity,
@@ -164,6 +166,20 @@ const Inventory: React.FC = () => {
     setPendingDonation(null);
     setDonationQuantity(0);
   };
+  const handlePrediction = async (startDate: string, endDate: string) => {
+    if (!selectedPredictionItem) return;
+    console.log(`Start Date: ${startDate}, End Date: ${endDate}`); 
+    try {
+      const result = await predictQuantityRequested(selectedPredictionItem, startDate, endDate);
+      setPredictionResult(result);  
+      toast.success('Prediction completed successfully');
+    } catch (err) {
+      console.error('Error in prediction:', err);
+      toast.error('Failed to generate prediction');
+    }
+  };
+  
+  
 
   const formatCategory = (category: string) => {
     return category.charAt(0).toUpperCase() + category.slice(1);
@@ -220,14 +236,20 @@ const Inventory: React.FC = () => {
             className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
           >
             <Plus size={18} />
-            <span>Add Item</span>
+            <span className="text-sm">Add Item</span>
           </button>
           <button
             onClick={() => setShowCategoryModal(true)}
             className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             <Settings size={18} />
-            <span>Manage Categories</span>
+            <span className="text-sm">Manage Categories</span>
+          </button>
+          <button
+            onClick={() => setShowPredictionModal(true)}
+            className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+          >
+            <span className="text-sm">Estimate Stock Needs</span>
           </button>
         </div>
       </div>
@@ -440,8 +462,18 @@ const Inventory: React.FC = () => {
           onClose={() => setShowCategoryModal(false)}
         />
       )}
+      <PredictionModal
+          showPredictionModal={showPredictionModal}
+          setShowPredictionModal={setShowPredictionModal}
+          inventory={inventory}
+          selectedPredictionItem={selectedPredictionItem}
+          setSelectedPredictionItem={setSelectedPredictionItem}
+          predictionResult={predictionResult}
+          handlePrediction={handlePrediction}
+        />
     </div>
   );
 };
 
 export default Inventory;
+

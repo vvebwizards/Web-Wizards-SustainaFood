@@ -9,9 +9,11 @@ import path from "path";
 import { fileURLToPath } from "url";
 import Donation  from "../models/Donation.js";
 import cron from 'node-cron';
-
+import { getPrediction } from '../utils/predict.js'
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+
 
 export async function addFoodItem(req, res) {
   upload(req, res, async (err) => {
@@ -355,6 +357,7 @@ export async function cancelDonation(req, res) {
 }
 
 
+
 cron.schedule('0 0 * * *', async () => {
   console.log('Checking for expired food items...');
   const currentDate = new Date().toISOString().split('T')[0];
@@ -381,3 +384,111 @@ cron.schedule('0 0 * * *', async () => {
     console.error('Error updating food items and donations:', error);
   }
 });
+async function getDonationDataInRange(foodItem, startDate, endDate, donorId) {
+  const donations = await Donation.find({
+    donorId,
+    title: foodItem,
+    createdAt: {
+      $gte: new Date(startDate),
+      $lte: new Date(endDate)
+    }
+  });
+
+  const totalDonations = donations.reduce((sum, d) => sum + (d.quantityToDonation || 0), 0);
+  const avgQuantity = donations.length > 0 ? totalDonations / donations.length : 0;
+
+  return { avgQuantity };
+}
+
+
+export async function predictQuantityRequested(avgQuantity, avgWasteRate) {
+  const prediction = await getPrediction([avgQuantity, avgWasteRate]);
+  
+  return prediction;  
+}
+
+async function getFoodWasteData(donorId, foodItem, startDate, endDate) {
+  const foodItems = await FoodItem.find({
+    donorId,
+    title: foodItem,
+    status: { $in: ['Expired', 'Damaged'] },
+    createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) }
+  });
+
+  const donations = await Donation.find({
+    donorId,
+    title: foodItem,
+    status: { $in: ['Expired', 'Damaged'] },
+    createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) }
+  });
+
+  const wastedFromFoodItems = foodItems.reduce((sum, item) => sum + (item.quantityInStock || 0), 0);
+  const wastedFromDonations = donations.reduce((sum, item) => sum + (item.quantityToDonation || 0), 0);
+
+  const totalWaste = wastedFromFoodItems + wastedFromDonations;
+  console.log(`Wasted from food items: ${wastedFromFoodItems}, Wasted from donations: ${wastedFromDonations}, Total waste: ${totalWaste}`);
+
+  return {
+    wastedFromFoodItems,
+    wastedFromDonations,
+    totalWaste
+  };
+}
+
+export async function predictSupplyDemand(req, res) {
+  try {
+    const user = await getAuthenticatedUser(req);
+    if (!user) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const donorId = user._id;
+
+    const { foodItem, startDate, endDate } = req.body;
+    if (!foodItem || !startDate || !endDate) {
+      console.warn("Missing fields:", { foodItem, startDate, endDate });
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    console.log("Starting prediction for user:", donorId);
+    console.log("Inputs received:", { foodItem, startDate, endDate });
+
+    const { avgQuantity } = await getDonationDataInRange(foodItem, startDate, endDate, donorId);
+
+    if (avgQuantity === 0) {
+      console.log("No donation data found in the given time range.");
+      return res.status(400).json({ error: "No donation data found in the given time range." });
+    }
+
+    const { totalWaste } = await getFoodWasteData(donorId, foodItem, startDate, endDate);
+
+    if (totalWaste === 0) {
+      console.log("Prediction unavailable: no food waste recorded for the specified period.");
+      return res.status(422).json({
+        error: "Prediction unavailable: no food waste recorded for the specified period."
+      });
+    }
+
+    const avgWasteRate = totalWaste / avgQuantity;
+    const predictedQuantityKg = await predictQuantityRequested(avgQuantity, avgWasteRate);
+
+    console.log("Predicted quantity requested:", predictedQuantityKg);
+    console.log("Average donation quantity:", avgQuantity);
+    console.log("Average food waste rate:", avgWasteRate);
+
+    res.status(200).json({
+      message: "Prediction successful",
+      avgDonationQuantity: avgQuantity,
+      predictedQuantityRequested: predictedQuantityKg,
+      avgFoodWasteRate: avgWasteRate
+    });
+
+  } catch (error) {
+    console.error("Error predicting supply-demand:", {
+      message: error.message,
+      stack: error.stack,
+      body: req.body,
+      headers: req.headers,
+    });
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
