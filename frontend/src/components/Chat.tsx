@@ -1,12 +1,13 @@
-// src/pages/Chat.tsx
-
 import React, { useEffect, useRef, useState } from "react";
 import {
   MessageCircle,
   Send,
   User,
   Users,
-  ArrowLeft
+  ArrowLeft,
+  Search,
+  X,
+  Filter
 } from "lucide-react";
 import { useSocket } from "../context/SocketContext";
 import { useAuth } from "../context/AuthContext";
@@ -104,9 +105,36 @@ const Chat: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [showMobileUsers, setShowMobileUsers] = useState(true);
+  
+  // New state for filtering
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const availableRoles = Object.keys(roleConfigs);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Filter users based on search term and selected roles
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.username.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRole = selectedRoles.length === 0 || (user.role && selectedRoles.includes(user.role));
+    return matchesSearch && matchesRole;
+  });
+
+  // Toggle role selection
+  const toggleRole = (role: string) => {
+    setSelectedRoles(prev => 
+      prev.includes(role) 
+        ? prev.filter(r => r !== role)
+        : [...prev, role]
+    );
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchTerm("");
+    setSelectedRoles([]);
+  };
 
   // 1) Real-time incoming messages
   useEffect(() => {
@@ -304,29 +332,87 @@ const Chat: React.FC = () => {
             selectedUser && !showMobileUsers ? "hidden md:flex" : "flex"
           } w-full md:w-72 bg-gradient-to-b from-gray-50 to-white border-r border-gray-200 flex-col transition-all duration-300`}
         >
-          <div className="p-4 border-b border-gray-200 bg-white">
+          {/* Search and Filter Section */}
+          <div className="p-4 space-y-3 border-b border-gray-200 bg-white">
             <div className="relative flex items-center">
               <Users className={`h-5 w-5 ${theme.text} mr-2`} />
               <h3 className="font-medium text-gray-700">Contacts</h3>
-              <div
-                className={`ml-auto px-2 py-1 ${theme.bg} ${theme.text} text-xs rounded-full`}
-              >
-                {users.length}
+              <div className={`ml-auto px-2 py-1 ${theme.bg} ${theme.text} text-xs rounded-full`}>
+                {filteredUsers.length}
               </div>
             </div>
+
+            {/* Search Input */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search contacts..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-8 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all duration-200"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm("")}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Role Filters */}
+            <div className="flex items-center space-x-1 overflow-x-auto pb-1 scrollbar-thin">
+              <Filter className="h-3 w-3 text-gray-500 mr-1 flex-shrink-0" />
+              {availableRoles.map((role) => {
+                const isSelected = selectedRoles.includes(role);
+                const roleTheme = roleConfigs[role].theme.colors;
+                
+                return (
+                  <button
+                    key={role}
+                    onClick={() => toggleRole(role)}
+                    className={`
+                      px-2 py-1 text-xs rounded-full whitespace-nowrap 
+                      transition-all duration-200 transform
+                      ${isSelected 
+                        ? `${roleTheme.button} text-white` 
+                        : `border ${roleTheme.bg} ${roleTheme.text}`
+                      }
+                      ${isSelected ? 'scale-105' : 'scale-100'}
+                    `}
+                  >
+                    <span className="capitalize">{role}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Clear Filters */}
+            {(searchTerm || selectedRoles.length > 0) && (
+              <button
+                onClick={clearFilters}
+                className="text-xs text-gray-500 hover:text-gray-700 flex items-center transition-colors duration-200"
+              >
+                <X className="h-3 w-3 mr-1" />
+                Clear filters
+              </button>
+            )}
           </div>
 
+          {/* Users List */}
           <div className="overflow-y-auto flex-1 pt-2">
-            {users.length === 0 ? (
+            {filteredUsers.length === 0 ? (
               <div className="p-8 text-sm text-gray-500 text-center flex flex-col items-center">
                 <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-3">
                   <Users className="h-8 w-8 text-gray-400" />
                 </div>
-                <p className="font-medium text-gray-600">No users available</p>
-                <p className="text-xs text-gray-400 mt-1">Check back later</p>
+                <p className="font-medium text-gray-600">No matches found</p>
+                <p className="text-xs text-gray-400 mt-1">Try adjusting your filters</p>
               </div>
             ) : (
-              users.map((u) => (
+              filteredUsers.map((u) => (
                 <div
                   key={getUserId(u)}
                   onClick={() => selectUser(u)}
@@ -347,10 +433,21 @@ const Chat: React.FC = () => {
                     >
                       {u.username}
                     </div>
-                    <div className="text-xs text-gray-500">
-                      {getUserId(selectedUser) === getUserId(u)
-                        ? "Active conversation"
-                        : "Tap to chat"}
+                    <div className="text-xs flex items-center">
+                      {u.role && (
+                        <span 
+                          className={`mr-2 px-1.5 py-0.5 rounded-full text-[10px] uppercase font-semibold ${
+                            roleConfigs[u.role].theme.colors.bg
+                          } ${roleConfigs[u.role].theme.colors.text}`}
+                        >
+                          {u.role}
+                        </span>
+                      )}
+                      <span className="text-gray-500">
+                        {getUserId(selectedUser) === getUserId(u)
+                          ? "Active conversation"
+                          : "Tap to chat"}
+                      </span>
                     </div>
                   </div>
                   {getUserId(selectedUser) === getUserId(u) && (
