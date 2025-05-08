@@ -17,7 +17,7 @@ import {
 import { useSocket } from "../../context/SocketContext";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
-import { ChatMessage, Room, User as UserType } from "../../types";
+import { ChatMessage, Room, User as UserType } from "../../types.ts";
 import { formatTime, getMessageDay, getUserId } from "../../utils/chatHelpers";
 import { roleConfigs } from "../../utils/roleConfigs";
 import UserAvatar from "./UserAvatar";
@@ -114,18 +114,21 @@ const RoomChat: React.FC = () => {
   // Socket connection for room messages
   useEffect(() => {
     if (!socket || !selectedRoom) return;
-    
-    const handleRoomMessage = (msg: ChatMessage) => {
-      if (msg.roomId === selectedRoom._id) {
-        setMessages(prev => [...prev, { ...msg, timestamp: new Date() }]);
-      }
+    const handleRoomMessage = (msg: any) => {
+      if (msg.roomId !== selectedRoom._id) return;
+      setMessages(prev => [
+        ...prev,
+        {
+          content:   msg.content,
+          senderId:  msg.senderId,
+          roomId:    msg.roomId,
+          type:      'room',
+          timestamp: new Date(msg.createdAt)
+        }
+      ]);
     };
-    
-    socket.on("roomMessage", handleRoomMessage);
-    
-    return () => {
-      socket.off("roomMessage", handleRoomMessage);
-    };
+    socket.on('roomMessage', handleRoomMessage);
+    return () => { socket.off('roomMessage', handleRoomMessage); };
   }, [socket, selectedRoom]);
   
   // Scroll to bottom on new messages
@@ -136,22 +139,17 @@ const RoomChat: React.FC = () => {
   }, [messages]);
   
   // Load room messages when selecting a room
-  const loadRoomMessages = async (roomId: string) => {
-    try {
-      const res = await axios.get(`http://localhost:5000/api/chat/rooms/${roomId}/messages`);
-      const loadedMessages: ChatMessage[] = res.data.map((m: any) => ({
-        content: m.content,
-        senderId: m.senderId,
-        roomId: roomId,
-        type: "room",
-        timestamp: new Date(m.createdAt)
-      }));
-      setMessages(loadedMessages);
-    } catch (err) {
-      console.error("Failed to load room messages", err);
-      setMessages([]);
-    }
-  };
+  async function loadRoomMessages(roomId: string) {
+    const res = await axios.get(`/api/chat/rooms/${roomId}/messages`);
+    const loaded = res.data.map((m: any) => ({
+      content:   m.content,
+      senderId:  m.senderId,
+      roomId:    m.roomId,
+      type:      'room',
+      timestamp: new Date(m.createdAt)
+    }));
+    setMessages(loaded);
+  }
   
   // Load room members when selecting a room
   const loadRoomMembers = async (roomId: string) => {
@@ -179,26 +177,47 @@ const RoomChat: React.FC = () => {
   };
   
   // Send a message to the room
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (!socket || !selectedRoom || !message.trim()) return;
-    
+  
+    // Build payload for HTTP + socket
     const payload = {
-      roomId: selectedRoom._id,
-      content: message,
-      senderId: currentUserId,
-      type: "room"
+      content:  message,
+      senderId: currentUserId
     };
-    
-    socket.emit("roomMessage", payload);
-    
-    // Echo in UI immediately
-    setMessages(prev => [
-      ...prev,
-      { ...payload, timestamp: new Date() }
-    ]);
-    
-    setMessage("");
+  
+    try {
+      // 1) Persist to the DB
+      await axios.post(
+        `/api/chat/rooms/${selectedRoom._id}/messages`,
+        payload
+      );
+  
+      // 2) Broadcast in real-time
+      socket.emit("roomMessage", {
+        ...payload,
+        roomId: selectedRoom._id
+      });
+  
+      // 3) Echo locally immediately
+      setMessages(prev => [
+        ...prev,
+        {
+          ...payload,
+          roomId:    selectedRoom._id,
+          type:      "room",
+          timestamp: new Date()
+        }
+      ]);
+  
+      // 4) Clear input
+      setMessage("");
+    } catch (err) {
+      console.error("Failed to send message", err);
+      // optional: show user feedback/toast here
+    }
   };
+  
   
   // Handle key down for sending message
   const handleKeyDown = (e: React.KeyboardEvent) => {
