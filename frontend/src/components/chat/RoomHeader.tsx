@@ -46,35 +46,7 @@ const RoomHeader: React.FC<RoomHeaderProps> = ({
         </div>
       </div>
       
-      <div className="flex items-center">
-        <button
-          onClick={isRoomMember ? leaveRoom : joinRoom}
-          className={`text-xs flex items-center px-3 py-1.5 rounded-full ${
-            isRoomMember
-              ? "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              : `${theme.button} text-white hover:opacity-90`
-          }`}
-        >
-          {isRoomMember ? (
-            <>
-              <X className="h-3 w-3 mr-1" />
-              Leave
-            </>
-          ) : (
-            <>
-              <UserPlus className="h-3 w-3 mr-1" />
-              Join
-            </>
-          )}
-        </button>
-        
-        <button
-          className="ml-2 p-1.5 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100"
-          title="Room information"
-        >
-          <Info className="h-4 w-4" />
-        </button>
-      </div>
+
     </div>
   );
 };

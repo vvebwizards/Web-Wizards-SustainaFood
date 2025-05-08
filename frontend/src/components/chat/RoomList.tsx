@@ -81,8 +81,25 @@ const RoomList: React.FC<RoomListProps> = ({
     if (room.isPrivate) {
       setSelectedPrivateRoom(room);
     } else {
-      await axios.post(`/api/chat/rooms/${room._id}/join`, { userId: currentUserId });
-      selectRoom(room);
+      try {
+        await axios.post(`/api/chat/rooms/${room._id}/join`, { userId: currentUserId });
+        const updatedRoom = { ...room, members: [...room.members, currentUserId] };
+        setRooms((prev) => prev.map(r => r._id === room._id ? updatedRoom : r));
+        selectRoom(updatedRoom);
+      } catch (err) {
+        console.error("Failed to join room", err);
+      }
+    }
+  };
+
+  const leaveRoom = async (room: Room) => {
+    try {
+      await axios.post(`/api/chat/rooms/${room._id}/leave`, { userId: currentUserId });
+      const updatedRoom = { ...room, members: room.members.filter(id => id !== currentUserId) };
+      setRooms((prev) => prev.map(r => r._id === room._id ? updatedRoom : r));
+      if (selectedRoom?._id === room._id) setSelectedRoom(null);
+    } catch (err) {
+      console.error("Failed to leave room", err);
     }
   };
 
@@ -156,8 +173,8 @@ const RoomList: React.FC<RoomListProps> = ({
               selectRoom={selectRoom}
               isRoomMember={isRoomMember(room)}
               joinRoom={joinRoom}
+              leaveRoom={leaveRoom}
               theme={theme}
-              currentUserId={currentUserId}
             />
           ))}
         </div>
@@ -179,9 +196,10 @@ const RoomList: React.FC<RoomListProps> = ({
         <PrivateJoinModal
           room={selectedPrivateRoom}
           onClose={() => setSelectedPrivateRoom(null)}
-          onJoinSuccess={(room) => {
+          onJoinSuccess={(updatedRoom) => {
             setSelectedPrivateRoom(null);
-            selectRoom(room);
+            setRooms((prev) => prev.map(r => r._id === updatedRoom._id ? updatedRoom : r));
+            selectRoom(updatedRoom);
           }}
           currentUserId={currentUserId}
           theme={theme}
@@ -191,7 +209,7 @@ const RoomList: React.FC<RoomListProps> = ({
   );
 };
 
-const RoomCard = ({ room, selectedRoom, selectRoom, isRoomMember, joinRoom, theme }) => (
+const RoomCard = ({ room, selectedRoom, selectRoom, isRoomMember, joinRoom, leaveRoom, theme }) => (
   <div onClick={() => selectRoom(room)} className={`mx-2 mb-2 rounded-lg border overflow-hidden cursor-pointer ${
       selectedRoom && selectedRoom._id === room._id ? `border-l-4 ${theme.button} border-opacity-80 bg-white` : "border-gray-200 bg-white hover:border-gray-300"}`}>
     <div className="p-3">
@@ -207,14 +225,21 @@ const RoomCard = ({ room, selectedRoom, selectRoom, isRoomMember, joinRoom, them
           <Users className="h-3 w-3 mr-1" />
           <span>{room.members.length} members</span>
         </div>
-        {!isRoomMember ? (
+        {isRoomMember ? (
+          <button onClick={(e) => {
+              e.stopPropagation();
+              leaveRoom(room);
+            }} className="px-2 py-1 rounded bg-red-500 text-white text-xs">
+            Leave
+          </button>
+        ) : (
           <button onClick={(e) => {
               e.stopPropagation();
               joinRoom(room);
             }} className={`px-2 py-1 rounded ${theme.button} text-white text-xs`}>
             <Plus className="h-3 w-3 mr-1" /> Join
           </button>
-        ) : null}
+        )}
       </div>
     </div>
   </div>
@@ -228,7 +253,8 @@ const PrivateJoinModal = ({ room, onClose, onJoinSuccess, currentUserId, theme }
     try {
       const res = await axios.post('/api/chat/rooms/join-by-code', { userId: currentUserId, code });
       if (res.data.roomId === room._id) {
-        onJoinSuccess(room);
+        const updatedRoom = { ...room, members: [...room.members, currentUserId] };
+        onJoinSuccess(updatedRoom);
       } else {
         setError('Incorrect code');
       }
