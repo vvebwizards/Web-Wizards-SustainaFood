@@ -1,9 +1,16 @@
+// src/components/Layout.tsx
 import React, { useState, useEffect } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import {
+  NavLink,
+  Outlet,
+  useNavigate,
+  Link,
+  useLocation,
+} from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useNotifications } from "../context/NotificationContext";
 import { useCart } from "../context/CartContext";
-import { Link } from 'react-router-dom';
+import { useSocket } from '../context/SocketContext';
 import {
   Menu,
   Bell,
@@ -13,7 +20,6 @@ import {
   Package,
   Truck,
   LineChart,
-  ScrollText,
   Database,
   AlertTriangle,
   User,
@@ -28,9 +34,28 @@ import {
   Gauge,
   Gamepad2,
   Gift,
-  Crown
+  Crown,
 } from "lucide-react";
 import defaultProfileImage from "../assets/images/default_user_img.jpg";
+
+// --- shape returned by your /api/chat/recent endpoint ---
+interface RecentMessage {
+  _id: string;
+  senderId: string;
+  recipientId: string;
+  partnerId: string;
+  partnerName: string;
+  content: string;
+  timestamp: string;
+  isRead: boolean;
+  profileImage?: string;
+}
+
+interface Notification {
+  _id: string;
+  message: string;
+  isRead: boolean;
+}
 
 const roleNames: Record<string, string> = {
   admin: "Administrator",
@@ -55,26 +80,15 @@ const roleConfigs: Record<string, any> = {
     },
     navigation: [
       { to: "/dashboard/overview", icon: Gauge, label: "System Overview" },
-      {
-        to: "/dashboard/UsersManagement",
-        icon: UserCog,
-        label: "User Management",
-      },
+      { to: "/dashboard/UsersManagement", icon: UserCog, label: "User Management" },
       { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
-      {
-        to: "/dashboard/organizations",
-        icon: Building2,
-        label: "Organizations",
-      },
+      { to: "/dashboard/organizations", icon: Building2, label: "Organizations" },
       { to: "/dashboard/donations", icon: Package, label: "Donations" },
       { to: "/dashboard/deliveries", icon: Truck, label: "Deliveries" },
       { to: "/dashboard/StatsDashboard", icon: LineChart, label: "Analytics" },
       { to: "/dashboard/database", icon: Database, label: "Database" },
-      {
-        to: "/dashboard/notifications",
-        icon: AlertTriangle,
-        label: "System Alerts",
-      },
+      { to: "/dashboard/chat", icon: MessageSquare, label: "Communications" },
+      { to: "/dashboard/notifications", icon: AlertTriangle, label: "System Alerts" },
       { to: "/dashboard/settings", icon: Settings, label: "System Settings" },
     ],
   },
@@ -99,6 +113,7 @@ const roleConfigs: Record<string, any> = {
       { to: "/dashboard/schedule", icon: Calendar, label: "Schedule Pickup" },
       { to: "/dashboard/statistics", icon: LineChart, label: "Impact" },
       { to: "/dashboard/history", icon: History, label: "History" },
+      { to: "/dashboard/chat", icon: MessageSquare, label: "Communications" },
       { to: "/dashboard/notifications", icon: Bell, label: "Notifications" },
       { to: "/dashboard/settings", icon: Settings, label: "Settings" },
     ],
@@ -124,6 +139,7 @@ const roleConfigs: Record<string, any> = {
       { to: "/dashboard/location", icon: MapPin, label: "Delivery Location" },
       { to: "/dashboard/statistics", icon: LineChart, label: "Received Items" },
       { to: "/dashboard/history", icon: History, label: "History" },
+      { to: "/dashboard/chat", icon: MessageSquare, label: "Communications" },
       { to: "/dashboard/notifications", icon: Bell, label: "Notifications" },
       { to: "/dashboard/settings", icon: Settings, label: "Settings" },
     ],
@@ -145,11 +161,7 @@ const roleConfigs: Record<string, any> = {
       { to: "/dashboard/UpdateProfile/:userId", icon: User, label: "Profile Settings" },
       { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
       { to: "/dashboard/orders", icon: Package, label: "Orders" },
-      {
-        to: "/dashboard/deliveries",
-        icon: Truck,
-        label: "Deliveries",
-      },
+      { to: "/dashboard/deliveries", icon: Truck, label: "Deliveries" },
       { to: "/dashboard/schedule", icon: Calendar, label: "My Schedule" },
       { to: "/dashboard/active", icon: Clock, label: "Active Deliveries" },
       { to: "/dashboard/chat", icon: MessageSquare, label: "Communications" },
@@ -163,53 +175,105 @@ const roleConfigs: Record<string, any> = {
 
 const Layout: React.FC = () => {
   const { user, logout } = useAuth();
+  const currentUserId = user?._id || user?.id || "";
   const navigate = useNavigate();
   const { notifications, fetchNotifications, markAsRead } = useNotifications();
   const { cartItems } = useCart();
+
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [isMessageOpen, setIsMessageOpen] = useState(false);
   const [profileImage, setProfileImage] = useState<string>(defaultProfileImage);
+  const [recentMessages, setRecentMessages] = useState<RecentMessage[]>([]);
+  const socket = useSocket();
 
-  // points from localStorage
-  const [points, setPoints] = useState<number>(() =>
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+  const [points, setPoints] = useState<number>(
     user?.points ?? parseInt(localStorage.getItem("points") || "0", 10)
   );
-  useEffect(() => {
-    if (user?.points != null) {
-      setPoints(user.points);
-    } else {
-      const p = localStorage.getItem("points");
-      if (p) setPoints(parseInt(p, 10));
-    }
-  }, [user]);
 
   const userRole = user?.role ?? "donor";
-  const roleConfig = roleConfigs[userRole];
+  const roleConfig = roleConfigs[userRole]!;
 
-  if (!roleConfig) {
-    return (
-      <div className="p-6 text-red-600">
-        ❌ Unknown user role: <strong>{userRole}</strong>. Please check your role configuration.
-      </div>
-    );
-  }
-
-  const displayRoleName = roleNames[userRole] || "User";
-
+  // keep points & profileImage in sync
   useEffect(() => {
+    if (user?.points != null) setPoints(user.points);
     if (user?.profileImage) {
-      const imageUrl = user.profileImage.startsWith("http")
+      const url = user.profileImage.startsWith("http")
         ? user.profileImage
         : `http://localhost:5000${user.profileImage}`;
-      setProfileImage(`${imageUrl}?t=${Date.now()}`);
-    } else {
-      setProfileImage(defaultProfileImage);
+      setProfileImage(`${url}?t=${Date.now()}`);
     }
   }, [user]);
 
+  // load notifications + recent chats once
   useEffect(() => {
     fetchNotifications();
-  }, []);
+    fetchRecentMessages();
+    if (!socket) return;
+  const handler = (msg: { senderId: string; recipientId: string }) => {
+    // only refresh when *you* receive a message
+    if (msg.recipientId === currentUserId) {
+      fetchRecentMessages();
+    }
+  };
+  socket.on('privateMessage', handler);
+  return () => {
+    socket.off('privateMessage', handler);
+  };
+    
+  }, [socket, currentUserId]);
+
+
+  const fetchRecentMessages = async () => {
+    if (!currentUserId) return;
+  
+    try {
+      const res = await fetch(`/api/chat/recent/${currentUserId}`);
+      if (!res.ok) throw new Error('Network response was not ok');
+      const data: RecentMessage[] = await res.json();
+  
+      // 1) drop any conversation where *you* are the sender
+      const filtered = data.filter(m => m.senderId !== currentUserId);
+  
+      // 2) update state
+      setRecentMessages(filtered);
+      setUnreadMessageCount(filtered.filter(m => !m.isRead).length);
+    } catch (err) {
+      console.error("Failed to fetch recent messages:", err);
+    }
+  };
+
+  const markMessageAsRead = async (msgId: string) => {
+    try {
+      await fetch(`/api/chat/read/${msgId}`, { method: "PUT" });
+      setRecentMessages(prev =>
+        prev.map(m => (m._id === msgId ? { ...m, isRead: true } : m))
+      );
+      setUnreadMessageCount(c => Math.max(0, c - 1));
+    } catch (err) {
+      console.error("Failed to mark as read:", err);
+    }
+  };
+
+  const handleMessageClick = async (msgId: string, partnerId: string) => {
+    await markMessageAsRead(msgId);
+    setIsMessageOpen(false);
+    navigate(`/dashboard/chat?user=${partnerId}`);
+  };
+
+  const formatRelativeTime = (ts: string) => {
+    const diffMins = Math.floor((Date.now() - new Date(ts).getTime()) / 60000);
+    if (diffMins < 1) return "just now";
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const hrs = Math.floor(diffMins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    if (days < 7) return `${days}d ago`;
+    return new Date(ts).toLocaleDateString();
+  };
+
+  const displayRoleName = roleNames[userRole] || "User";
 
   const handleLogout = () => {
     logout();
@@ -219,61 +283,119 @@ const Layout: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="fixed top-0 left-0 w-full bg-white shadow-sm px-6 py-4 flex justify-between items-center z-50">
+      <header className="fixed top-0 left-0 w-full bg-white shadow px-6 py-4 flex justify-between items-center z-50">
         <div className="flex items-center space-x-3">
-          <button className="p-3" onClick={() => setSidebarOpen(!sidebarOpen)}>
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-3">
             <Menu className="h-6 w-6" />
           </button>
-          <div className="flex items-center space-x-2">
-          <Link to="/dashboard">
-  <roleConfig.theme.icon
-    className={`h-6 w-6 cursor-pointer ${roleConfig.theme.colors.header}`}
-  />
-</Link>
-            <span className="text-xl font-semibold text-gray-900">
-              {displayRoleName}
-            </span>
-          </div>
+          <Link to="/dashboard" className="flex items-center space-x-2">
+            <roleConfig.theme.icon
+              className={`h-6 w-6 ${roleConfig.theme.colors.header}`}
+            />
+            <span className="text-xl font-semibold">{displayRoleName}</span>
+          </Link>
         </div>
 
         <div className="flex items-center space-x-6">
-          <NavLink
-            to="/dashboard/redeem"
-            className="flex items-center space-x-1 p-2 text-gray-600 hover:text-gray-900"
-            title="Prize Wheel"
-          >
-            <span
-              className={`font-semibold text-sm ${roleConfig.theme.colors.text}`}
-            >
+          <NavLink to="/dashboard/redeem" className="flex items-center space-x-1">
+            <span className={`font-semibold text-sm ${roleConfig.theme.colors.text}`}>
               {points} pts
             </span>
             <Gift className="h-6 w-6" />
           </NavLink>
 
-          <NavLink
-            to="/dashboard/game-center"
-            className="relative p-2 text-gray-600 hover:text-gray-900"
-            title="Game Center"
-          >
+          <NavLink to="/dashboard/game-center" className="p-2">
             <Gamepad2 className="h-6 w-6" />
           </NavLink>
 
+          {/* Messages */}
           <div className="relative">
             <button
-              onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-              className="relative p-2 text-gray-600 hover:text-gray-900"
+              onClick={() => setIsMessageOpen(!isMessageOpen)}
+              className="relative p-2"
+            >
+              <MessageSquare className="h-6 w-6" />
+              {unreadMessageCount > 0 && (
+                <span className="absolute top-0 right-0 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">
+                  {unreadMessageCount}
+                </span>
+              )}
+            </button>
+            {isMessageOpen && (
+              <div className="absolute right-0 mt-2 w-80 bg-white border rounded shadow-lg z-50">
+                <div className={`${roleConfig.theme.colors.bg} p-3 flex justify-between`}>
+                  <span className={`${roleConfig.theme.colors.text} font-medium`}>
+                    Recent Messages
+                  </span>
+                  <span className="text-xs">{recentMessages.length}</span>
+                </div>
+                <div className="max-h-64 overflow-y-auto">
+                  {recentMessages.length === 0 ? (
+                    <div className="p-6 text-center text-gray-500">
+                      <MessageSquare className="h-10 w-10 mx-auto mb-2 text-gray-300" />
+                      <p>No messages yet</p>
+                    </div>
+                  ) : (
+                    <ul>
+                      {recentMessages.map(m => (
+                        <li
+                          key={m._id}
+                          onClick={() => handleMessageClick(m._id, m.partnerId)}
+                          className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b"
+                        >
+                          <div className="flex justify-between items-center mb-1">
+                            <p className="text-sm font-medium truncate">
+                              {m.senderId === currentUserId
+                                ? `You → ${m.partnerName}`
+                                : m.partnerName}
+                            </p>
+                            <span className="text-xs text-gray-500">
+                              {formatRelativeTime(m.timestamp)}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-500 truncate">
+                            {m.content}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                {recentMessages.length > 0 && (
+                  <div className="border-t p-3">
+                    <Link
+                      to={`/dashboard/chat?user=${recentMessages[0].partnerId}`}
+                      className={`${roleConfig.theme.colors.text} text-sm w-full block text-center`}
+                      onClick={() => setIsMessageOpen(false)}
+                    >
+                      See All Messages
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Notifications */}
+          <div className="relative">
+            <button
+              onClick={() => {
+                setIsNotificationOpen(!isNotificationOpen);
+                if (isMessageOpen) setIsMessageOpen(false);
+              }}
+              className="relative p-2"
             >
               <Bell className="h-6 w-6" />
-              {notifications.filter((n) => !n.isRead).length > 0 && (
-                <span className="absolute top-0 right-0 bg-red-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full">
-                  {notifications.filter((n) => !n.isRead).length}
+              {notifications.filter(n => !n.isRead).length > 0 && (
+                <span className="absolute top-0 right-0 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">
+                  {notifications.filter(n => !n.isRead).length}
                 </span>
               )}
             </button>
             {isNotificationOpen && (
-              <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+              <div className="absolute right-0 mt-2 w-64 bg-white border rounded shadow-lg z-50">
                 <ul className="max-h-60 overflow-y-auto">
-                  {notifications.map((notif) => (
+                  {notifications.map(notif => (
                     <li
                       key={notif._id}
                       onClick={() => markAsRead(notif._id)}
@@ -289,30 +411,25 @@ const Layout: React.FC = () => {
             )}
           </div>
 
+          {/* Cart (recipient only) */}
           {userRole === "recipient" && (
-            <NavLink
-              to="/dashboard/cart"
-              className="relative p-2 text-gray-600 hover:text-gray-900"
-            >
+            <NavLink to="/dashboard/cart" className="relative p-2">
               <ShoppingCart className="h-6 w-6" />
               {cartItems.length > 0 && (
-                <span className="absolute top-0 right-0 bg-blue-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full">
+                <span className="absolute top-0 right-0 bg-blue-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">
                   {cartItems.length}
                 </span>
               )}
             </NavLink>
           )}
 
-          <span className="text-gray-900 font-medium">
-            Welcome, {user?.username}
-          </span>
+          {/* Profile + Logout */}
+          <span className="text-gray-900 font-medium">Welcome, {user?.username}</span>
           <img
             src={profileImage}
             alt="Profile"
             className="h-8 w-8 rounded-full border"
-            onError={(e) => {
-              e.currentTarget.src = defaultProfileImage;
-            }}
+            onError={e => { (e.currentTarget as HTMLImageElement).src = defaultProfileImage }}
           />
           <button
             onClick={handleLogout}
@@ -324,11 +441,7 @@ const Layout: React.FC = () => {
       </header>
 
       <div className="flex mt-16">
-        <nav
-          className={`w-64 bg-white shadow-lg p-5 ${
-            sidebarOpen ? "block" : "hidden"
-          }`}
-        >
+        <nav className={`w-64 bg-white p-5 ${sidebarOpen ? "block" : "hidden"}`}>
           <ul>
             {roleConfig.navigation.map((item: any) => (
               <li key={item.to}>
@@ -336,8 +449,8 @@ const Layout: React.FC = () => {
                   to={item.to}
                   className={`flex items-center p-3 rounded-md ${roleConfig.theme.colors.hover}`}
                 >
-                  <item.icon className="h-6 w-6" />
-                  <span className="ml-3">{item.label}</span>
+                  <item.icon className="h-6 w-6 mr-2" />
+                  <span>{item.label}</span>
                 </NavLink>
               </li>
             ))}

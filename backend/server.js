@@ -20,7 +20,7 @@ import orderRoutes from "./routes/orderRoutes.js";
 import quizRoutes from './routes/quizRoutes.js';
 import statistics from './routes/statisticRoute.js';
 import statsApi from './routes/adminStats.js';
-
+import chatRoutes from './routes/chatRoutes.js';
 
 import passport from "passport";
 import "./passport.js"; 
@@ -77,6 +77,7 @@ app.use('/api', statsApi);
 app.use("/api/category",CategoryRoutes);
 app.use('/api', quizRoutes);
 app.use('/api/statistics', statistics);
+app.use('/api/chat', chatRoutes);
 app.use("/api/settings", settingsRoutes);
 app.get("/", (req, res) => {
   res.send("Backend connected to frontend");

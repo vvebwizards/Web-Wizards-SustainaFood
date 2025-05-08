@@ -5,6 +5,7 @@ import SignUp from "./pages/signup";
 import GetInvolved from "./pages/GetInvolved";
 import Login from "./pages/SignIn";
 import GameCenter from "./pages/GameCenter";
+import ChatPage from './pages/ChatPage';
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import MemoryGame from "./games/MemoryGame";
@@ -156,6 +157,7 @@ function App() {
           <Route path="/dashboard/tictactoe" element={<TicTacToe />} />
           <Route path="/dashboard/StatsDashboard" element={<StatsDashboard />} />       
           <Route path="/dashboard/overview" element={<Overview />} />     
+          <Route path="chat" element={<ChatPage />} />
         </Route>
       </Routes>
     </>
