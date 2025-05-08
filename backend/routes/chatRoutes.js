@@ -25,10 +25,13 @@ router.get('/rooms', async (req, res) => {
 });
 
 // Create a new room
+import crypto from 'crypto';
+
 router.post('/rooms', async (req, res) => {
   const { name, description, isPrivate, createdBy, members } = req.body;
   try {
-    const room = new Room({ name, description, isPrivate, createdBy, members });
+    const joinCode = isPrivate ? crypto.randomBytes(3).toString('hex') : null;
+    const room = new Room({ name, description, isPrivate, createdBy, members, joinCode });
     await room.save();
     res.status(201).json(room);
   } catch (error) {
@@ -36,6 +39,7 @@ router.post('/rooms', async (req, res) => {
     res.status(500).json({ error: 'Failed to create room' });
   }
 });
+
 
 // Get room members
 router.get('/rooms/:roomId/members', async (req, res) => {
@@ -223,5 +227,33 @@ router.put('/read/:messageId', async (req, res) => {
     res.status(500).json({ error: 'Failed to mark as read' });
   }
 });
+// POST /api/chat/rooms/join-by-code
+router.post('/rooms/join-by-code', async (req, res) => {
+  const { userId, code } = req.body;
 
+  try {
+    const room = await Room.findOne({ joinCode: code });
+    if (!room) return res.status(404).json({ error: 'Invalid code' });
+
+    if (!room.members.includes(userId)) {
+      room.members.push(userId);
+      await room.save();
+    }
+
+    const member = await User.findById(userId).select('username profileImage').lean();
+
+    res.json({
+      roomId: room._id,
+      roomName: room.name,
+      member: {
+        id: member._id.toString(),
+        username: member.username,
+        profileImage: member.profileImage,
+      },
+    });
+  } catch (error) {
+    console.error('Failed to join by code:', error);
+    res.status(500).json({ error: 'Failed to join room' });
+  }
+});
 export default router;

@@ -27,21 +27,21 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
     description: "",
     isPrivate: false
   });
+  const [joinCode, setJoinCode] = useState<string | null>(null);
 
-  // Create a new room
   const createRoom = async () => {
     if (!roomForm.name.trim()) return;
-    
+
     try {
       const newRoom = {
         ...roomForm,
         createdBy: currentUserId,
         members: [currentUserId]
       };
-      
-      const res = await axios.post("http://localhost:5000/api/chat/rooms", newRoom);
+      const res = await axios.post("/api/chat/rooms", newRoom);
       onRoomCreated(res.data);
-      setShowCreateRoom(false);
+      if (res.data.isPrivate) setJoinCode(res.data.joinCode);
+      else setShowCreateRoom(false);
     } catch (err) {
       console.error("Failed to create room", err);
     }
@@ -49,79 +49,54 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 animate-fade-in">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-medium text-gray-900">Create a New Room</h3>
-          <button 
-            onClick={() => setShowCreateRoom(false)}
-            className="text-gray-400 hover:text-gray-600"
-          >
+          <button onClick={() => setShowCreateRoom(false)} className="text-gray-400 hover:text-gray-600">
             <X className="h-5 w-5" />
           </button>
         </div>
-        
-        <div className="space-y-4">
+
+        {joinCode ? (
           <div>
-            <label htmlFor="roomName" className="block text-sm font-medium text-gray-700 mb-1">
-              Room Name
-            </label>
-            <input
-              id="roomName"
-              type="text"
-              value={roomForm.name}
-              onChange={(e) => setRoomForm(prev => ({ ...prev, name: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter room name"
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="roomDescription" className="block text-sm font-medium text-gray-700 mb-1">
-              Description
-            </label>
-            <textarea
-              id="roomDescription"
-              value={roomForm.description}
-              onChange={(e) => setRoomForm(prev => ({ ...prev, description: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-              placeholder="What's this room about?"
-              rows={3}
-            />
-          </div>
-          
-          <div className="flex items-center">
-            <input
-              id="isPrivate"
-              type="checkbox"
-              checked={roomForm.isPrivate}
-              onChange={(e) => setRoomForm(prev => ({ ...prev, isPrivate: e.target.checked }))}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-            <label htmlFor="isPrivate" className="ml-2 block text-sm text-gray-700">
-              Private Room (Invite only)
-            </label>
-          </div>
-          
-          <div className="flex justify-end space-x-3 pt-4">
+            <p className="text-green-600 mb-4">Private room created! Share this code:</p>
+            <div className="text-center font-mono text-lg bg-gray-100 p-2 rounded">{joinCode}</div>
             <button
               onClick={() => setShowCreateRoom(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-lg"
             >
-              Cancel
+              Close
             </button>
-            <button
-              onClick={createRoom}
-              disabled={!roomForm.name.trim()}
-              className={`px-4 py-2 text-sm font-medium text-white rounded-lg ${
-                roomForm.name.trim() 
-                  ? `${theme.button} hover:opacity-90` 
-                  : "bg-gray-300 cursor-not-allowed"
-              }`}
-            >
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <input
+              type="text"
+              placeholder="Room name"
+              value={roomForm.name}
+              onChange={(e) => setRoomForm({ ...roomForm, name: e.target.value })}
+              className="w-full px-3 py-2 border rounded"
+            />
+            <textarea
+              placeholder="Description"
+              value={roomForm.description}
+              onChange={(e) => setRoomForm({ ...roomForm, description: e.target.value })}
+              className="w-full px-3 py-2 border rounded"
+            />
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                checked={roomForm.isPrivate}
+                onChange={(e) => setRoomForm({ ...roomForm, isPrivate: e.target.checked })}
+                className="mr-2"
+              />
+              <span>Private room (requires code to join)</span>
+            </div>
+            <button onClick={createRoom} className={`w-full px-4 py-2 ${theme.button} text-white rounded`}>
               Create Room
             </button>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
