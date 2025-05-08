@@ -4,7 +4,7 @@ import User from "../models/User.js";
 import { sendEmail } from "../utils/helpers.js";
 import Message from "../models/Message.js";
 import Room from "../models/Room.js";
-
+import RoomMessage from "../models/RoomMessage.js"
 let onlineUsers = new Map();
 
 const setupSocket = (server) => {
@@ -61,17 +61,9 @@ const setupSocket = (server) => {
 
     socket.on("sendMessage", async ({ roomId, content, senderId }) => {
       try {
-        const message = await Message.create({
-          sender: senderId,
-          room: roomId,
-          content,
-        });
+        const saved = await RoomMessage.create({ sender: senderId, room: roomId, content });
 
-        io.to(roomId).emit("newMessage", {
-          senderId,
-          roomId,
-          content,
-        });
+        io.to(roomId).emit("newMessage", saved);
 
         console.log(`📣 Sent group message to room ${roomId}`);
       } catch (error) {

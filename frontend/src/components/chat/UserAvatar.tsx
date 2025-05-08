@@ -1,5 +1,5 @@
 import React from "react";
-import { User } from "../../types";
+import { User } from "../../types.ts";
 import { roleConfigs } from "../../utils/roleConfigs";
 
 // This would be imported from your assets
