@@ -82,7 +82,7 @@ const OrderDetails: React.FC = () => {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-700 mx-auto"></div>
           <p className="mt-3 text-gray-700">Loading order details...</p>
         </div>
       </div>
@@ -102,7 +102,7 @@ const OrderDetails: React.FC = () => {
         </p>
         <Link
           to="/dashboard/orders"
-          className="mt-4 inline-flex items-center text-blue-600 hover:text-blue-800"
+          className="mt-4 inline-flex items-center text-purple-600 hover:text-purple-600"
         >
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Orders
         </Link>
@@ -118,7 +118,7 @@ const OrderDetails: React.FC = () => {
         <div>
           <Link
             to="/dashboard/orders"
-            className="inline-flex items-center text-blue-600 hover:text-blue-800"
+            className="inline-flex items-center text-purple-600 hover:text-purple-800"
           >
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Orders
           </Link>
@@ -127,83 +127,14 @@ const OrderDetails: React.FC = () => {
           </h1>
         </div>
         <div className="flex mt-4 sm:mt-0 space-x-3">
-          <button className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+          <button className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
             <Printer className="mr-2 h-4 w-4" />
             Print
           </button>
-          <button className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+          <button className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
             <Download className="mr-2 h-4 w-4" />
             Download
           </button>
-        </div>
-      </div>
-
-      {/* Order Summary */}
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
-        <div className="px-4 py-5 sm:px-6 flex items-center justify-between">
-          <div>
-            <h3 className="text-lg leading-6 font-medium text-gray-900">
-              Order Summary
-            </h3>
-            <p className="mt-1 max-w-2xl text-sm text-gray-500">
-              Created on {formatDate(order.createdAt)}
-            </p>
-          </div>
-          <OrderStatusBadge status={order.status} />
-        </div>
-        <div className="border-t border-gray-200 px-4 py-5 sm:p-6">
-          <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="sm:col-span-1">
-              <dt className="text-sm font-medium text-gray-500">Order ID</dt>
-              <dd className="mt-1 text-sm text-gray-900">
-                {order.orderNumber}
-              </dd>
-            </div>
-            <div className="sm:col-span-1">
-              <dt className="text-sm font-medium text-gray-500">Quantity</dt>
-              {order.items.map((item, index) => (
-                <dd className="mt-1 text-sm text-gray-900">
-                  {item.orderedQuantity}
-                </dd>
-              ))}
-            </div>
-            <div className="sm:col-span-1">
-              <dt className="text-sm font-medium text-gray-500">
-                Payment Status
-              </dt>
-              <dd className="mt-1 text-sm">
-                <span
-                  className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
-                    order.paymentStatus === "paid"
-                      ? "bg-green-100 text-green-800"
-                      : order.paymentStatus === "pending"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : "bg-red-100 text-red-800"
-                  }`}
-                >
-                  {order.paymentStatus === "paid"
-                    ? "Paid"
-                    : order.paymentStatus === "pending"
-                    ? "Pending"
-                    : order.paymentStatus === "failed"
-                    ? "Failed"
-                    : order.paymentStatus === "refunded"
-                    ? "Refunded"
-                    : "Partially Refunded"}
-                </span>
-              </dd>
-            </div>
-            {order.delivery?.trackingNumber && (
-              <div className="sm:col-span-1">
-                <dt className="text-sm font-medium text-gray-500">
-                  Tracking Number
-                </dt>
-                <dd className="mt-1 text-sm text-blue-600 hover:text-blue-800">
-                  <a href="#">{order.delivery?.trackingNumber}</a>
-                </dd>
-              </div>
-            )}
-          </dl>
         </div>
       </div>
 
@@ -233,7 +164,7 @@ const OrderDetails: React.FC = () => {
                         : 0
                     }%`,
                   }}
-                  className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-600 transition-all duration-500"
+                  className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-purple-600 transition-all duration-500"
                 ></div>
               </div>
 
@@ -250,10 +181,10 @@ const OrderDetails: React.FC = () => {
                         flex items-center justify-center w-10 h-10 rounded-full 
                         ${
                           isCompleted
-                            ? "bg-blue-600 text-white"
+                            ? "bg-purple-600 text-white"
                             : "bg-gray-200 text-gray-600"
                         }
-                        ${isCurrent ? "ring-4 ring-blue-100" : ""}
+                        ${isCurrent ? "ring-4 ring-purple-600" : ""}
                       `}
                       >
                         {status === "pending" && <Clock className="h-5 w-5" />}
@@ -269,7 +200,7 @@ const OrderDetails: React.FC = () => {
                       <div className="text-center mt-2">
                         <p
                           className={`text-xs font-medium ${
-                            isCompleted ? "text-blue-600" : "text-gray-500"
+                            isCompleted ? "text-purple-600" : "text-gray-500"
                           }`}
                         >
                           {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -313,11 +244,11 @@ const OrderDetails: React.FC = () => {
                         px-3 py-1.5 text-xs font-medium rounded-md
                         ${
                           isCurrentStatus
-                            ? "bg-blue-100 text-blue-800 cursor-default"
+                            ? "bg-purple-100 text-purple-800 cursor-default"
                             : isPastStatus
                             ? "bg-gray-100 text-gray-600 cursor-not-allowed opacity-60"
                             : isNextStatus
-                            ? "bg-blue-600 text-white hover:bg-blue-700"
+                            ? "bg-purple-500 text-white hover:bg-purple-700"
                             : "bg-gray-100 text-gray-600 cursor-not-allowed opacity-60"
                         }
                       `}
@@ -429,7 +360,10 @@ const OrderDetails: React.FC = () => {
                       <p className="text-sm font-medium text-gray-500">
                         Tracking Number
                       </p>
-                      <a href="#" className="text-blue-600 hover:text-blue-800">
+                      <a
+                        href="#"
+                        className="text-purple-600 hover:text-purple-800"
+                      >
                         {order.trackingNumber}
                       </a>
                     </div>
