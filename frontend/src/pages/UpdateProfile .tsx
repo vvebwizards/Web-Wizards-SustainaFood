@@ -77,6 +77,7 @@ const UpdateProfile = () => {
     setProfileError("");
     setProfileSuccess("");
 
+
     if (!userId) {
       setProfileError("User ID is missing.");
       return;
@@ -89,6 +90,7 @@ const UpdateProfile = () => {
 
     try {
       console.log("Submitting with:", { userId, username: formData.username, profileImage });
+
       await updateUserInfo(userId, formData.username, profileImage);
       setProfileSuccess("Profile updated successfully!");
     } catch (err: any) {
@@ -100,7 +102,6 @@ const UpdateProfile = () => {
   const handlePasswordSubmit = async () => {
     setPasswordError("");
     setPasswordSuccess("");
-
     if (!userId) {
       setPasswordError("User ID is missing.");
       return;

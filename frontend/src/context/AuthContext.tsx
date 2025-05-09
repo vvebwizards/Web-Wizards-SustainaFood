@@ -6,7 +6,6 @@ import "react-toastify/dist/ReactToastify.css";
 
 axios.defaults.withCredentials = true;
 
-// ----- User & Context Types -----
 interface User {
   id: string;
   username: string;
@@ -35,7 +34,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// ----- Email Verification Helper -----
 export const verifyEmail = async (token: string) => {
   try {
     const res = await fetch(
@@ -51,39 +49,45 @@ export const verifyEmail = async (token: string) => {
   }
 };
 
-// ----- AuthProvider Component -----
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, _setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Wrap the setter to persist into localStorage & cookies
   const setUser = (u: User | null) => {
     _setUser(u);
     if (u) {
       Cookies.set("user", JSON.stringify(u), { expires: 7 });
       Cookies.set("points", (u.points ?? 0).toString());
+
     } else {
       
       Cookies.remove("user");
       Cookies.remove("points");
     }
   };
+  
 
-  // On mount, restore session or load from localStorage
+
   useEffect(() => {
     const checkSession = async () => {
       const stored = localStorage.getItem("user");
       const storedPoints = localStorage.getItem("points");
+  
       if (stored) {
         const u: User = JSON.parse(stored);
-        if (storedPoints) {
-          u.points = parseInt(storedPoints, 10);
+  
+        if (storedPoints && !isNaN(Number(storedPoints))) {
+          u.points = storedPoints; 
+        } else {
+          u.points = "0"; 
         }
+  
         setUser(u);
         setLoading(false);
         return;
       }
-
+  
       try {
         const res = await axios.get("http://localhost:5000/api/auth/me");
         if (res.data.user) {
@@ -97,10 +101,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setLoading(false);
       }
     };
+  
     checkSession();
   }, []);
+  
 
-  // ----- Auth Actions -----
   const login = async (email: string, password: string, captchaToken: string) => {
     const res = await axios.post(
       "http://localhost:5000/api/auth/login",
@@ -218,7 +223,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Hook to consume the context
+
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
