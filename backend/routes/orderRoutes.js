@@ -11,9 +11,6 @@ router.post("/", createOrder);
 router.get('/my', getOrdersByRecipient);
 
 
-
-
-// Get all orders
 router.get('/', async (req, res) => {
   try {
     const orders = await Order.find().sort({ createdAt: -1 });
@@ -22,7 +19,7 @@ router.get('/', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-// Get order by ID
+
 router.get('/:id', async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
@@ -35,7 +32,6 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Update order status
 router.patch('/:id/status', async (req, res) => {
   try {
     const order = await Order.findByIdAndUpdate(
@@ -52,7 +48,6 @@ router.patch('/:id/status', async (req, res) => {
   }
 });
 
-// Schedule delivery
 router.post('/:id/delivery', async (req, res) => {
   try {
     const { method, date, time, notes } = req.body;
@@ -65,7 +60,6 @@ router.post('/:id/delivery', async (req, res) => {
           scheduledDate: new Date(date),
           scheduledTime: time,
           notes,
-          // Generate a random tracking number for demo purposes
           trackingNumber: 'TRK' + Math.random().toString(36).substr(2, 9).toUpperCase(),
           estimatedDelivery: new Date(date)
         },
@@ -84,7 +78,6 @@ router.post('/:id/delivery', async (req, res) => {
   }
 });
 
-// Get order statistics
 router.get('/stats/overview', async (req, res) => {
   try {
     const stats = await Order.aggregate([
@@ -127,5 +120,6 @@ router.get('/stats/overview', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
 
 export default router;

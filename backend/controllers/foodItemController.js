@@ -9,7 +9,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import Donation  from "../models/Donation.js";
 import cron from 'node-cron';
-import { getPrediction } from '../utils/predict.js'
+import { getPredictionSupplyDemand } from '../utils/predict.js'
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -402,7 +402,7 @@ async function getDonationDataInRange(foodItem, startDate, endDate, donorId) {
 
 
 export async function predictQuantityRequested(avgQuantity, avgWasteRate) {
-  const prediction = await getPrediction([avgQuantity, avgWasteRate]);
+  const prediction = await getPredictionSupplyDemand([avgQuantity, avgWasteRate]);
   
   return prediction;  
 }
