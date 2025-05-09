@@ -60,13 +60,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const setUser = (u: User | null) => {
     _setUser(u);
     if (u) {
-      localStorage.setItem("user", JSON.stringify(u));
-      localStorage.setItem("points", u.points.toString());
       Cookies.set("user", JSON.stringify(u), { expires: 7 });
-      Cookies.set("points", u.points.toString(), { expires: 7 });
+      Cookies.set("points", (u.points ?? 0).toString());
     } else {
-      localStorage.removeItem("user");
-      localStorage.removeItem("points");
+      
       Cookies.remove("user");
       Cookies.remove("points");
     }
