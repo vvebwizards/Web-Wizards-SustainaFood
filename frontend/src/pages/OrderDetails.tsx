@@ -15,8 +15,8 @@ import {
 } from "lucide-react";
 import OrderStatusBadge from "../components/OrderStatusBadge";
 import { fetchOrder, updateOrderStatus } from "../services/api";
-import { Order, OrderStatus } from "../types";
-
+import { Order, OrderStatus } from "../types/index";
+import jsPDF from "jspdf";
 const OrderDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [order, setOrder] = useState<Order | null>(null);
@@ -53,6 +53,77 @@ const OrderDetails: React.FC = () => {
     } finally {
       setUpdatingStatus(false);
     }
+  };
+
+  const handleDownload = () => {
+    if (!order) return;
+
+    const doc = new jsPDF();
+    const lineHeight = 10;
+    let y = 20;
+
+    // Header
+    doc.setFontSize(20);
+    doc.text(`Order #${order.orderNumber}`, 20, y);
+    y += lineHeight * 2;
+
+    // Order Details
+    doc.setFontSize(12);
+    doc.text(`Status: ${order.status}`, 20, y);
+    y += lineHeight;
+    doc.text(`Date: ${new Date(order.createdAt).toLocaleDateString()}`, 20, y);
+    y += lineHeight;
+    // doc.text(`Total Amount: $${order.totalAmount.toFixed(2)}`, 20, y);
+    y += lineHeight * 2;
+
+    // Customer Information
+    doc.setFontSize(16);
+    doc.text("Customer Information", 20, y);
+    y += lineHeight;
+    doc.setFontSize(12);
+    doc.text(`Name: ${order.customer.name}`, 20, y);
+    y += lineHeight;
+    doc.text(`Email: ${order.customer.email}`, 20, y);
+    y += lineHeight;
+    if (order.customer.phone) {
+      doc.text(`Phone: ${order.customer.phone}`, 20, y);
+      y += lineHeight;
+    }
+    y += lineHeight;
+
+    // Shipping Address
+    doc.setFontSize(16);
+    doc.text("Shipping Address", 20, y);
+    y += lineHeight;
+    doc.setFontSize(12);
+    doc.text(order.shippingAddress.street, 20, y);
+    y += lineHeight;
+    doc.text(
+      `${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.zipCode}`,
+      20,
+      y
+    );
+    y += lineHeight;
+    doc.text(order.shippingAddress.country, 20, y);
+    y += lineHeight * 2;
+
+    // Items
+    doc.setFontSize(16);
+    doc.text("Order Items", 20, y);
+    y += lineHeight;
+    doc.setFontSize(12);
+
+    order.items.forEach((item) => {
+      doc.text(
+        `${item.name} x ${item.orderedQuantity} @ $${item.price}`,
+        20,
+        y
+      );
+      y += lineHeight;
+    });
+
+    // Save the PDF
+    doc.save(`order-${order.orderNumber}.pdf`);
   };
 
   const formatDate = (dateString: string) => {
@@ -127,11 +198,10 @@ const OrderDetails: React.FC = () => {
           </h1>
         </div>
         <div className="flex mt-4 sm:mt-0 space-x-3">
-          <button className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
-            <Printer className="mr-2 h-4 w-4" />
-            Print
-          </button>
-          <button className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+          <button
+            onClick={handleDownload}
+            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
             <Download className="mr-2 h-4 w-4" />
             Download
           </button>
