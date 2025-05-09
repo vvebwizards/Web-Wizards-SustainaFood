@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import axios from "axios";
-import { Camera, X } from "lucide-react"; // Added X icon
+import { Camera, X } from "lucide-react";
 import { motion } from "framer-motion";
 import defaultProfileImage from "../assets/images/default_user_img.jpg";
 import Modal from "../components/Modal";
@@ -17,9 +17,10 @@ const UpdateProfile = () => {
   });
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string>("");
-  const [error, setError] = useState("");
-  const [profileSuccess, setProfileSuccess] = useState(""); // Separate success for profile
-  const [passwordSuccess, setPasswordSuccess] = useState(""); // Separate success for password
+  const [profileError, setProfileError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [profileSuccess, setProfileSuccess] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState("");
   const [isPasswordModalOpen, setPasswordModalOpen] = useState(false);
   const [passwordData, setPasswordData] = useState({
     oldPassword: "",
@@ -73,36 +74,46 @@ const UpdateProfile = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setProfileError("");
     setProfileSuccess("");
 
+    // Validate userId
+    if (!userId) {
+      setProfileError("User ID is missing.");
+      return;
+    }
+
+    // Validate username
+    if (!formData.username.trim()) {
+      setProfileError("Username is required.");
+      return;
+    }
+
     try {
-      await updateUserInfo(userId!, formData.username, profileImage!);
+      console.log("Submitting with:", { userId, username: formData.username, profileImage });
+      // Pass profileImage as-is (null if no new image is selected)
+      await updateUserInfo(userId, formData.username, profileImage);
       setProfileSuccess("Profile updated successfully!");
     } catch (err: any) {
-      setError(err.message || "An error occurred. Please try again.");
+      console.error("Error in updateUserInfo:", err);
+      setProfileError(err.message || "An error occurred. Please try again.");
     }
   };
 
   const handlePasswordSubmit = async () => {
-    setError("");
+    setPasswordError("");
     setPasswordSuccess("");
 
-    // Check for empty inputs
     if (!passwordData.oldPassword || !passwordData.newPassword || !passwordData.confirmNewPassword) {
-      setError("All fields are required.");
+      setPasswordError("All fields are required.");
       return;
     }
-
-    // Check if new password matches confirm password
     if (passwordData.newPassword !== passwordData.confirmNewPassword) {
-      setError("New password and confirmation do not match.");
+      setPasswordError("New password and confirmation do not match.");
       return;
     }
-
-    // Check if current password matches new password
     if (passwordData.oldPassword === passwordData.newPassword) {
-      setError("New password must be different from current password.");
+      setPasswordError("New password must be different from current password.");
       return;
     }
 
@@ -112,11 +123,20 @@ const UpdateProfile = () => {
       setTimeout(() => {
         setPasswordModalOpen(false);
         setPasswordData({ oldPassword: "", newPassword: "", confirmNewPassword: "" });
-      }, 2000); // Close modal after 2 seconds
+      }, 2000);
     } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to update password.");
+      setPasswordError(err.response?.data?.message || "Failed to update password.");
     }
   };
+
+  // Redirect or show error if userId is missing
+  if (!userId) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-red-500">Invalid user ID.</p>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -128,7 +148,6 @@ const UpdateProfile = () => {
       <div className="max-w-4xl mx-auto bg-white shadow rounded-lg p-6">
         <h1 className="text-3xl font-semibold text-gray-900 mb-6">Profile Settings</h1>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
           <div className="flex flex-col items-center">
             <div className="relative w-32 h-32">
               <img
@@ -155,15 +174,13 @@ const UpdateProfile = () => {
                 <Camera className="h-5 w-5" />
               </label>
             </div>
-            <p className="mt-4 text-lg font-medium text-gray-800">{user?.username}</p>
+            <p className="mt-4 text-lg font-medium text-gray-800">{user?.username || "Loading..."}</p>
           </div>
 
-        
           <div className="space-y-6">
-           
             <div>
               <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                🧑‍💼 Personnal details
+                🧑‍💼 Personal details
               </h2>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
@@ -192,8 +209,8 @@ const UpdateProfile = () => {
                 {profileSuccess && (
                   <p className="text-green-500 text-sm mt-2">{profileSuccess}</p>
                 )}
-                {error && !isPasswordModalOpen && (
-                  <p className="text-red-500 text-sm mt-2">{error}</p>
+                {profileError && (
+                  <p className="text-red-500 text-sm mt-2">{profileError}</p>
                 )}
               </form>
             </div>
@@ -259,8 +276,8 @@ const UpdateProfile = () => {
             onChange={handlePasswordChange}
             className="w-full px-3 py-2 border rounded-md mt-2"
           />
-          {error && isPasswordModalOpen && (
-            <p className="text-red-500 text-sm mt-2">{error}</p>
+          {passwordError && (
+            <p className="text-red-500 text-sm mt-2">{passwordError}</p>
           )}
           {passwordSuccess && (
             <p className="text-green-500 text-sm mt-2">{passwordSuccess}</p>
