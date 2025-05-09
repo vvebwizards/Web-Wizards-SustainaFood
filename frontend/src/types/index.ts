@@ -40,6 +40,7 @@ export interface OrderItem {
   price: number;
   sku?: string;
   weight?: number;
+  urgencyScore?: number;
 }
 
 export type OrderStatus = 

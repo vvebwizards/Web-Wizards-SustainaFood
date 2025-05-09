@@ -474,12 +474,12 @@ const OrderDetails: React.FC = () => {
                   >
                     Quantity
                   </th>
-                  {/* <th
+                  <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
-                    Price
-                  </th> */}
+                    Transportation urgency
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -494,12 +494,25 @@ const OrderDetails: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {item.orderedQuantity}
                     </td>
-                    {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      ${item.price.toFixed(2)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      ${(item.price * item.quantity).toFixed(2)}
-                    </td> */}
+                  
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        item.urgencyScore === 0
+                          ? 'text-green-800 bg-green-100'
+                          : item.urgencyScore === 1
+                          ? 'text-yellow-800 bg-yellow-100'
+                          : 'text-red-800 bg-red-100'
+                      }`}
+                    >
+                      {item.urgencyScore === 0
+                        ? 'Low'
+                        : item.urgencyScore === 1
+                        ? 'Medium'
+                        : 'High'}
+                    </span>
+                  </td>
+
                   </tr>
                 ))}
               </tbody>

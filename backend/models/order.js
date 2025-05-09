@@ -27,13 +27,14 @@ const orderSchema = new mongoose.Schema({
     {
       productId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "FoodItem",
+        ref: "Donation",
         required: true,
       },
       name: { type: String, required: true },
       orderedQuantity: { type: Number, required: true },
-      imageUrl: { type: String },  // store image directly
-      title: { type: String },     // store title directly
+      imageUrl: { type: String },  
+      title: { type: String },  
+      urgencyScore: { type:Number },   
     },
   ],
   status: {
