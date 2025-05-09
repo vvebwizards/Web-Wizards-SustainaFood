@@ -139,6 +139,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         leaveRoom={leaveRoom}
         roomMembers={roomMembers}
         theme={theme}
+        currentUserId={currentUserId}
       />
       <MessageList
         messages={messages}

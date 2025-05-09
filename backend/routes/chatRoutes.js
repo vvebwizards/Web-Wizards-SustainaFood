@@ -3,7 +3,8 @@ import Message from '../models/Message.js';
 import RoomMessage from '../models/RoomMessage.js';
 import Room from '../models/Room.js';
 import User from '../models/User.js';
-
+import Notification from "../models/Notification.js";
+import { sendNotification } from "../socket/socket.js"
 const router = express.Router();
 
 // Get all rooms + lastMessage
@@ -256,4 +257,57 @@ router.post('/rooms/join-by-code', async (req, res) => {
     res.status(500).json({ error: 'Failed to join room' });
   }
 });
+
+
+
+router.post("/rooms/:roomId/invite", async (req, res) => {
+  const { roomId } = req.params;
+  const { fromUserId, toUsername } = req.body;
+
+  try {
+    console.log("▶️ Invite API called with:", { roomId, fromUserId, toUsername });
+
+    const room = await Room.findById(roomId);
+    if (!room) return res.status(400).json({ error: "Room not found" });
+
+    if (!room.isPrivate) return res.status(400).json({ error: "Room is not private" });
+
+    if (!room.members.map(id => id.toString()).includes(fromUserId)) {
+      return res.status(403).json({ error: "You are not a member of this room" });
+    }
+
+    const fromUser = await User.findById(fromUserId);
+    if (!fromUser) return res.status(404).json({ error: "Inviter user not found" });
+
+    const toUser = await User.findOne({ username: toUsername });
+    if (!toUser) return res.status(404).json({ error: "User to invite not found" });
+
+    if (!room.joinCode) return res.status(400).json({ error: "Room has no join code" });
+
+    const message = `${fromUser.username} invited you to join "${room.name}". Join code: ${room.joinCode}`;
+
+    // Save notification in DB
+    const notification = new Notification({
+      userId: toUser._id,
+      message,
+    });
+    await notification.save();
+    console.log(`✅ Notification saved for ${toUsername}`);
+
+    // Send notification through helper
+    await sendNotification(toUser._id, message, req.io);
+    console.log(`📢 Socket event sent to user ${toUsername}`);
+
+    res.json({ success: true, message: "Invitation sent" });
+  } catch (err) {
+    console.error("❌ Failed to send invite:", err.message, err.stack);
+    res.status(500).json({ error: "Failed to send invite" });
+  }
+});
+
+
+
+
+
+
 export default router;
