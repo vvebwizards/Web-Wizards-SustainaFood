@@ -5,7 +5,7 @@ import SignUp from "./pages/signup";
 import GetInvolved from "./pages/GetInvolved";
 import Login from "./pages/SignIn";
 import GameCenter from "./pages/GameCenter";
-import ChatPage from './pages/ChatPage';
+import ChatPage from "./pages/ChatPage";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import MemoryGame from "./games/MemoryGame";
@@ -13,7 +13,7 @@ import TwoFactorAuth from "./pages/TwoFactorAuth";
 import Layout from "./components/Layout";
 import Profile from "./pages/Profile";
 import Statistics from "./pages/Statistics";
-import { StatsDashboard } from './components/StatsDashboard';
+import { StatsDashboard } from "./components/StatsDashboard";
 import TicTacToe from "./games/TicTacToe";
 import Settings from "./pages/Settings";
 import Notifications from "./pages/Notifications";
@@ -33,15 +33,15 @@ import { FoodBankProvider } from "./context/FoodBankContext";
 import VerifyEmail from "./pages/VerifyEmail";
 import SpinWheel from "./games/SpinWheel";
 import ConfirmEmail from "./pages/ConfirmEmail";
-import { CartProvider } from "./context/CartContext"; 
-import Cart from "./pages/Cart"; 
+import { CartProvider } from "./context/CartContext";
+import Cart from "./pages/Cart";
 import MyRequests from "./pages/MyRequests";
 import QuizChallenge from "./games/QuizChallenge";
 import OrdersList from "./pages/OrdersList";
 import OrderDetails from "./pages/OrderDetails";
 import Deliveries from "./pages/Deliveries";
 import { StatisticsProvider } from "./context/StatisticsContext";
-import {Overview} from "./pages/overview";
+import { Overview } from "./pages/overview";
 import Leaderboard from "./pages/Leaderboard";
 import Redeem from "./pages/Redeem";
 
@@ -99,13 +99,13 @@ function App() {
         >
           <Route index element={<WelcomePage />} />
           <Route
-              path="profile"
-              element={
-                <StatisticsProvider>
-                  <Profile />
-                </StatisticsProvider>
-              }
-            />
+            path="profile"
+            element={
+              <StatisticsProvider>
+                <Profile />
+              </StatisticsProvider>
+            }
+          />
           <Route path="redeem" element={<Redeem />} />
           <Route
             path="UsersManagement"
@@ -145,7 +145,7 @@ function App() {
               </FoodBankProvider>
             }
           />
-          
+
           <Route path="cart" element={<Cart />} />
           <Route path="game-center" element={<GameCenter />} />
           <Route path="quiz-challenge" element={<QuizChallenge />} />
@@ -153,10 +153,13 @@ function App() {
           <Route path="/dashboard/memory" element={<MemoryGame />} />
           <Route path="orders" element={<OrdersList />} />
           <Route path="orders/:id" element={<OrderDetails />} />
-          <Route path="deliveries" element={<Deliveries />} />  
+          <Route path="deliveries" element={<Deliveries />} />
           <Route path="/dashboard/tictactoe" element={<TicTacToe />} />
-          <Route path="/dashboard/StatsDashboard" element={<StatsDashboard />} />       
-          <Route path="/dashboard/overview" element={<Overview />} />     
+          <Route
+            path="/dashboard/StatsDashboard"
+            element={<StatsDashboard />}
+          />
+          <Route path="/dashboard/overview" element={<Overview />} />
           <Route path="chat" element={<ChatPage />} />
         </Route>
       </Routes>
