@@ -79,6 +79,7 @@ const roleConfigs: Record<string, any> = {
       name: "Admin Dashboard",
     },
     navigation: [
+      { to: "/dashboard/profile", icon: User, label: "Profile" },
       { to: "/dashboard/overview", icon: Gauge, label: "System Overview" },
       {
         to: "/dashboard/UsersManagement",
@@ -144,11 +145,7 @@ const roleConfigs: Record<string, any> = {
       name: "Food Recipient",
     },
     navigation: [
-      {
-        to: "/dashboard/UpdateProfile/:userId",
-        icon: User,
-        label: "Profile Settings",
-      },
+      { to: "/dashboard/profile", icon: User, label: "Profile" },
       { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
       { to: "/dashboard/available", icon: Package, label: "Available Food" },
       { to: "/dashboard/my-requests", icon: Heart, label: "My Requests" },
@@ -174,11 +171,7 @@ const roleConfigs: Record<string, any> = {
       name: "Delivery Volunteer",
     },
     navigation: [
-      {
-        to: "/dashboard/UpdateProfile/:userId",
-        icon: User,
-        label: "Profile Settings",
-      },
+      { to: "/dashboard/profile", icon: User, label: "Profile" },
       { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
       { to: "/dashboard/orders", icon: Package, label: "Orders" },
       { to: "/dashboard/deliveries", icon: Truck, label: "Deliveries" },
@@ -215,7 +208,6 @@ const Layout: React.FC = () => {
   const userRole = user?.role ?? "donor";
   const roleConfig = roleConfigs[userRole]!;
 
-  // keep points & profileImage in sync
   useEffect(() => {
     if (user?.points != null) setPoints(user.points);
     if (user?.profileImage) {
@@ -226,13 +218,11 @@ const Layout: React.FC = () => {
     }
   }, [user]);
 
-  // load notifications + recent chats once
   useEffect(() => {
     fetchNotifications();
     fetchRecentMessages();
     if (!socket) return;
     const handler = (msg: { senderId: string; recipientId: string }) => {
-      // only refresh when *you* receive a message
       if (msg.recipientId === currentUserId) {
         fetchRecentMessages();
       }
@@ -250,11 +240,8 @@ const Layout: React.FC = () => {
       const res = await fetch(`/api/chat/recent/${currentUserId}`);
       if (!res.ok) throw new Error("Network response was not ok");
       const data: RecentMessage[] = await res.json();
-
-      // 1) drop any conversation where *you* are the sender
       const filtered = data.filter((m) => m.senderId !== currentUserId);
 
-      // 2) update state
       setRecentMessages(filtered);
       setUnreadMessageCount(filtered.filter((m) => !m.isRead).length);
     } catch (err) {
@@ -331,7 +318,6 @@ const Layout: React.FC = () => {
             <Gamepad2 className="h-6 w-6" />
           </NavLink>
 
-          {/* Messages */}
           <div className="relative">
             <button
               onClick={() => setIsMessageOpen(!isMessageOpen)}
@@ -403,7 +389,6 @@ const Layout: React.FC = () => {
             )}
           </div>
 
-          {/* Notifications */}
           <div className="relative">
             <button
               onClick={() => {
@@ -438,7 +423,6 @@ const Layout: React.FC = () => {
             )}
           </div>
 
-          {/* Cart (recipient only) */}
           {userRole === "recipient" && (
             <NavLink to="/dashboard/cart" className="relative p-2">
               <ShoppingCart className="h-6 w-6" />
@@ -450,7 +434,6 @@ const Layout: React.FC = () => {
             </NavLink>
           )}
 
-          {/* Profile + Logout */}
           <span className="text-gray-900 font-medium">
             Welcome, {user?.username}
           </span>

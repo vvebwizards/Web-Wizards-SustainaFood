@@ -3,12 +3,13 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { getUserId } from "../utils/chatHelpers";
 
 axios.defaults.withCredentials = true;
 
-// ----- User & Context Types -----
 interface User {
-  id: string;
+  id?: string;
+  _id?: string;
   username: string;
   email: string;
   role: string;
@@ -35,7 +36,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// ----- Email Verification Helper -----
 export const verifyEmail = async (token: string) => {
   try {
     const res = await fetch(
@@ -51,37 +51,35 @@ export const verifyEmail = async (token: string) => {
   }
 };
 
-// ----- AuthProvider Component -----
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, _setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Wrap the setter to persist into localStorage & cookies
   const setUser = (u: User | null) => {
     _setUser(u);
     if (u) {
-      localStorage.setItem("user", JSON.stringify(u));
-      localStorage.setItem("points", u.points.toString());
       Cookies.set("user", JSON.stringify(u), { expires: 7 });
-      Cookies.set("points", u.points.toString(), { expires: 7 });
+      Cookies.set("points", (u.points ?? 0).toString());
     } else {
-      localStorage.removeItem("user");
-      localStorage.removeItem("points");
       Cookies.remove("user");
       Cookies.remove("points");
     }
   };
 
-  // On mount, restore session or load from localStorage
   useEffect(() => {
     const checkSession = async () => {
       const stored = localStorage.getItem("user");
       const storedPoints = localStorage.getItem("points");
+
       if (stored) {
         const u: User = JSON.parse(stored);
-        if (storedPoints) {
-          u.points = parseInt(storedPoints, 10);
+
+        if (storedPoints && !isNaN(Number(storedPoints))) {
+          u.points = Number(storedPoints);
+        } else {
+          u.points = 0;
         }
+
         setUser(u);
         setLoading(false);
         return;
@@ -100,20 +98,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setLoading(false);
       }
     };
+
     checkSession();
   }, []);
 
-  // ----- Auth Actions -----
   const login = async (email: string, password: string, captchaToken: string) => {
-    const res = await axios.post(
-      "http://localhost:5000/api/auth/login",
-      { email, password, captchaToken }
-    );
+    const res = await axios.post("http://localhost:5000/api/auth/login", {
+      email,
+      password,
+      captchaToken,
+    });
     const u: User = res.data.user;
+    const uid = getUserId(u);
 
     if (u.twofa) {
-      await sendOtp(u.id);
-      window.location.href = `/2fa?userId=${u.id}`;
+      await sendOtp(uid);
+      window.location.href = `/2fa?userId=${uid}`;
       return;
     }
 
@@ -125,10 +125,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signup = async (username: string, email: string, password: string, role: string) => {
-    const res = await axios.post(
-      "http://localhost:5000/api/auth/signup",
-      { username, email, password, role }
-    );
+    const res = await axios.post("http://localhost:5000/api/auth/signup", {
+      username,
+      email,
+      password,
+      role,
+    });
     window.location.href = `/verify-email?email=${email}`;
     return res.data;
   };
@@ -141,61 +143,47 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const updatePassword = async (userId: string, currentPassword: string, newPassword: string) => {
     try {
-      await axios.put(
-        `http://localhost:5000/api/users/update-password/${userId}`,
-        { currentPassword, newPassword }
-      );
+      await axios.put(`http://localhost:5000/api/users/update-password/${userId}`, {
+        currentPassword,
+        newPassword,
+      });
       toast.success("Password updated successfully!");
     } catch {
       toast.error("Failed to update password. Please try again.");
     }
   };
 
-  const updateUserInfo = async (userId: string, username: string, profileImage: File | null) => {
-    const form = new FormData();
-    form.append("username", username);
-    if (profileImage) form.append("profileImage", profileImage);
+const updateUserInfo = async (userId: string, username: string, profileImage: File | null) => {
+  const resolvedUserId = userId === ":userId" ? getUserId(user) : userId;
+  const form = new FormData();
+  form.append("username", username);
+  if (profileImage) form.append("profileImage", profileImage);
 
-    const res = await axios.put(
-      `http://localhost:5000/api/auth/update/${userId}`,
-      form
-    );
-    setUser(res.data.user);
-  };
+  const res = await axios.put(`http://localhost:5000/api/auth/update/${resolvedUserId}`, form);
+  setUser(res.data.user);
+};
 
   const sendOtp = async (userId: string) => {
     await axios.post(`http://localhost:5000/api/auth/send-otp/${userId}`);
   };
 
   const verifyTwoFactor = async (userId: string, code: string) => {
-    const res = await axios.post(
-      `http://localhost:5000/api/auth/verify-2fa/${userId}`,
-      { code }
-    );
+    const res = await axios.post(`http://localhost:5000/api/auth/verify-2fa/${userId}`, { code });
     setUser(res.data.user);
   };
 
   const updateTwoFaStatus = async (userId: string, status: boolean, code: string) => {
-    await axios.post(
-      `http://localhost:5000/api/auth/updatetwofa/${userId}`,
-      { twofa: status, code }
-    );
+    await axios.post(`http://localhost:5000/api/auth/updatetwofa/${userId}`, { twofa: status, code });
     toast.success("2FA status updated successfully");
   };
 
   const requestPasswordReset = async (email: string) => {
-    await axios.post(
-      "http://localhost:5000/api/auth/request-reset",
-      { email }
-    );
+    await axios.post("http://localhost:5000/api/auth/request-reset", { email });
     toast.success("Password reset email sent!");
   };
 
   const resetPassword = async (token: string, newPassword: string) => {
-    await axios.post(
-      "http://localhost:5000/api/auth/reset-password",
-      { token, newPassword }
-    );
+    await axios.post("http://localhost:5000/api/auth/reset-password", { token, newPassword });
     toast.success("Password successfully changed!");
   };
 
@@ -221,7 +209,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Hook to consume the context
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");

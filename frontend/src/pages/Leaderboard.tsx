@@ -3,11 +3,76 @@ import { Trophy, Medal, Users, ChevronUp, ChevronDown, Award, Zap, Sparkles } fr
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 
+// Role-based theme configuration
+const roleConfigs = {
+  admin: {
+    theme: {
+      primary: "red",
+      colors: {
+        bg: "bg-red-50",
+        text: "text-red-700",
+        hover: "hover:bg-red-100",
+        button: "bg-red-600 hover:bg-red-700",
+        gradient: "from-red-500 to-rose-600",
+        border: "border-red-200",
+        badge: "bg-red-100 text-red-800",
+        highlight: "bg-red-100 hover:bg-red-200"
+      },
+    },
+  },
+  donor: {
+    theme: {
+      primary: "green",
+      colors: {
+        bg: "bg-green-50",
+        text: "text-green-700",
+        hover: "hover:bg-green-100",
+        button: "bg-green-600 hover:bg-green-700",
+        gradient: "from-green-500 to-emerald-600",
+        border: "border-green-200",
+        badge: "bg-green-100 text-green-800",
+        highlight: "bg-green-100 hover:bg-green-200"
+      },
+    },
+  },
+  recipient: {
+    theme: {
+      primary: "blue",
+      colors: {
+        bg: "bg-blue-50",
+        text: "text-blue-700",
+        hover: "hover:bg-blue-100",
+        button: "bg-blue-600 hover:bg-blue-700",
+        gradient: "from-blue-500 to-indigo-600",
+        border: "border-blue-200",
+        badge: "bg-blue-100 text-blue-800",
+        highlight: "bg-blue-100 hover:bg-blue-200"
+      },
+    },
+  },
+  volunteer: {
+    theme: {
+      primary: "purple",
+      colors: {
+        bg: "bg-purple-50",
+        text: "text-purple-700",
+        hover: "hover:bg-purple-100",
+        button: "bg-purple-600 hover:bg-purple-700",
+        gradient: "from-purple-500 to-indigo-600",
+        border: "border-purple-200",
+        badge: "bg-purple-100 text-purple-800",
+        highlight: "bg-purple-100 hover:bg-purple-200"
+      },
+    },
+  },
+};
+
 interface User {
   _id: string;
   username: string;
   profileImage: string;
   points: number;
+  role: keyof typeof roleConfigs;
 }
 
 const BASE_URL = "http://localhost:5000";
@@ -39,6 +104,10 @@ const Leaderboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   
+  // Get theme based on user role
+  const userRole = user?.role || 'volunteer';
+  const theme = roleConfigs[userRole]?.theme.colors;
+  
   useEffect(() => {
     fetchUsers();
   }, [user]);
@@ -52,7 +121,6 @@ const Leaderboard: React.FC = () => {
       const sortedUsers = response.data.users.sort((a: User, b: User) => b.points - a.points);
       setUsers(sortedUsers);
       
-      // Find current user
       const connectedUser = sortedUsers.find((userItem: User) => userItem.username === user.username);
       setCurrentUser(connectedUser || null);
     } catch (error) {
@@ -104,12 +172,12 @@ const Leaderboard: React.FC = () => {
     <div className="animate-fadeIn">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-3">
-          <Trophy className="w-8 h-8 text-indigo-600" />
-          <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-blue-600">
+          <Trophy className={`w-8 h-8 ${theme.text}`} />
+          <h2 className={`text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r ${theme.gradient}`}>
             Leaderboard
           </h2>
         </div>
-        <div className="flex items-center gap-2 text-gray-600 bg-white px-3 py-1.5 rounded-full shadow-sm">
+        <div className={`flex items-center gap-2 ${theme.text} ${theme.bg} px-3 py-1.5 rounded-full shadow-sm`}>
           <Users size={16} />
           <span className="text-sm font-medium">{users.length} Participants</span>
         </div>
@@ -117,7 +185,7 @@ const Leaderboard: React.FC = () => {
 
       {currentUser && (
         <div className="mb-8 overflow-hidden">
-          <div className="bg-gradient-to-r from-indigo-500 to-blue-600 rounded-t-xl p-6 text-white relative">
+          <div className={`bg-gradient-to-r ${theme.gradient} rounded-t-xl p-6 text-white relative`}>
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mt-12 -mr-12 pointer-events-none"></div>
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -mb-8 -ml-8 pointer-events-none"></div>
             <h3 className="text-lg font-medium mb-2 flex items-center gap-2">
@@ -133,7 +201,7 @@ const Leaderboard: React.FC = () => {
                   alt={currentUser.username}
                 />
                 <div className="absolute -bottom-1 -right-1 bg-yellow-400 rounded-full w-8 h-8 flex items-center justify-center border-2 border-white">
-                  <Award className="w-4 h-4 text-indigo-800" />
+                  <Award className={`w-4 h-4 ${theme.text}`} />
                 </div>
               </div>
               
@@ -165,7 +233,7 @@ const Leaderboard: React.FC = () => {
             <div className="relative">
               <div className="w-full bg-gray-200 rounded-full h-2.5 mb-1 overflow-hidden">
                 <div 
-                  className="bg-gradient-to-r from-indigo-500 to-blue-500 h-full rounded-full transition-all duration-700 ease-out"
+                  className={`bg-gradient-to-r ${theme.gradient} h-full rounded-full transition-all duration-700 ease-out`}
                   style={{ width: `${(() => {
                     const { level, xpToNextLevel } = calculateLevel(currentUser.points);
                     const totalXPForCurrentLevel = level < 5 ? [500, 1000, 1500, 2000, 5000][level] : 5000;
@@ -188,7 +256,7 @@ const Leaderboard: React.FC = () => {
                     <div 
                       key={i} 
                       className={`w-3 h-3 rounded-full transform -translate-x-1/2 transition-all ${
-                        isMilestone ? 'bg-indigo-600' : 'bg-gray-300'
+                        isMilestone ? theme.button : 'bg-gray-300'
                       }`}
                       style={{ left: `${position}%` }}
                     ></div>
@@ -206,7 +274,7 @@ const Leaderboard: React.FC = () => {
                   return `${currentLevelXP.toLocaleString()} XP earned in Level ${level}`;
                 })()}
               </div>
-              <div className="flex items-center gap-1 text-indigo-600 font-medium text-sm">
+              <div className={`flex items-center gap-1 ${theme.text} font-medium text-sm`}>
                 <Zap className="w-4 h-4" />
                 <span>
                   {calculateLevel(currentUser.points).xpToNextLevel.toLocaleString()} XP to Level {calculateLevel(currentUser.points).level + 1}
@@ -221,7 +289,7 @@ const Leaderboard: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-gray-200">
+              <tr className={`bg-gradient-to-r ${theme.bg} border-b ${theme.border}`}>
                 <th className="px-6 py-3.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Rank
                 </th>
@@ -234,7 +302,7 @@ const Leaderboard: React.FC = () => {
                 >
                   <div className="flex items-center gap-1">
                     <span>Experience Points</span>
-                    <div className="transition-transform duration-200 group-hover:text-indigo-600">
+                    <div className={`transition-transform duration-200 ${theme.hover}`}>
                       {sortOrder === "asc" ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                     </div>
                   </div>
@@ -248,14 +316,15 @@ const Leaderboard: React.FC = () => {
               {users.map((userItem, index) => {
                 const isCurrentUser = user && user.username === userItem.username;
                 const { level } = calculateLevel(userItem.points);
+                const userTheme = roleConfigs[userItem.role]?.theme.colors;
                 
                 return (
                   <tr
                     key={userItem._id}
-                    className={`transition-all duration-300 hover:bg-indigo-50 ${
+                    className={`transition-all duration-300 ${theme.hover} ${
                       isCurrentUser 
-                        ? "bg-indigo-100 hover:bg-indigo-200" 
-                        : index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                        ? theme.highlight
+                        : index % 2 === 0 ? "bg-white" : theme.bg
                     }`}
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -268,23 +337,26 @@ const Leaderboard: React.FC = () => {
                         <div className="relative">
                           <img
                             className={`h-10 w-10 rounded-full object-cover border-2 ${
-                              isCurrentUser ? "border-indigo-500" : "border-gray-200"
+                              isCurrentUser ? `${theme.border}` : "border-gray-200"
                             }`}
                             src={getProfileImageUrl(userItem.profileImage)}
                             alt={userItem.username}
                           />
                           {isCurrentUser && (
-                            <div className="absolute -top-1 -right-1 bg-indigo-600 rounded-full w-4 h-4 border border-white"></div>
+                            <div className={`absolute -top-1 -right-1 ${theme.button} rounded-full w-4 h-4 border border-white`}></div>
                           )}
                         </div>
                         <div className="ml-4">
-                          <div className={`font-medium ${isCurrentUser ? "text-indigo-700" : "text-gray-900"}`}>
+                          <div className={`font-medium ${isCurrentUser ? theme.text : "text-gray-900"}`}>
                             {userItem.username}
                             {index < 3 && (
-                              <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800">
+                              <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${theme.badge}`}>
                                 Top {index + 1}
                               </span>
                             )}
+                          </div>
+                          <div className={`text-sm ${userTheme?.text || 'text-gray-500'}`}>
+                            {userItem.role}
                           </div>
                         </div>
                       </div>
@@ -296,7 +368,7 @@ const Leaderboard: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="px-2.5 py-1 bg-indigo-100 rounded-full text-xs font-semibold text-indigo-700 inline-block">
+                      <div className={`px-2.5 py-1 ${theme.badge} rounded-full text-xs font-semibold inline-block`}>
                         Level {level}
                       </div>
                     </td>
@@ -308,7 +380,7 @@ const Leaderboard: React.FC = () => {
         </div>
       </div>
       
-      <style jsx>{`
+      <style >{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }

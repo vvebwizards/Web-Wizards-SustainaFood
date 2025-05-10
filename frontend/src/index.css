@@ -3,14 +3,22 @@
 @tailwind utilities;
 
 html, body {
-  overflow-x: hidden; /* Évite tout décalage horizontal */
+  overflow-x: hidden; 
 }
 
 
+button:hover {
+  background-color: rgb(239, 239, 239); 
+}
+button:focus,
+button:focus-visible {
+ 
+  box-shadow: none !important;
+}
 
-/* 🚨 Exception: restore hover bg for buttons with .keep-hover */
+
 button.keep-hover:hover,
 button.keep-hover:focus,
 button.keep-hover:focus-visible {
-  background-color: #15803d !important; /* Tailwind bg-green-700 */
+  background-color: #15803d !important; 
 }

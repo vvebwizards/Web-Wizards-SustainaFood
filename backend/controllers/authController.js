@@ -11,7 +11,8 @@ import { fileURLToPath } from 'url';
 import { sendEmailVerification } from "../utils/helpers.js";
 import {UAParser} from'ua-parser-js';
 import { deviceLocationLoginAlert } from "../emailTemplates/deviceLocationLoginAlert.js";
-
+import mongoose from 'mongoose';
+import fs from 'fs/promises';
 
 dotenv.config();
 export async function signup(req, res) {
@@ -270,93 +271,57 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export async function updateUserInfo(req, res) {
+  const { userId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return res.status(400).json({ message: "Invalid user ID format." });
+  }
+
   try {
-    const { userId } = req.params;
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
 
-   
     if (req.body.username) {
       const existingUsername = await User.findOne({
         username: req.body.username,
-        _id: { $ne: userId }
+        _id: { $ne: userId },
       });
-
       if (existingUsername) {
         return res.status(400).json({ message: "Username is already taken." });
       }
       user.username = req.body.username;
     }
 
-    // Mettre à jour l'image de profil (profileImage)
     if (req.files && req.files.profileImage) {
-      const profileImageFile = req.files.profileImage[0]; // Prendre le premier fichier du tableau
-      console.log('Profile image uploaded:', profileImageFile);
-
-      // Supprimer l'ancienne image si elle existe
+      const profileImageFile = req.files.profileImage[0];
       if (user.profileImage) {
-        const oldImagePath = path.join(__dirname, '..', user.profileImage);
+        const oldImagePath = path.join(process.cwd(), user.profileImage);
         try {
           await fs.access(oldImagePath);
           await fs.unlink(oldImagePath);
-          console.log('Old profile image deleted:', oldImagePath);
-        } catch (error) {
-          console.error('Failed to delete old profile image:', error);
+        } catch (err) {
+          console.warn("Failed to delete old profile image:", err);
         }
       }
-
-      // Mettre à jour le chemin de la nouvelle image
       user.profileImage = `/uploads/${profileImageFile.filename}`;
     }
 
-    // Mettre à jour l'image supplémentaire (imageUrl)
-    if (req.files && req.files.imageUrl) {
-      const imageUrlFile = req.files.imageUrl[0]; // Prendre le premier fichier du tableau
-      console.log('Image URL uploaded:', imageUrlFile);
-
-      // Supprimer l'ancienne image si elle existe
-      if (user.imageUrl) {
-        const oldImagePath = path.join(__dirname, '..', user.imageUrl);
-        try {
-          await fs.access(oldImagePath);
-          await fs.unlink(oldImagePath);
-          console.log('Old image URL deleted:', oldImagePath);
-        } catch (error) {
-          console.error('Failed to delete old image URL:', error);
-        }
-      }
-
-      // Mettre à jour le chemin de la nouvelle image
-      user.imageUrl = `/uploads/${imageUrlFile.filename}`;
-    }
-
-    // Sauvegarder les modifications
     const updatedUser = await user.save();
-    console.log('User updated:', updatedUser);
-
-    // Répondre avec les informations mises à jour
-    const userResponse = {
-      id: updatedUser._id,
-      username: updatedUser.username,
-      email: updatedUser.email,
-      profileImage: updatedUser.profileImage,
-      imageUrl: updatedUser.imageUrl,
-      role: updatedUser.role
-    };
-
     res.status(200).json({
-      message: "User information updated successfully.",
-      user: userResponse
+      message: "User updated successfully.",
+      user: {
+        id: updatedUser._id,
+        username: updatedUser.username,
+        email: updatedUser.email,
+        profileImage: updatedUser.profileImage,
+        role: updatedUser.role,
+      },
     });
-
   } catch (error) {
     console.error("Update User Info Error:", error);
-    res.status(500).json({
-      message: "Server error. Please try again later.",
-      error: error.message
-    });
+    res.status(500).json({ message: "Server error.", error: error.message });
   }
 }
 
