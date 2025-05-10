@@ -2,11 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { Heart, Hourglass, Timer, Edit2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Bar, Pie } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+} from 'chart.js';
 import { useAuth } from '../context/AuthContext';
 import { useStatistics } from '../context/StatisticsContext';
 import defaultProfileImage from '../assets/images/default_user_img.jpg';
-
+import { getUserId } from '../utils/chatHelpers';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 
@@ -30,13 +39,6 @@ const Profile = () => {
     }
   }, [user?.profileImage]);
 
-  const recentActivity = [
-    { id: 1, text: 'Donated 50 lbs of produce on April 1, 2023' },
-    { id: 2, text: 'Delivered a donation on March 25, 2023' },
-    { id: 3, text: 'Helped 3 people on March 20, 2023' },
-  ];
-
-
   const chartData = {
     labels: donationCountsByFoodItem.map((item) => item.foodItem),
     datasets: [
@@ -50,50 +52,38 @@ const Profile = () => {
     ],
   };
 
-
   const pieChartData = {
     labels: ['Donated', 'Wasted'],
     datasets: [
       {
         label: 'Wasted vs Donated',
-        data: [totalDonations - expiredQuantity, expiredQuantity], 
-        backgroundColor: ['#4CAF50', '#FF5733'], 
+        data: [totalDonations - expiredQuantity, expiredQuantity],
+        backgroundColor: ['#4CAF50', '#FF5733'],
         borderColor: ['#4CAF50', '#FF5733'],
         borderWidth: 1,
       },
     ],
   };
 
-  // Chart options
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: {
-        position: 'top' as const,
-      },
+      legend: { position: 'top' as const },
       title: {
         display: true,
         text: 'Donations by Food Item',
-        font: {
-          size: 18,
-        },
+        font: { size: 18 },
         color: '#1f2937',
       },
     },
     scales: {
       y: {
         beginAtZero: true,
-        title: {
-          display: true,
-          text: 'Quantity Donated',
-        },
+        title: { display: true, text: 'Quantity Donated' },
       },
       x: {
-        title: {
-          display: true,
-          text: 'Food Item',
-        },
+        title: { display: true, text: 'Food Item' },
       },
     },
   };
@@ -102,15 +92,11 @@ const Profile = () => {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: {
-        position: 'top' as const,
-      },
+      legend: { position: 'top' as const },
       title: {
         display: true,
         text: 'Wasted vs Donated Ratio',
-        font: {
-          size: 18,
-        },
+        font: { size: 18 },
         color: '#1f2937',
       },
     },
@@ -148,7 +134,7 @@ const Profile = () => {
 
           <div className="mt-2">
             <Link
-              to={`/dashboard/UpdateProfile/${user?.id}`}
+              to={`/dashboard/UpdateProfile/${getUserId(user)}`}
               className="flex items-center text-blue-600 hover:underline"
             >
               <Edit2 className="h-4 w-4 mr-1" />

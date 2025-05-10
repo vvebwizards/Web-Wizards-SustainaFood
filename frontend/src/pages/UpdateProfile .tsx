@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import axios from "axios";
 import { Camera, X } from "lucide-react";
 import { motion } from "framer-motion";
 import defaultProfileImage from "../assets/images/default_user_img.jpg";
 import Modal from "../components/Modal";
+import { getUserId } from "../utils/chatHelpers";
 
 const UpdateProfile = () => {
-  const { userId } = useParams();
+  const { userId: paramUserId } = useParams();
   const navigate = useNavigate();
   const { user, updateUserInfo, updatePassword } = useAuth();
 
-  const [formData, setFormData] = useState({
-    username: "",
-  });
+  const userId = paramUserId || getUserId(user);
+
+  const [formData, setFormData] = useState({ username: "" });
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string>("");
   const [profileError, setProfileError] = useState("");
@@ -22,6 +22,8 @@ const UpdateProfile = () => {
   const [profileSuccess, setProfileSuccess] = useState("");
   const [passwordSuccess, setPasswordSuccess] = useState("");
   const [isPasswordModalOpen, setPasswordModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordData, setPasswordData] = useState({
     oldPassword: "",
     newPassword: "",
@@ -32,9 +34,7 @@ const UpdateProfile = () => {
 
   useEffect(() => {
     if (user) {
-      setFormData({
-        username: user.username || "",
-      });
+      setFormData({ username: user.username || "" });
     }
   }, [user]);
 
@@ -77,36 +77,38 @@ const UpdateProfile = () => {
     setProfileError("");
     setProfileSuccess("");
 
-
     if (!userId) {
       setProfileError("User ID is missing.");
       return;
     }
-
     if (!formData.username.trim()) {
       setProfileError("Username is required.");
       return;
     }
 
     try {
-      console.log("Submitting with:", { userId, username: formData.username, profileImage });
-
+      setLoading(true);
       await updateUserInfo(userId, formData.username, profileImage);
       setProfileSuccess("Profile updated successfully!");
+      setTimeout(() => {
+        navigate("/dashboard/Profile");
+      }, 2000);
     } catch (err: any) {
       console.error("Error in updateUserInfo:", err);
       setProfileError(err.message || "An error occurred. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handlePasswordSubmit = async () => {
     setPasswordError("");
     setPasswordSuccess("");
+
     if (!userId) {
       setPasswordError("User ID is missing.");
       return;
     }
-
     if (!passwordData.oldPassword || !passwordData.newPassword || !passwordData.confirmNewPassword) {
       setPasswordError("All fields are required.");
       return;
@@ -121,6 +123,7 @@ const UpdateProfile = () => {
     }
 
     try {
+      setPasswordLoading(true);
       await updatePassword(userId, passwordData.oldPassword, passwordData.newPassword);
       setPasswordSuccess("Password updated successfully!");
       setTimeout(() => {
@@ -129,6 +132,8 @@ const UpdateProfile = () => {
       }, 2000);
     } catch (err: any) {
       setPasswordError(err.response?.data?.message || "Failed to update password.");
+    } finally {
+      setPasswordLoading(false);
     }
   };
 
@@ -181,15 +186,10 @@ const UpdateProfile = () => {
 
           <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                🧑‍💼 Personal details
-              </h2>
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">🧑‍💼 Personal details</h2>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label
-                    htmlFor="username"
-                    className="block text-sm font-medium text-gray-700"
-                  >
+                  <label htmlFor="username" className="block text-sm font-medium text-gray-700">
                     Username
                   </label>
                   <input
@@ -204,26 +204,21 @@ const UpdateProfile = () => {
                 </div>
                 <button
                   type="submit"
-                  className="w-full py-3 px-4 rounded-md bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition"
+                  disabled={loading}
+                  className={`w-full py-3 px-4 rounded-md text-white font-semibold shadow transition ${
+                    loading ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+                  }`}
                 >
-                  Update Profile
+                  {loading ? "Updating..." : "Update Profile"}
                 </button>
-                {profileSuccess && (
-                  <p className="text-green-500 text-sm mt-2">{profileSuccess}</p>
-                )}
-                {profileError && (
-                  <p className="text-red-500 text-sm mt-2">{profileError}</p>
-                )}
+                {profileSuccess && <p className="text-green-500 text-sm mt-2">{profileSuccess}</p>}
+                {profileError && <p className="text-red-500 text-sm mt-2">{profileError}</p>}
               </form>
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                🔒 Change Password
-              </h2>
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">🔒 Change Password</h2>
               <div className="flex items-center justify-between">
-                <label className="block text-sm font-medium text-gray-700">
-                  Password
-                </label>
+                <label className="block text-sm font-medium text-gray-700">Password</label>
                 <button
                   type="button"
                   onClick={() => setPasswordModalOpen(true)}
@@ -278,17 +273,16 @@ const UpdateProfile = () => {
             onChange={handlePasswordChange}
             className="w-full px-3 py-2 border rounded-md mt-2"
           />
-          {passwordError && (
-            <p className="text-red-500 text-sm mt-2">{passwordError}</p>
-          )}
-          {passwordSuccess && (
-            <p className="text-green-500 text-sm mt-2">{passwordSuccess}</p>
-          )}
+          {passwordError && <p className="text-red-500 text-sm mt-2">{passwordError}</p>}
+          {passwordSuccess && <p className="text-green-500 text-sm mt-2">{passwordSuccess}</p>}
           <button
             onClick={handlePasswordSubmit}
-            className="w-full py-2 mt-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+            disabled={passwordLoading}
+            className={`w-full py-2 mt-4 rounded-md text-white transition ${
+              passwordLoading ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+            }`}
           >
-            Update Password
+            {passwordLoading ? "Updating..." : "Update Password"}
           </button>
         </Modal>
       )}
