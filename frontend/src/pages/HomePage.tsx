@@ -9,7 +9,6 @@ import {
   BookOpen,
   Send,
 } from "lucide-react";
-import ChatBot from "../components/ChatBot/ChatBot";
 
 function HomePage() {
   return (
@@ -33,7 +32,6 @@ function HomePage() {
             Join us in our mission to reduce food waste and feed those in need
           </p>
           <div className="space-y-4">
-            <ChatBot />
             <Link
               to="/get-involved"
               className="inline-block bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-full text-lg font-semibold transition-colors duration-300"

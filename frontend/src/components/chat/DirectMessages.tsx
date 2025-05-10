@@ -7,7 +7,7 @@ import {
   ArrowLeft,
   Search,
   X,
-  Filter
+  Filter,
 } from "lucide-react";
 import { useSocket } from "../../context/SocketContext";
 import { useAuth } from "../../context/AuthContext";
@@ -33,8 +33,7 @@ const DirectMessages: React.FC = () => {
 
   const userRole = user?.role || "recipient";
   const theme =
-    roleConfigs[userRole]?.theme.colors ||
-    roleConfigs.recipient.theme.colors;
+    roleConfigs[userRole]?.theme.colors || roleConfigs.recipient.theme.colors;
 
   const [users, setUsers] = useState<UserType[]>([]);
   const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
@@ -42,7 +41,7 @@ const DirectMessages: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [showMobileUsers, setShowMobileUsers] = useState(true);
-  
+
   // State for filtering
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
@@ -52,18 +51,20 @@ const DirectMessages: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Filter users based on search term and selected roles
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.username.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = selectedRoles.length === 0 || (user.role && selectedRoles.includes(user.role));
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch = user.username
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesRole =
+      selectedRoles.length === 0 ||
+      (user.role && selectedRoles.includes(user.role));
     return matchesSearch && matchesRole;
   });
 
   // Toggle role selection
   const toggleRole = (role: string) => {
-    setSelectedRoles(prev => 
-      prev.includes(role) 
-        ? prev.filter(r => r !== role)
-        : [...prev, role]
+    setSelectedRoles((prev) =>
+      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]
     );
   };
 
@@ -123,9 +124,7 @@ const DirectMessages: React.FC = () => {
   // 4) Auto-select partner from URL
   useEffect(() => {
     if (initialPartner && users.length) {
-      const partner = users.find(
-        (u) => getUserId(u) === initialPartner
-      );
+      const partner = users.find((u) => getUserId(u) === initialPartner);
       if (partner) selectUser(partner);
     }
   }, [initialPartner, users]);
@@ -195,7 +194,9 @@ const DirectMessages: React.FC = () => {
           <div className="relative flex items-center">
             <Users className={`h-5 w-5 ${theme.text} mr-2`} />
             <h3 className="font-medium text-gray-700">Contacts</h3>
-            <div className={`ml-auto px-2 py-1 ${theme.bg} ${theme.text} text-xs rounded-full`}>
+            <div
+              className={`ml-auto px-2 py-1 ${theme.bg} ${theme.text} text-xs rounded-full`}
+            >
               {filteredUsers.length}
             </div>
           </div>
@@ -226,7 +227,7 @@ const DirectMessages: React.FC = () => {
             {availableRoles.map((role) => {
               const isSelected = selectedRoles.includes(role);
               const roleTheme = roleConfigs[role].theme.colors;
-              
+
               return (
                 <button
                   key={role}
@@ -234,11 +235,12 @@ const DirectMessages: React.FC = () => {
                   className={`
                     px-2 py-1 text-xs rounded-full whitespace-nowrap 
                     transition-all duration-200 transform
-                    ${isSelected 
-                      ? `${roleTheme.button} text-white` 
-                      : `border ${roleTheme.bg} ${roleTheme.text}`
+                    ${
+                      isSelected
+                        ? `${roleTheme.button} text-white`
+                        : `border ${roleTheme.bg} ${roleTheme.text}`
                     }
-                    ${isSelected ? 'scale-105' : 'scale-100'}
+                    ${isSelected ? "scale-105" : "scale-100"}
                   `}
                 >
                   <span className="capitalize">{role}</span>
@@ -262,7 +264,7 @@ const DirectMessages: React.FC = () => {
         {/* Users List */}
         <div className="overflow-y-auto flex-1 pt-2">
           {filteredUsers.length === 0 ? (
-            <EmptyState 
+            <EmptyState
               type="contacts"
               message="No matches found"
               subMessage="Try adjusting your filters"
@@ -291,7 +293,7 @@ const DirectMessages: React.FC = () => {
                   </div>
                   <div className="text-xs flex items-center">
                     {u.role && (
-                      <span 
+                      <span
                         className={`mr-2 px-1.5 py-0.5 rounded-full text-[10px] uppercase font-semibold ${
                           roleConfigs[u.role].theme.colors.bg
                         } ${roleConfigs[u.role].theme.colors.text}`}
@@ -362,8 +364,7 @@ const DirectMessages: React.FC = () => {
                     return messages.map((msg, idx) => {
                       const isUser = msg.senderId === currentUserId;
                       const messageDay = getMessageDay(msg.timestamp);
-                      const showDayDivider =
-                        messageDay !== currentDay;
+                      const showDayDivider = messageDay !== currentDay;
 
                       if (showDayDivider) {
                         currentDay = messageDay;
@@ -376,17 +377,12 @@ const DirectMessages: React.FC = () => {
                             </div>
                             <div
                               className={`flex ${
-                                isUser
-                                  ? "justify-end"
-                                  : "justify-start"
+                                isUser ? "justify-end" : "justify-start"
                               } group items-end`}
                             >
                               {!isUser && (
                                 <div className="mr-2 flex-shrink-0">
-                                  <UserAvatar
-                                    user={selectedUser}
-                                    size="sm"
-                                  />
+                                  <UserAvatar user={selectedUser} size="sm" />
                                 </div>
                               )}
                               <div
@@ -405,9 +401,7 @@ const DirectMessages: React.FC = () => {
                                 </div>
                                 <div
                                   className={`text-[10px] text-right mt-1 ${
-                                    isUser
-                                      ? "text-white/70"
-                                      : "text-gray-400"
+                                    isUser ? "text-white/70" : "text-gray-400"
                                   }`}
                                 >
                                   {formatTime(msg.timestamp)}
@@ -415,7 +409,10 @@ const DirectMessages: React.FC = () => {
                               </div>
                               {isUser && (
                                 <div className="ml-2 flex-shrink-0">
-                                  <UserAvatar user={user as UserType} size="sm" />
+                                  <UserAvatar
+                                    user={user as UserType}
+                                    size="sm"
+                                  />
                                 </div>
                               )}
                             </div>
@@ -432,10 +429,7 @@ const DirectMessages: React.FC = () => {
                         >
                           {!isUser && (
                             <div className="mr-2 flex-shrink-0">
-                              <UserAvatar
-                                user={selectedUser}
-                                size="sm"
-                              />
+                              <UserAvatar user={selectedUser} size="sm" />
                             </div>
                           )}
                           <div
@@ -454,9 +448,7 @@ const DirectMessages: React.FC = () => {
                             </div>
                             <div
                               className={`text-[10px] text-right mt-1 ${
-                                isUser
-                                  ? "text-white/70"
-                                  : "text-gray-400"
+                                isUser ? "text-white/70" : "text-gray-400"
                               }`}
                             >
                               {formatTime(msg.timestamp)}

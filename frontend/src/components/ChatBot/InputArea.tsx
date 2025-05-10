@@ -1,11 +1,24 @@
 import React, { useState } from "react";
 import { Send, Smile } from "lucide-react";
+import { useLocation } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import { getUserId } from "../../utils/chatHelpers";
+import { roleConfigs } from "../../utils/roleConfigs";
 
 interface InputAreaProps {
   onSendMessage: (text: string) => void;
 }
 
 const InputArea: React.FC<InputAreaProps> = ({ onSendMessage }) => {
+  const { search } = useLocation();
+  const { user } = useAuth();
+  const currentUserId = getUserId(user);
+  const params = new URLSearchParams(search);
+  const initialPartner = params.get("user") || "";
+
+  const userRole = user?.role || "donor";
+  const theme =
+    roleConfigs[userRole]?.theme.colors || roleConfigs.donor.theme.colors;
   const [message, setMessage] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -31,7 +44,7 @@ const InputArea: React.FC<InputAreaProps> = ({ onSendMessage }) => {
           <button
             key={index}
             onClick={() => onSendMessage(action)}
-            className="text-xs px-3 py-1 bg-green-100 text-green-800 rounded-full hover:bg-green-200 transition-colors"
+            className={`text-xs px-3 py-1 ${theme.button} text-white rounded-full hover:${theme.hover} transition-colors`}
           >
             {action}
           </button>
@@ -44,7 +57,7 @@ const InputArea: React.FC<InputAreaProps> = ({ onSendMessage }) => {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Ask about food rescue, donations, or volunteering..."
-          className="flex-1 p-3 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-gray-700 placeholder-gray-400"
+          className={`flex-1 p-3 border border-gray-200 rounded-full focus:outline-none focus:ring-2 ${theme.bg} focus:border-transparent text-gray-700 placeholder-gray-400`}
         />
 
         <button
@@ -52,7 +65,7 @@ const InputArea: React.FC<InputAreaProps> = ({ onSendMessage }) => {
           disabled={!message.trim()}
           className={`p-3 rounded-full ${
             message.trim()
-              ? "bg-emerald-600 text-white hover:bg-emerald-700"
+              ? `${theme.bg} text-white hover:${theme.hover}`
               : "bg-gray-100 text-gray-400 cursor-not-allowed"
           } transition-colors duration-200`}
           aria-label="Send message"

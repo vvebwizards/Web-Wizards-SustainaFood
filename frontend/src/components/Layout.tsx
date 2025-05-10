@@ -10,7 +10,7 @@ import {
 import { useAuth } from "../context/AuthContext";
 import { useNotifications } from "../context/NotificationContext";
 import { useCart } from "../context/CartContext";
-import { useSocket } from '../context/SocketContext';
+import { useSocket } from "../context/SocketContext";
 import {
   Menu,
   Bell,
@@ -80,15 +80,27 @@ const roleConfigs: Record<string, any> = {
     },
     navigation: [
       { to: "/dashboard/overview", icon: Gauge, label: "System Overview" },
-      { to: "/dashboard/UsersManagement", icon: UserCog, label: "User Management" },
+      {
+        to: "/dashboard/UsersManagement",
+        icon: UserCog,
+        label: "User Management",
+      },
       { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
-      { to: "/dashboard/organizations", icon: Building2, label: "Organizations" },
+      {
+        to: "/dashboard/organizations",
+        icon: Building2,
+        label: "Organizations",
+      },
       { to: "/dashboard/donations", icon: Package, label: "Donations" },
       { to: "/dashboard/deliveries", icon: Truck, label: "Deliveries" },
       { to: "/dashboard/StatsDashboard", icon: LineChart, label: "Analytics" },
       { to: "/dashboard/database", icon: Database, label: "Database" },
       { to: "/dashboard/chat", icon: MessageSquare, label: "Communications" },
-      { to: "/dashboard/notifications", icon: AlertTriangle, label: "System Alerts" },
+      {
+        to: "/dashboard/notifications",
+        icon: AlertTriangle,
+        label: "System Alerts",
+      },
       { to: "/dashboard/settings", icon: Settings, label: "System Settings" },
     ],
   },
@@ -132,7 +144,11 @@ const roleConfigs: Record<string, any> = {
       name: "Food Recipient",
     },
     navigation: [
-      { to: "/dashboard/UpdateProfile/:userId", icon: User, label: "Profile Settings" },
+      {
+        to: "/dashboard/UpdateProfile/:userId",
+        icon: User,
+        label: "Profile Settings",
+      },
       { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
       { to: "/dashboard/available", icon: Package, label: "Available Food" },
       { to: "/dashboard/my-requests", icon: Heart, label: "My Requests" },
@@ -158,7 +174,11 @@ const roleConfigs: Record<string, any> = {
       name: "Delivery Volunteer",
     },
     navigation: [
-      { to: "/dashboard/UpdateProfile/:userId", icon: User, label: "Profile Settings" },
+      {
+        to: "/dashboard/UpdateProfile/:userId",
+        icon: User,
+        label: "Profile Settings",
+      },
       { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
       { to: "/dashboard/orders", icon: Package, label: "Orders" },
       { to: "/dashboard/deliveries", icon: Truck, label: "Deliveries" },
@@ -211,34 +231,32 @@ const Layout: React.FC = () => {
     fetchNotifications();
     fetchRecentMessages();
     if (!socket) return;
-  const handler = (msg: { senderId: string; recipientId: string }) => {
-    // only refresh when *you* receive a message
-    if (msg.recipientId === currentUserId) {
-      fetchRecentMessages();
-    }
-  };
-  socket.on('privateMessage', handler);
-  return () => {
-    socket.off('privateMessage', handler);
-  };
-    
+    const handler = (msg: { senderId: string; recipientId: string }) => {
+      // only refresh when *you* receive a message
+      if (msg.recipientId === currentUserId) {
+        fetchRecentMessages();
+      }
+    };
+    socket.on("privateMessage", handler);
+    return () => {
+      socket.off("privateMessage", handler);
+    };
   }, [socket, currentUserId]);
-
 
   const fetchRecentMessages = async () => {
     if (!currentUserId) return;
-  
+
     try {
       const res = await fetch(`/api/chat/recent/${currentUserId}`);
-      if (!res.ok) throw new Error('Network response was not ok');
+      if (!res.ok) throw new Error("Network response was not ok");
       const data: RecentMessage[] = await res.json();
-  
+
       // 1) drop any conversation where *you* are the sender
-      const filtered = data.filter(m => m.senderId !== currentUserId);
-  
+      const filtered = data.filter((m) => m.senderId !== currentUserId);
+
       // 2) update state
       setRecentMessages(filtered);
-      setUnreadMessageCount(filtered.filter(m => !m.isRead).length);
+      setUnreadMessageCount(filtered.filter((m) => !m.isRead).length);
     } catch (err) {
       console.error("Failed to fetch recent messages:", err);
     }
@@ -247,10 +265,10 @@ const Layout: React.FC = () => {
   const markMessageAsRead = async (msgId: string) => {
     try {
       await fetch(`/api/chat/read/${msgId}`, { method: "PUT" });
-      setRecentMessages(prev =>
-        prev.map(m => (m._id === msgId ? { ...m, isRead: true } : m))
+      setRecentMessages((prev) =>
+        prev.map((m) => (m._id === msgId ? { ...m, isRead: true } : m))
       );
-      setUnreadMessageCount(c => Math.max(0, c - 1));
+      setUnreadMessageCount((c) => Math.max(0, c - 1));
     } catch (err) {
       console.error("Failed to mark as read:", err);
     }
@@ -297,8 +315,13 @@ const Layout: React.FC = () => {
         </div>
 
         <div className="flex items-center space-x-6">
-          <NavLink to="/dashboard/redeem" className="flex items-center space-x-1">
-            <span className={`font-semibold text-sm ${roleConfig.theme.colors.text}`}>
+          <NavLink
+            to="/dashboard/redeem"
+            className="flex items-center space-x-1"
+          >
+            <span
+              className={`font-semibold text-sm ${roleConfig.theme.colors.text}`}
+            >
               {points} pts
             </span>
             <Gift className="h-6 w-6" />
@@ -323,8 +346,12 @@ const Layout: React.FC = () => {
             </button>
             {isMessageOpen && (
               <div className="absolute right-0 mt-2 w-80 bg-white border rounded shadow-lg z-50">
-                <div className={`${roleConfig.theme.colors.bg} p-3 flex justify-between`}>
-                  <span className={`${roleConfig.theme.colors.text} font-medium`}>
+                <div
+                  className={`${roleConfig.theme.colors.bg} p-3 flex justify-between`}
+                >
+                  <span
+                    className={`${roleConfig.theme.colors.text} font-medium`}
+                  >
                     Recent Messages
                   </span>
                   <span className="text-xs">{recentMessages.length}</span>
@@ -337,7 +364,7 @@ const Layout: React.FC = () => {
                     </div>
                   ) : (
                     <ul>
-                      {recentMessages.map(m => (
+                      {recentMessages.map((m) => (
                         <li
                           key={m._id}
                           onClick={() => handleMessageClick(m._id, m.partnerId)}
@@ -386,16 +413,16 @@ const Layout: React.FC = () => {
               className="relative p-2"
             >
               <Bell className="h-6 w-6" />
-              {notifications.filter(n => !n.isRead).length > 0 && (
+              {notifications.filter((n) => !n.isRead).length > 0 && (
                 <span className="absolute top-0 right-0 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">
-                  {notifications.filter(n => !n.isRead).length}
+                  {notifications.filter((n) => !n.isRead).length}
                 </span>
               )}
             </button>
             {isNotificationOpen && (
               <div className="absolute right-0 mt-2 w-64 bg-white border rounded shadow-lg z-50">
                 <ul className="max-h-60 overflow-y-auto">
-                  {notifications.map(notif => (
+                  {notifications.map((notif) => (
                     <li
                       key={notif._id}
                       onClick={() => markAsRead(notif._id)}
@@ -424,12 +451,16 @@ const Layout: React.FC = () => {
           )}
 
           {/* Profile + Logout */}
-          <span className="text-gray-900 font-medium">Welcome, {user?.username}</span>
+          <span className="text-gray-900 font-medium">
+            Welcome, {user?.username}
+          </span>
           <img
             src={profileImage}
             alt="Profile"
             className="h-8 w-8 rounded-full border"
-            onError={e => { (e.currentTarget as HTMLImageElement).src = defaultProfileImage }}
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).src = defaultProfileImage;
+            }}
           />
           <button
             onClick={handleLogout}
@@ -441,7 +472,9 @@ const Layout: React.FC = () => {
       </header>
 
       <div className="flex mt-16">
-        <nav className={`w-64 bg-white p-5 ${sidebarOpen ? "block" : "hidden"}`}>
+        <nav
+          className={`w-64 bg-white p-5 ${sidebarOpen ? "block" : "hidden"}`}
+        >
           <ul>
             {roleConfig.navigation.map((item: any) => (
               <li key={item.to}>
