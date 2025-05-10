@@ -8,12 +8,16 @@ import {
   Trophy,
   BookOpen,
   Send,
+  MapPin,
+  Phone,
+  Mail,
+  Package,
 } from "lucide-react";
 
 function HomePage() {
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero Section */}
+
       <section
         className="relative h-screen flex items-center justify-center"
         style={{
@@ -50,7 +54,6 @@ function HomePage() {
         </div>
       </section>
 
-      {/* About Us */}
       <section className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-4xl font-bold text-center mb-16">About Us</h2>
@@ -71,285 +74,120 @@ function HomePage() {
                 reduce food waste while addressing food insecurity in our
                 communities.
               </p>
-              <div className="flex items-center text-green-600 font-semibold cursor-pointer">
-                Learn more about our impact{" "}
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </div>
+              
             </div>
           </div>
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="bg-gray-50 py-20 px-4">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-16">How It Works</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center p-6">
-              <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Truck className="w-8 h-8 text-green-600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-4">1. Food Collection</h3>
-              <p className="text-gray-600">
-                We collect surplus food from restaurants, grocers, and farms
-              </p>
+      <section className="bg-gray-50 py-16 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <h2 className="text-4xl md:text-5xl font-bold text-center text-gray-900 mb-12">
+          How Food Rescue Works
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      
+          <div className="relative text-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300">
+            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
+              <Package className="w-8 h-8 text-green-600" />
             </div>
-            <div className="text-center p-6">
-              <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Users className="w-8 h-8 text-green-600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-4">2. Distribution</h3>
-              <p className="text-gray-600">
-                Our network ensures food reaches those who need it most
-              </p>
-            </div>
-            <div className="text-center p-6">
-              <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Heart className="w-8 h-8 text-green-600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-4">
-                3. Community Impact
-              </h3>
-              <p className="text-gray-600">
-                Together, we create positive change in our communities
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Success Stories */}
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-16">
-            Success Stories
-          </h2>
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-              <img
-                src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
-                alt="Success story"
-                className="w-full h-48 object-cover"
-              />
-              <div className="p-6">
-                <h3 className="text-xl font-semibold mb-4">
-                  10,000 Meals Rescued
-                </h3>
-                <p className="text-gray-600">
-                  Working with local restaurants, we rescued enough food to
-                  provide 10,000 meals to families in need.
-                </p>
-              </div>
-            </div>
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-              <img
-                src="https://images.unsplash.com/photo-1578357078586-491adf1aa5ba?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
-                alt="Community impact"
-                className="w-full h-48 object-cover"
-              />
-              <div className="p-6">
-                <h3 className="text-xl font-semibold mb-4">
-                  Community Partnership
-                </h3>
-                <p className="text-gray-600">
-                  Our partnership with local farms has helped reduce food waste
-                  while supporting sustainable agriculture.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Get Involved Section */}
-      <section className="bg-green-600 text-white py-20 px-4">
-        <div className="max-w-6xl mx-auto text-center">
-          <h2 className="text-4xl font-bold mb-8">Get Involved</h2>
-          <p className="text-xl mb-12 max-w-2xl mx-auto">
-            Join our community of volunteers and supporters making a difference
-            in food rescue and redistribution.
-          </p>
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-white text-gray-800 rounded-lg p-8">
-              <Trophy className="w-12 h-12 text-green-600 mx-auto mb-4" />
-              <h3 className="text-2xl font-semibold mb-4">Volunteer</h3>
-              <p className="mb-6">
-                Help us collect and distribute food to those in need
-              </p>
-              <Link
-                to="/get-involved"
-                className="inline-block bg-green-600 text-white px-6 py-2 rounded-full hover:bg-green-700 transition-colors duration-300"
-              >
-                Join as Volunteer
-              </Link>
-            </div>
-            <div className="bg-white text-gray-800 rounded-lg p-8">
-              <Heart className="w-12 h-12 text-green-600 mx-auto mb-4" />
-              <h3 className="text-2xl font-semibold mb-4">Donate</h3>
-              <p className="mb-6">
-                Support our mission with a financial contribution
-              </p>
-              <Link
-                to="/get-involved"
-                className="inline-block bg-green-600 text-white px-6 py-2 rounded-full hover:bg-green-700 transition-colors duration-300"
-              >
-                Make a Donation
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Resources */}
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-16">Resources</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="p-6 border rounded-lg">
-              <BookOpen className="w-8 h-8 text-green-600 mb-4" />
-              <h3 className="text-xl font-semibold mb-4">Food Waste Guide</h3>
-              <p className="text-gray-600 mb-4">
-                Learn how to reduce food waste in your daily life
-              </p>
-              <a href="#" className="text-green-600 font-semibold">
-                Read More →
-              </a>
-            </div>
-            <div className="p-6 border rounded-lg">
-              <BookOpen className="w-8 h-8 text-green-600 mb-4" />
-              <h3 className="text-xl font-semibold mb-4">Best Practices</h3>
-              <p className="text-gray-600 mb-4">
-                Tips for food storage and preservation
-              </p>
-              <a href="#" className="text-green-600 font-semibold">
-                Read More →
-              </a>
-            </div>
-            <div className="p-6 border rounded-lg">
-              <BookOpen className="w-8 h-8 text-green-600 mb-4" />
-              <h3 className="text-xl font-semibold mb-4">Impact Reports</h3>
-              <p className="text-gray-600 mb-4">
-                See the difference we're making together
-              </p>
-              <a href="#" className="text-green-600 font-semibold">
-                Read More →
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Contact Form */}
-      <section className="bg-gray-50 py-20 px-4">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-16">Contact Us</h2>
-          <form className="space-y-6">
-            <div>
-              <label className="block text-gray-700 mb-2" htmlFor="name">
-                Name
-              </label>
-              <input
-                type="text"
-                id="name"
-                className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-green-600"
-                placeholder="Your name"
-              />
-            </div>
-            <div>
-              <label className="block text-gray-700 mb-2" htmlFor="email">
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-green-600"
-                placeholder="Your email"
-              />
-            </div>
-            <div>
-              <label className="block text-gray-700 mb-2" htmlFor="message">
-                Message
-              </label>
-              <textarea
-                id="message"
-                rows={4}
-                className="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-green-600"
-                placeholder="Your message"
-              ></textarea>
-            </div>
-            <button
-              type="submit"
-              className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors duration-300"
-            >
-              Send Message
-            </button>
-          </form>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-800 text-white py-12 px-4">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-4 gap-8">
-          <div>
-            <h3 className="text-xl font-semibold mb-4">Food Rescue</h3>
-            <p className="text-gray-400">
-              Making a difference in our community through food rescue and
-              redistribution.
+            <h3 className="text-xl font-semibold text-gray-900 mb-3">1. Donate Food</h3>
+            <p className="text-gray-600 text-sm leading-relaxed">
+              Donors like restaurants and grocers list surplus food on our platform for rescue.
             </p>
           </div>
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
-            <ul className="space-y-2 text-gray-400">
-              <li>
-                <a href="#" className="hover:text-white">
-                  About Us
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-white">
-                  How It Works
-                </a>
-              </li>
-              <li>
-                <Link to="/get-involved" className="hover:text-white">
-                  Get Involved
-                </Link>
-              </li>
-              <li>
-                <a href="#" className="hover:text-white">
-                  Resources
-                </a>
-              </li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Contact</h4>
-            <ul className="space-y-2 text-gray-400">
-              <li>123 Food Rescue St</li>
-              <li>City, State 12345</li>
-              <li>contact@foodrescue.org</li>
-              <li>(555) 123-4567</li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-lg font-semibold mb-4">Follow Us</h4>
-            <div className="flex space-x-4">
-              <a href="#" className="hover:text-green-500">
-                <Send className="w-6 h-6" />
-              </a>
-              <a href="#" className="hover:text-green-500">
-                <Users className="w-6 h-6" />
-              </a>
-              <a href="#" className="hover:text-green-500">
-                <Heart className="w-6 h-6" />
-              </a>
+          <div className="relative text-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300">
+            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
+              <Truck className="w-8 h-8 text-green-600" />
             </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-3">2. Coordinate Delivery</h3>
+            <p className="text-gray-600 text-sm leading-relaxed">
+              Volunteers pick up donations and deliver them safely to those in need.
+            </p>
+          </div>
+          <div className="relative text-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300">
+            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
+              <Users className="w-8 h-8 text-green-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-3">3. Support Communities</h3>
+            <p className="text-gray-600 text-sm leading-relaxed">
+              Recipients receive fresh food, reducing hunger and waste in our communities.
+            </p>
           </div>
         </div>
-        <div className="max-w-6xl mx-auto mt-8 pt-8 border-t border-gray-700 text-center text-gray-400">
-          <p>&copy; 2024 Food Rescue. All rights reserved.</p>
+      </div>
+    </section>
+
+      <footer className="bg-gray-900 text-white py-12 px-4 md:px-6">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+       
+        <div className="space-y-4">
+          <h3 className="text-2xl font-bold tracking-tight">SustainaFood</h3>
+          <p className="text-gray-300 text-sm leading-relaxed">
+            Making a difference in our community through food rescue and redistribution.
+          </p>
         </div>
-      </footer>
+
+        <div className="space-y-4">
+          <h4 className="text-lg font-semibold text-gray-100">Contact Us</h4>
+          <ul className="space-y-2 text-sm text-gray-300">
+            <li className="flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-green-400" />
+              <span>Esprit, Ariana, Tunis</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <Phone className="w-5 h-5 text-green-400" />
+              <a href="tel:+1234567890" className="hover:text-green-400 transition-colors">
+                (+216) 72108459
+              </a>
+            </li>
+            <li className="flex items-center gap-2">
+              <Mail className="w-5 h-5 text-green-400" />
+              <a href="mailto:info@foodrescue.org" className="hover:text-green-400 transition-colors">
+                info@foodrescue.tn
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div className="space-y-4">
+          <h4 className="text-lg font-semibold text-gray-100">Follow Us</h4>
+          <div className="flex space-x-4">
+            <a
+              href="https://telegram.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 rounded-full bg-gray-700 hover:bg-green-500 hover:text-white transition-all transform hover:scale-110"
+              aria-label="Follow us on Telegram"
+            >
+              <Send className="w-5 h-5" />
+            </a>
+            <a
+              href="https://facebook.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 rounded-full bg-gray-700 hover:bg-green-500 hover:text-white transition-all transform hover:scale-110"
+              aria-label="Follow us on Facebook"
+            >
+              <Users className="w-5 h-5" />
+            </a>
+            <a
+              href="https://instagram.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 rounded-full bg-gray-700 hover:bg-green-500 hover:text-white transition-all transform hover:scale-110"
+              aria-label="Follow us on Instagram"
+            >
+              <Heart className="w-5 h-5" />
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto mt-10 pt-6 border-t border-gray-700 text-center text-gray-400 text-sm">
+        <p>© 2025 SustainaFood. All rights reserved.</p>
+      </div>
+    </footer>
     </div>
   );
 }
