@@ -415,9 +415,10 @@ const OrderDetails: React.FC = () => {
                   Delivery Information
                 </h4>
                 <div className="mt-3 text-sm text-gray-900">
-                  {order.estimatedDelivery ? (
+                  {order.delivery?.estimatedDelivery ? (
                     <p>
-                      Estimated delivery: {formatDate(order.estimatedDelivery)}
+                      Estimated delivery:{" "}
+                      {formatDate(order.delivery?.estimatedDelivery)}
                     </p>
                   ) : (
                     <p>
@@ -498,25 +499,24 @@ const OrderDetails: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {item.orderedQuantity}
                     </td>
-                  
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        item.urgencyScore === 0
-                          ? 'text-green-800 bg-green-100'
-                          : item.urgencyScore === 1
-                          ? 'text-yellow-800 bg-yellow-100'
-                          : 'text-red-800 bg-red-100'
-                      }`}
-                    >
-                      {item.urgencyScore === 0
-                        ? 'Low'
-                        : item.urgencyScore === 1
-                        ? 'Medium'
-                        : 'High'}
-                    </span>
-                  </td>
 
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          item.urgencyScore === 0
+                            ? "text-green-800 bg-green-100"
+                            : item.urgencyScore === 1
+                            ? "text-yellow-800 bg-yellow-100"
+                            : "text-red-800 bg-red-100"
+                        }`}
+                      >
+                        {item.urgencyScore === 0
+                          ? "Low"
+                          : item.urgencyScore === 1
+                          ? "Medium"
+                          : "High"}
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -9,15 +9,17 @@ interface DeliveriesListProps {
 const DeliveriesList: React.FC<DeliveriesListProps> = ({ orders }) => {
   const deliveryOrders = orders.filter((order) => order.delivery);
 
-  const formatDateTime = (date: string, time: string) => {
-    return new Date(`${date} ${time}`).toLocaleString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "numeric",
-    });
-  };
+  function formatDateTime(dateStr, timeStr) {
+    if (!dateStr || !timeStr) return "No date";
+
+    const dateOnly = dateStr.split("T")[0];
+    const combined = `${dateOnly}T${timeStr}`;
+
+    const date = new Date(combined);
+    if (isNaN(date.getTime())) return "Invalid Date";
+
+    return date.toLocaleString();
+  }
 
   return (
     <div className="bg-white shadow rounded-lg overflow-hidden">
