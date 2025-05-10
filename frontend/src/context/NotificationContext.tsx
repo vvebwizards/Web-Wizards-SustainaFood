@@ -1,48 +1,60 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "./AuthContext"; 
 import { useSocket } from "./SocketContext";
-import { getUserId } from "../utils/chatHelpers";
 
 interface Notification {
-  _id: string;
-  userId: string;
-  message: string;
-  isRead: boolean;
-  createdAt: string;
+  _id: string; 
+  userId: string; 
+  message: string; 
+  isRead: boolean; 
+  createdAt: string; 
 }
 
 const API_BASE_URL = "http://localhost:5000/api/notifications";
 
+
 interface NotificationContextType {
-  notifications: Notification[];
+  notifications: Notification[]; 
   fetchNotifications: () => Promise<void>;
-  markAsRead: (notificationId: string) => Promise<void>;
+  markAsRead: (notificationId: string) => Promise<void>; 
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
+
 export const NotificationProvider = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
-  const socket = useSocket();
+  const socket = useSocket(); 
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
+ 
   const fetchNotifications = async () => {
-    const userId = getUserId(user);
-    if (!userId) {
-      console.warn("⚠️ No user ID found, skipping notifications fetch.");
+    if (!user || !user.id) {
+      console.warn("⚠️ No user found, skipping notifications fetch.");
       return;
     }
-
+  
     try {
-      console.log(`📡 Fetching notifications for user ${userId}`);
-      const response = await axios.get(`${API_BASE_URL}/${userId}`);
+      console.log(`📡 Fetching notifications for user ${user.id}`);
+      const response = await axios.get(`${API_BASE_URL}/${user.id}`);
       setNotifications(response.data);
     } catch (error) {
       console.error("❌ Error fetching notifications:", error);
     }
   };
+  
+  useEffect(() => {
+    if (!user) {
+      console.warn("No user available, skipping notifications fetch.");
+      return;
+    }
+    fetchNotifications();
+  }, [user]);
+  
+  
 
+ 
   const markAsRead = async (notificationId: string) => {
     try {
       await axios.put(`${API_BASE_URL}/${notificationId}/read`);
@@ -52,33 +64,35 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
         )
       );
     } catch (error) {
-      console.error("❌ Error marking notification as read:", error);
+      console.error("Error marking notification as read:", error);
     }
   };
 
-  useEffect(() => {
-    const userId = getUserId(user);
-    if (!userId) {
-      console.warn("⚠️ No user ID, skipping notifications fetch.");
-      return;
-    }
-    fetchNotifications();
-  }, [user]);
 
   useEffect(() => {
     if (!socket || !user) {
-      console.warn("⚠️ No user or socket, skipping notifications listener.");
+      console.warn("⚠️ No user found, skipping notifications fetch.");
       return;
     }
 
     socket.on("new_notification", (notification: Notification) => {
-      setNotifications((prev) => [notification, ...prev]);
+      setNotifications((prev) => [notification, ...prev]); 
     });
 
     return () => {
       socket.off("new_notification");
     };
   }, [socket, user]);
+
+  useEffect(() => {
+    if (!user || !user.id) {
+      console.warn("⚠️ No user found, skipping notifications fetch.");
+      return;
+    }
+  
+    fetchNotifications();
+  }, [user]);
+  
 
   return (
     <NotificationContext.Provider value={{ notifications, fetchNotifications, markAsRead }}>

@@ -79,6 +79,7 @@ const roleConfigs: Record<string, any> = {
       name: "Admin Dashboard",
     },
     navigation: [
+      { to: "/dashboard/profile", icon: User, label: "Profile" },
       { to: "/dashboard/overview", icon: Gauge, label: "System Overview" },
       { to: "/dashboard/UsersManagement", icon: UserCog, label: "User Management" },
       { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
@@ -132,7 +133,7 @@ const roleConfigs: Record<string, any> = {
       name: "Food Recipient",
     },
     navigation: [
-      { to: "/dashboard/UpdateProfile/:userId", icon: User, label: "Profile Settings" },
+      { to: "/dashboard/profile", icon: User, label: "Profile" },
       { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
       { to: "/dashboard/available", icon: Package, label: "Available Food" },
       { to: "/dashboard/my-requests", icon: Heart, label: "My Requests" },
@@ -158,7 +159,7 @@ const roleConfigs: Record<string, any> = {
       name: "Delivery Volunteer",
     },
     navigation: [
-      { to: "/dashboard/UpdateProfile/:userId", icon: User, label: "Profile Settings" },
+      { to: "/dashboard/profile", icon: User, label: "Profile" },
       { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
       { to: "/dashboard/orders", icon: Package, label: "Orders" },
       { to: "/dashboard/deliveries", icon: Truck, label: "Deliveries" },

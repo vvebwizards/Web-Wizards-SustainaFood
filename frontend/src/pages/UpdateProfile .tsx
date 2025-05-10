@@ -1,11 +1,56 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { Camera, X } from "lucide-react";
-import { motion } from "framer-motion";
-import defaultProfileImage from "../assets/images/default_user_img.jpg";
-import Modal from "../components/Modal";
+import { Camera, X, Save, Key, User, Mail, ArrowLeft } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { getUserId } from "../utils/chatHelpers";
+
+const roleConfigs = {
+  admin: {
+    theme: {
+      primary: "red",
+      colors: {
+        bg: "bg-red-50",
+        text: "text-red-700",
+        hover: "hover:bg-red-100",
+        button: "bg-red-600 hover:bg-red-700",
+      },
+    },
+  },
+  donor: {
+    theme: {
+      primary: "green",
+      colors: {
+        bg: "bg-green-50",
+        text: "text-green-700",
+        hover: "hover:bg-green-100",
+        button: "bg-green-600 hover:bg-green-700",
+      },
+    },
+  },
+  recipient: {
+    theme: {
+      primary: "blue",
+      colors: {
+        bg: "bg-blue-50",
+        text: "text-blue-700",
+        hover: "hover:bg-blue-100",
+        button: "bg-blue-600 hover:bg-blue-700",
+      },
+    },
+  },
+  volunteer: {
+    theme: {
+      primary: "purple",
+      colors: {
+        bg: "bg-purple-50",
+        text: "text-purple-700",
+        hover: "hover:bg-purple-100",
+        button: "bg-purple-600 hover:bg-purple-700",
+      },
+    },
+  },
+};
 
 const UpdateProfile = () => {
   const { userId: paramUserId } = useParams();
@@ -13,6 +58,7 @@ const UpdateProfile = () => {
   const { user, updateUserInfo, updatePassword } = useAuth();
 
   const userId = paramUserId || getUserId(user);
+  const theme = roleConfigs[user?.role as keyof typeof roleConfigs]?.theme || roleConfigs.donor.theme;
 
   const [formData, setFormData] = useState({ username: "" });
   const [profileImage, setProfileImage] = useState<File | null>(null);
@@ -30,7 +76,7 @@ const UpdateProfile = () => {
     confirmNewPassword: "",
   });
 
-  const defaultImage = defaultProfileImage;
+  const defaultImage = 'https://via.placeholder.com/150';
 
   useEffect(() => {
     if (user) {
@@ -47,7 +93,7 @@ const UpdateProfile = () => {
           : `http://localhost:5000${user.profileImage}`;
         setPreview(`${imageUrl}?t=${Date.now()}`);
       } else {
-        setPreview(defaultProfileImage);
+        setPreview(defaultImage);
       }
       return;
     }
@@ -139,7 +185,7 @@ const UpdateProfile = () => {
 
   if (!userId) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className={`min-h-screen ${theme.colors.bg} flex items-center justify-center`}>
         <p className="text-red-500">Invalid user ID.</p>
       </div>
     );
@@ -147,145 +193,234 @@ const UpdateProfile = () => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.1 }}
-      className="min-h-screen bg-gray-50 py-8"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className={`min-h-screen ${theme.colors.bg} py-8 px-4`}
     >
-      <div className="max-w-4xl mx-auto bg-white shadow rounded-lg p-6">
-        <h1 className="text-3xl font-semibold text-gray-900 mb-6">Profile Settings</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="flex flex-col items-center">
-            <div className="relative w-32 h-32">
-              <img
-                src={preview}
-                alt="Profile"
-                className="w-full h-full rounded-full border-2 border-gray-300 object-cover"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = defaultImage;
-                }}
-              />
-              <input
-                type="file"
-                accept="image/*"
-                id="profile-photo-input"
-                className="hidden"
-                onChange={handleFileChange}
-              />
-              <label
-                htmlFor="profile-photo-input"
-                className="absolute bottom-0 right-0 bg-blue-600 p-2 rounded-full text-white shadow-lg hover:bg-blue-700 cursor-pointer transition-colors"
-                title="Upload Profile Photo"
-              >
-                <Camera className="h-5 w-5" />
-              </label>
+      <div className="max-w-4xl mx-auto">
+        <button
+          onClick={() => navigate("/dashboard/Profile")}
+          className={`mb-6 flex items-center gap-2 ${theme.colors.text} hover:opacity-80 transition-opacity`}
+        >
+          <ArrowLeft size={20} />
+          <span>Back to Profile</span>
+        </button>
+
+        <div className={`bg-white rounded-2xl shadow-xl p-8 border border-${theme.primary}-200`}>
+          <div className="flex items-center gap-4 mb-8">
+            <div className={`p-3 rounded-full ${theme.colors.bg}`}>
+              <User size={24} className={theme.colors.text} />
             </div>
-            <p className="mt-4 text-lg font-medium text-gray-800">{user?.username || "Loading..."}</p>
+            <h1 className="text-3xl font-bold text-gray-900">Profile Settings</h1>
           </div>
 
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">🧑‍💼 Personal details</h2>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                    Username
-                  </label>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-1">
+              <div className="flex flex-col items-center space-y-4">
+                <div className="relative group">
+                  <div className={`w-40 h-40 rounded-full overflow-hidden border-4 border-${theme.primary}-400 transition-transform duration-300 group-hover:scale-105`}>
+                    <img
+                      src={preview}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = defaultImage;
+                      }}
+                    />
+                  </div>
                   <input
-                    type="text"
-                    name="username"
-                    id="username"
-                    value={formData.username}
-                    onChange={handleChange}
-                    placeholder="Enter new username"
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    type="file"
+                    accept="image/*"
+                    id="profile-photo-input"
+                    className="hidden"
+                    onChange={handleFileChange}
                   />
+                  <label
+                    htmlFor="profile-photo-input"
+                    className={`absolute bottom-2 right-2 ${theme.colors.button} p-3 rounded-full text-white shadow-lg cursor-pointer transition-all duration-300 hover:scale-110`}
+                  >
+                    <Camera size={20} />
+                  </label>
                 </div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className={`w-full py-3 px-4 rounded-md text-white font-semibold shadow transition ${
-                    loading ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
-                  }`}
-                >
-                  {loading ? "Updating..." : "Update Profile"}
-                </button>
-                {profileSuccess && <p className="text-green-500 text-sm mt-2">{profileSuccess}</p>}
-                {profileError && <p className="text-red-500 text-sm mt-2">{profileError}</p>}
-              </form>
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">🔒 Change Password</h2>
-              <div className="flex items-center justify-between">
-                <label className="block text-sm font-medium text-gray-700">Password</label>
-                <button
-                  type="button"
-                  onClick={() => setPasswordModalOpen(true)}
-                  className="text-blue-600 hover:underline"
-                >
-                  Edit
-                </button>
+                <p className={`text-lg font-medium ${theme.colors.text}`}>
+                  {user?.username || "Loading..."}
+                </p>
+                <p className="text-gray-500 text-sm">{user?.email}</p>
               </div>
-              <input
-                type="password"
-                value="••••••••"
-                disabled
-                className="w-full px-3 py-2 border rounded-md bg-gray-100 mt-1"
-              />
+            </div>
+
+            <div className="lg:col-span-2 space-y-8">
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <Mail size={20} className={theme.colors.text} />
+                  <h2 className="text-xl font-semibold text-gray-900">Account Information</h2>
+                </div>
+                
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+                      Username
+                    </label>
+                    <input
+                      type="text"
+                      name="username"
+                      id="username"
+                      value={formData.username}
+                      onChange={handleChange}
+                      placeholder="Enter your username"
+                      className={`w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-${theme.primary}-500 focus:border-transparent transition-all duration-200`}
+                    />
+                  </div>
+
+                  {(profileSuccess || profileError) && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`p-3 rounded-lg ${
+                        profileSuccess ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"
+                      }`}
+                    >
+                      {profileSuccess || profileError}
+                    </motion.div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-white font-semibold shadow-md transition-all duration-200 ${
+                      loading ? `bg-${theme.primary}-400 cursor-not-allowed` : `${theme.colors.button} hover:shadow-lg transform hover:-translate-y-0.5`
+                    }`}
+                  >
+                    <Save size={20} />
+                    {loading ? "Updating..." : "Save Changes"}
+                  </button>
+                </form>
+              </div>
+
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <Key size={20} className={theme.colors.text} />
+                  <h2 className="text-xl font-semibold text-gray-900">Security</h2>
+                </div>
+                
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-medium text-gray-900">Password</h3>
+                      <p className="text-sm text-gray-500">Update your password to keep your account secure</p>
+                    </div>
+                    <button
+                      onClick={() => setPasswordModalOpen(true)}
+                      className={`px-4 py-2 rounded-lg ${theme.colors.button} text-white shadow-md transition-all duration-200 hover:shadow-lg transform hover:-translate-y-0.5`}
+                    >
+                      Change Password
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-      {isPasswordModalOpen && (
-        <Modal onClose={() => setPasswordModalOpen(false)}>
-          <div className="relative">
-            <h2 className="text-lg font-semibold text-gray-800">🔒 Change Password</h2>
-            <button
-              onClick={() => setPasswordModalOpen(false)}
-              className="absolute top-0 right-0 text-gray-500 hover:text-gray-700"
-              title="Close"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-          <input
-            type="password"
-            name="oldPassword"
-            placeholder="Current Password"
-            value={passwordData.oldPassword}
-            onChange={handlePasswordChange}
-            className="w-full px-3 py-2 border rounded-md mt-4"
-          />
-          <input
-            type="password"
-            name="newPassword"
-            placeholder="New Password"
-            value={passwordData.newPassword}
-            onChange={handlePasswordChange}
-            className="w-full px-3 py-2 border rounded-md mt-2"
-          />
-          <input
-            type="password"
-            name="confirmNewPassword"
-            placeholder="Confirm New Password"
-            value={passwordData.confirmNewPassword}
-            onChange={handlePasswordChange}
-            className="w-full px-3 py-2 border rounded-md mt-2"
-          />
-          {passwordError && <p className="text-red-500 text-sm mt-2">{passwordError}</p>}
-          {passwordSuccess && <p className="text-green-500 text-sm mt-2">{passwordSuccess}</p>}
-          <button
-            onClick={handlePasswordSubmit}
-            disabled={passwordLoading}
-            className={`w-full py-2 mt-4 rounded-md text-white transition ${
-              passwordLoading ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
-            }`}
+
+      <AnimatePresence>
+        {isPasswordModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
           >
-            {passwordLoading ? "Updating..." : "Update Password"}
-          </button>
-        </Modal>
-      )}
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className={`bg-white rounded-2xl p-6 max-w-md w-full border border-${theme.primary}-200 shadow-2xl`}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <Key size={20} className={theme.colors.text} />
+                  <h2 className="text-xl font-semibold text-gray-900">Change Password</h2>
+                </div>
+                <button
+                  onClick={() => setPasswordModalOpen(false)}
+                  className="text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Current Password
+                  </label>
+                  <input
+                    type="password"
+                    name="oldPassword"
+                    value={passwordData.oldPassword}
+                    onChange={handlePasswordChange}
+                    className={`w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-${theme.primary}-500 focus:border-transparent`}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    name="newPassword"
+                    value={passwordData.newPassword}
+                    onChange={handlePasswordChange}
+                    className={`w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-${theme.primary}-500 focus:border-transparent`}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Confirm New Password
+                  </label>
+                  <input
+                    type="password"
+                    name="confirmNewPassword"
+                    value={passwordData.confirmNewPassword}
+                    onChange={handlePasswordChange}
+                    className={`w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-${theme.primary}-500 focus:border-transparent`}
+                  />
+                </div>
+
+                {(passwordSuccess || passwordError) && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`p-3 rounded-lg ${
+                      passwordSuccess ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"
+                    }`}
+                  >
+                    {passwordSuccess || passwordError}
+                  </motion.div>
+                )}
+
+                <button
+                  onClick={handlePasswordSubmit}
+                  disabled={passwordLoading}
+                  className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-white font-semibold shadow-md transition-all duration-200 ${
+                    passwordLoading
+                      ? `bg-${theme.primary}-400 cursor-not-allowed`
+                      : `${theme.colors.button} hover:shadow-lg transform hover:-translate-y-0.5`
+                  }`}
+                >
+                  <Save size={20} />
+                  {passwordLoading ? "Updating..." : "Update Password"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
