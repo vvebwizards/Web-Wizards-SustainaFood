@@ -123,7 +123,7 @@ const roleConfigs: Record<string, any> = {
       { to: "/dashboard/profile", icon: User, label: "Profile" },
       { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
       { to: "/dashboard/inventory", icon: Package, label: "Inventory" },
-      { to: "/dashboard/donations", icon: Heart, label: "My Donations" },
+      { to: "/dashboard/my-donations", icon: Heart, label: "My Donations" },
       { to: "/dashboard/schedule", icon: Calendar, label: "Schedule Pickup" },
       { to: "/dashboard/statistics", icon: LineChart, label: "Impact" },
       { to: "/dashboard/history", icon: History, label: "History" },

@@ -492,3 +492,18 @@ export async function predictSupplyDemand(req, res) {
     res.status(500).json({ error: "Internal server error" });
   }
 }
+
+export async function getPendingDonationsByUser(req, res) {
+  try {
+    const user = await getAuthenticatedUser(req);
+    if (!user) {
+      return res.status(401).json({ error: "Unauthorized: No authenticated user found" });
+    }
+
+    const pendingDonations = await Donation.find({ donorId: user._id, status: "Pending Donation" });
+    res.status(200).json(pendingDonations);
+  } catch (error) {
+    console.error("Error fetching pending donations:", error);
+    res.status(500).json({ error: "Internal server error while fetching pending donations" });
+  }
+}

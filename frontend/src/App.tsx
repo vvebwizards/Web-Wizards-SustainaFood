@@ -46,6 +46,7 @@ import Leaderboard from "./pages/Leaderboard";
 import Redeem from "./pages/Redeem";
 import ChatBot from "./components/ChatBot/ChatBot";
 import CarbonFootprintCalculator from "./components/Carbon/CarbonFootprintCalculator";
+import MyDonations from "./pages/MyDonations";
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user } = useAuth();
@@ -116,6 +117,8 @@ function App() {
             }
           />
           <Route path="redeem" element={<Redeem />} />
+          <Route path="my-donations" element={<MyDonations />} />
+          
           <Route
             path="UsersManagement"
             element={
