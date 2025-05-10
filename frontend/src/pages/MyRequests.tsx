@@ -1,22 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { MapPin, PackageCheck, Clock, ClipboardList, ChevronDown, ChevronUp, Package } from "lucide-react";
-
-interface OrderItem {
-  productId: string;
-  name: string;
-  orderedQuantity: number;
-  imageUrl?: string;
-  title?: string;
-}
-
-interface Order {
-  _id: string;
-  items: OrderItem[];
-  recipientId: string;
-  location: string;
-  status: string;
-  createdAt: string;
-}
+import { Order, OrderItem } from "../types";
 
 const MyRequests: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -55,28 +39,28 @@ const MyRequests: React.FC = () => {
       : orders.filter((order) => order.status === filterStatus);
 
   const formatDate = (dateString: string) => {
-    const options: Intl.DateTimeFormatOptions = { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    const options: Intl.DateTimeFormatOptions = {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     };
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
   const getStatusStyles = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'delivered':
+      case "delivered":
         return {
-          badge: 'bg-teal-100 text-teal-800',
-          icon: 'bg-teal-100 text-teal-600'
+          badge: "bg-teal-100 text-teal-800",
+          icon: "bg-teal-100 text-teal-600",
         };
-      case 'pending':
+      case "pending":
       default:
         return {
-          badge: 'bg-amber-100 text-amber-800',
-          icon: 'bg-amber-100 text-amber-600'
+          badge: "bg-amber-100 text-amber-800",
+          icon: "bg-amber-100 text-amber-600",
         };
     }
   };
@@ -118,7 +102,7 @@ const MyRequests: React.FC = () => {
               <option value="delivered">Delivered</option>
             </select>
           </div>
-          
+
           <div className="text-sm text-gray-500">
             Showing {filteredOrders.length} of {orders.length} requests
           </div>
@@ -132,8 +116,8 @@ const MyRequests: React.FC = () => {
           </div>
           <h3 className="text-xl font-semibold text-gray-700 mb-2">No requests found</h3>
           <p className="text-gray-500">
-            {filterStatus === "all" 
-              ? "You haven't made any requests yet." 
+            {filterStatus === "all"
+              ? "You haven't made any requests yet."
               : `You don't have any ${filterStatus} requests.`}
           </p>
         </div>
@@ -152,15 +136,26 @@ const MyRequests: React.FC = () => {
                       <div className={`p-2 rounded-full flex-shrink-0 ${statusStyles.icon}`}>
                         <PackageCheck className="w-5 h-5" />
                       </div>
-                      
+
                       <div>
                         <h3 className="text-md font-semibold text-gray-800 mb-1">
-                          Order {order._id}
+                          Order {order.orderNumber}
                         </h3>
                         <div className="flex flex-col sm:flex-row sm:items-center gap-x-4 gap-y-1 text-sm text-gray-600">
                           <p className="flex items-center gap-1">
                             <MapPin className="w-3.5 h-3.5" />
-                            <span>{order.location}</span>
+                            <span>
+                              {order.location.latitude.toFixed(5)},{" "}
+                              {order.location.longitude.toFixed(5)}
+                            </span>
+                          </p>
+                          <p className="flex items-center gap-1">
+                            <MapPin className="w-3.5 h-3.5" />
+                            <span>
+                              {order.shippingAddress.street}, {order.shippingAddress.city},{" "}
+                              {order.shippingAddress.state}, {order.shippingAddress.zipCode},{" "}
+                              {order.shippingAddress.country}
+                            </span>
                           </p>
                           <p className="flex items-center gap-1">
                             <Clock className="w-3.5 h-3.5" />
@@ -170,16 +165,16 @@ const MyRequests: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center justify-between sm:justify-end gap-4">
                     <span
                       className={`text-xs font-medium px-3 py-1 rounded-full flex items-center justify-center min-w-[90px] ${statusStyles.badge}`}
                     >
                       {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                     </span>
-                  
+
                     <button
-                      onClick={() => setExpandedOrderId((prev) => prev === order._id ? null : order._id)}
+                      onClick={() => setExpandedOrderId((prev) => (prev === order._id ? null : order._id))}
                       className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1 transition-colors"
                       aria-expanded={expandedOrderId === order._id}
                     >
@@ -200,7 +195,7 @@ const MyRequests: React.FC = () => {
 
                 <div
                   className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                    expandedOrderId === order._id ? 'max-h-[800px] opacity-100 mt-4' : 'max-h-0 opacity-0'
+                    expandedOrderId === order._id ? "max-h-[800px] opacity-100 mt-4" : "max-h-0 opacity-0"
                   }`}
                 >
                   <div className="pt-4 border-t border-gray-100">

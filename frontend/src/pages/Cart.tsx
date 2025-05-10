@@ -1,9 +1,10 @@
-// src/pages/Cart.tsx
 import React, { useState, FC } from "react";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { Trash, Calendar, CheckCircle, X, MapPin } from "lucide-react";
 import LocationPicker from "../components/LocationPicker";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Cart: FC = () => {
   const { cartItems, clearCart, updateQuantity, removeFromCart } = useCart();
@@ -20,9 +21,9 @@ const Cart: FC = () => {
       return;
     }
 
-    const userId    = user?._id ?? user?.id;
-    const userName  = user?.username ?? user?.name  ?? "Anonymous";
-    const userEmail = user?.email    ?? "";
+    const userId = user?._id ?? user?.id;
+    const userName = user?.username ?? user?.name ?? "Anonymous";
+    const userEmail = user?.email ?? "";
 
     if (!userId) {
       alert("❌ User ID is missing.");
@@ -33,14 +34,14 @@ const Cart: FC = () => {
       recipientId: userId,
       userName,
       userEmail,
-      location: `${latLng.lat},${latLng.lng}`,
-      items: cartItems.map(item => ({
-        productId:       item._id,
+      location: { lat: latLng.lat, lng: latLng.lng }, // Send as object
+      items: cartItems.map((item) => ({
+        productId: item._id,
         orderedQuantity: item.quantity,
-        name:            item.title,
-        imageUrl:        item.imageUrl,
-        title:           item.title
-      }))
+        name: item.title,
+        imageUrl: item.imageUrl,
+        title: item.title,
+      })),
     };
 
     console.log("➡️ POST /api/orders payload:", orderPayload);
@@ -57,7 +58,7 @@ const Cart: FC = () => {
         throw new Error(err.error || "Order submission failed");
       }
 
-      alert("✅ Your request has been submitted!");
+      toast.success("Your order has been placed successfully!");
       clearCart();
       setShowModal(false);
       setLatLng(null);
@@ -78,12 +79,11 @@ const Cart: FC = () => {
       ) : (
         <>
           <div className="space-y-6">
-            {cartItems.map(item => (
+            {cartItems.map((item) => (
               <div
                 key={item._id}
                 className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-white border border-gray-200 shadow-md rounded-lg p-4"
               >
-                {/* Image + Details */}
                 <div className="flex gap-4 w-full sm:w-auto">
                   <img
                     src={`http://localhost:5000${
@@ -108,17 +108,12 @@ const Cart: FC = () => {
                     </p>
                   </div>
                 </div>
-
-                {/* Qty controls + Remove */}
                 <div className="flex flex-col sm:items-end gap-2 w-full sm:w-auto">
                   <div className="flex items-center gap-2">
                     <button
                       className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-lg font-bold"
                       onClick={() =>
-                        updateQuantity(
-                          item._id,
-                          Math.max(item.quantity - 1, 1)
-                        )
+                        updateQuantity(item._id, Math.max(item.quantity - 1, 1))
                       }
                     >
                       −
@@ -149,7 +144,6 @@ const Cart: FC = () => {
             ))}
           </div>
 
-          {/* Cart Actions */}
           <div className="mt-10 bg-white shadow-md rounded-lg p-6 border border-gray-200">
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
               <button
@@ -174,7 +168,6 @@ const Cart: FC = () => {
             </div>
           </div>
 
-          {/* Location Modal */}
           {showModal && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
               <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">

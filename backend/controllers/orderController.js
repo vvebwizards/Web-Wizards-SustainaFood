@@ -7,54 +7,115 @@ import Donation from '../models/Donation.js';
 import { getPredictionUrgencyTransportation } from '../utils/predict.js';
 export const createOrder = async (req, res) => {
   try {
-    const { recipientId, location, items ,userName,userEmail} = req.body;
+    const { recipientId, location, items, userName, userEmail } = req.body;
 
-    if (!recipientId || !location || !items || !Array.isArray(items)) {
+    // Validate required fields
+    if (
+      !recipientId ||
+      !location ||
+      !location.lat ||
+      !location.lng ||
+      !items ||
+      !Array.isArray(items)
+    ) {
       return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // Reverse geocoding to convert lat/lng to shipping address
+    let shippingAddress;
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${location.lat}&lon=${location.lng}`
+      );
+      const data = await response.json();
+
+      if (data && data.address) {
+        shippingAddress = {
+          street: data.address.road || "Unknown Street",
+          city:
+            data.address.city ||
+            data.address.town ||
+            data.address.village ||
+            "Unknown City",
+          state: data.address.state || "Unknown State",
+          zipCode: data.address.postcode || "Unknown Zip",
+          country: data.address.country || "Unknown Country",
+        };
+      } else {
+        throw new Error("Unable to retrieve address from coordinates");
+      }
+    } catch (geocodeError) {
+      console.error("[REVERSE GEOCODING ERROR]", geocodeError);
+      return res.status(400).json({ error: "Invalid location coordinates" });
     }
 
     const formattedItems = [];
     let totalAmount = 0;
 
-    for (const { itemId, orderedQuantity,name } of items) {
-      const foodItem = await FoodItem.findById(itemId);
-      if (!foodItem) continue;
+    for (const { productId, orderedQuantity, name, imageUrl } of items) {
+      const donationItem = await Donation.findById(productId);
+      if (!donationItem) {
+        return res.status(400).json({ error: `Invalid productId: ${productId}` });
+      }
 
-      foodItem.quantityToDonation = Math.max(foodItem.quantityToDonation - orderedQuantity, 0);
-      await foodItem.save();
+      donationItem.quantityToDonation = Math.max(
+        donationItem.quantityToDonation - orderedQuantity,
+        0
+      );
+      if (donationItem.quantityToDonation === 0) {
+        donationItem.status = "Donated";
 
+        const foodItem = await FoodItem.findById(donationItem.foodItemId);
+        if (
+          foodItem.status === "Pending Donation" &&
+          donationItem.status === "Donated"
+        ) {
+          foodItem.status = "Donated";
+          await foodItem.save();
+        }
+      }
+      await donationItem.save();
+
+
+      formattedItems.push({
+        productId,
+        name: name || donationItem.title || "Unknown Item", 
+        orderedQuantity,
+        imageUrl: imageUrl || donationItem.imageUrl,
+
+      });
     }
-    console.log("formattedItems", formattedItems);
 
     const order = new Order({
       orderNumber: uuidv4(),
       recipientId,
-      location,
-      items,
+      location: {
+        latitude: location.lat,
+        longitude: location.lng,
+      },
+      items: formattedItems,
       status: "pending",
       totalAmount,
-      paymentStatus: "paid", 
       customer: {
         name: userName,
         email: userEmail,
         phone: "26762772",
       },
-      shippingAddress: {
-        street: "123 Main St",
-        city: "Cityville",
-        state: "StateX",
-        zipCode: "12345",
-        country: "Wonderland",
-      },
+      shippingAddress,
     });
 
     await order.save();
-    for (const item of order.items) {
-      const productId = item._id; 
-      const urgencyScore = await getTransportationUrgency(order._id, productId);
-      item.urgencyScore = urgencyScore; 
-    }
+
+    // for (const item of order.items) {
+    //   const urgencyScore = await getPredictionUrgencyTransportation(
+    //     order._id,
+    //     item.productId
+    //   );
+    //   item.urgencyScore = urgencyScore;
+    // }
+
     await order.save();
+
     res.status(201).json({ message: "Order submitted successfully", order });
   } catch (err) {
     console.error("[CREATE ORDER ERROR]", err);
@@ -67,7 +128,7 @@ export const getOrdersByRecipient = async (req, res) => {
     const user = await getAuthenticatedUser(req);
 
     const orders = await Order.find({ recipientId: user._id })
-      .populate("items.productId", "title imageUrl")  
+      .populate("items._id", "title imageUrl")  
       .sort({ createdAt: -1 });
 
     res.status(200).json(orders);

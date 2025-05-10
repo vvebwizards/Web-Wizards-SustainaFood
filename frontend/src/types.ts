@@ -30,3 +30,12 @@ export interface User {
       timestamp: Date;
     };
   }
+
+export interface OrderFilters {
+    searchQuery?: string;
+    status?: string[];
+    dateRange?: {
+        from: string;
+        to: string;
+    };
+}

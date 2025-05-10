@@ -70,12 +70,11 @@ const OrderTable: React.FC<OrderTableProps> = ({
     try {
       setSchedulingDelivery(true);
       await scheduleDelivery(selectedOrderId, data);
-      onRefresh(); // Refresh the orders list
+      onRefresh();
       setDeliveryModalOpen(false);
       setSelectedOrderId(null);
     } catch (error) {
       console.error("Error scheduling delivery:", error);
-      // Here you might want to show an error message to the user
     } finally {
       setSchedulingDelivery(false);
     }
@@ -146,6 +145,13 @@ const OrderTable: React.FC<OrderTableProps> = ({
                 >
                   <div className="flex items-center">Customer</div>
                 </th>
+              
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Address
+                </th>
                 <th
                   scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
@@ -162,22 +168,6 @@ const OrderTable: React.FC<OrderTableProps> = ({
                     )}
                   </div>
                 </th>
-                {/* <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => handleSort("totalAmount")}
-                >
-                  <div className="flex items-center">
-                    Total
-                    {sortField === "totalAmount" && (
-                      <ChevronDown
-                        className={`ml-1 h-4 w-4 transform ${
-                          sortDirection === "desc" ? "rotate-180" : ""
-                        }`}
-                      />
-                    )}
-                  </div>
-                </th> */}
                 <th
                   scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
@@ -203,7 +193,7 @@ const OrderTable: React.FC<OrderTableProps> = ({
               {loading ? (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="px-6 py-4 text-center text-sm text-gray-500"
                   >
                     <RefreshCw className="h-5 w-5 animate-spin mx-auto" />
@@ -213,7 +203,7 @@ const OrderTable: React.FC<OrderTableProps> = ({
               ) : orders.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="px-6 py-4 text-center text-sm text-gray-500"
                   >
                     No orders found
@@ -244,14 +234,15 @@ const OrderTable: React.FC<OrderTableProps> = ({
                         {order.customer.email}
                       </div>
                     </td>
+               
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {order.shippingAddress.street}, {order.shippingAddress.city},{" "}
+                      {order.shippingAddress.state}, {order.shippingAddress.zipCode},{" "}
+                      {order.shippingAddress.country}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <OrderStatusBadge status={order.status} />
                     </td>
-                    {/* <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        ${order.totalAmount.toFixed(2)}
-                      </div>
-                    </td> */}
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {formatDate(order.createdAt)}
                     </td>

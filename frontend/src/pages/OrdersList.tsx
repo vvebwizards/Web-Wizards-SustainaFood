@@ -250,7 +250,13 @@ const OrdersList: React.FC = () => {
                   <p className="text-sm text-gray-500">
                     {order.customer.email}
                   </p>
-
+                  <p className="text-sm text-gray-500 mt-2 break-words">
+                    Address:{" "}
+                    {order.shippingAddress
+                      ? `${order.shippingAddress.street}, ${order.shippingAddress.city}, ${order.shippingAddress.state}, ${order.shippingAddress.zipCode}, ${order.shippingAddress.country}`
+                      : "Unknown address"}
+                  </p>
+               
                   <div className="mt-4 flex items-center justify-between">
                     <div className="text-sm font-medium text-gray-500">
                       Date:{" "}
@@ -262,7 +268,6 @@ const OrdersList: React.FC = () => {
                       ${order.totalAmount.toFixed(2)}
                     </div>
                   </div>
-
                   <div className="mt-4 text-sm text-gray-500">
                     {order.items.length}{" "}
                     {order.items.length === 1 ? "item" : "items"}

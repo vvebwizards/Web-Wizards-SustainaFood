@@ -6,6 +6,10 @@ export interface Order {
     email: string;
     phone?: string;
   };
+  location: {
+    latitude: number;
+    longitude: number;
+  };
   shippingAddress: {
     street: string;
     city: string;

@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 
 const FoodItemSchema = new mongoose.Schema({
   id: { type: String },
-
   title: { type: String , required : true},
   category: { type: String ,required : true},
   quantityInStock: { type: Number ,required : true},
