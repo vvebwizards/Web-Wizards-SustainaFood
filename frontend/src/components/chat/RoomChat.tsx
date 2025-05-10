@@ -11,8 +11,9 @@ const RoomChat: React.FC = () => {
   const { user } = useAuth();
   const currentUserId = getUserId(user);
   const userRole = user?.role || "recipient";
-  const theme = roleConfigs[userRole]?.theme.colors || roleConfigs.recipient.theme.colors;
-  
+  const theme =
+    roleConfigs[userRole]?.theme.colors || roleConfigs.recipient.theme.colors;
+
   // Shared state between components
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [showMobileRoomList, setShowMobileRoomList] = useState(true);
@@ -21,7 +22,7 @@ const RoomChat: React.FC = () => {
   return (
     <>
       {/* Rooms List Sidebar */}
-      <RoomList 
+      <RoomList
         selectedRoom={selectedRoom}
         setSelectedRoom={setSelectedRoom}
         showMobileRoomList={showMobileRoomList}
@@ -31,7 +32,7 @@ const RoomChat: React.FC = () => {
         currentUserId={currentUserId}
         theme={theme}
       />
-      
+
       {/* Chat Area */}
       <div
         className={`${
@@ -39,7 +40,7 @@ const RoomChat: React.FC = () => {
         } flex-1 flex flex-col bg-white transition-all duration-300`}
       >
         {selectedRoom ? (
-          <ChatArea 
+          <ChatArea
             selectedRoom={selectedRoom}
             setShowMobileRoomList={setShowMobileRoomList}
             currentUserId={currentUserId}

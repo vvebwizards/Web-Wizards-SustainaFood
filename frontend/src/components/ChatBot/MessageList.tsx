@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from 'react';
-import MessageItem from './MessageItem';
-import { Message } from '../../types/chat';
+import React, { useEffect, useRef } from "react";
+import MessageItem from "./MessageItem";
+import { Message } from "../../types/chat";
 
 interface MessageListProps {
   messages: Message[];
@@ -11,7 +11,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isTyping }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
@@ -24,7 +24,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isTyping }) => {
         {messages.map((message) => (
           <MessageItem key={message.id} message={message} />
         ))}
-        
+
         {isTyping && (
           <div className="flex items-center space-x-2 max-w-[80%] bg-green-100 text-green-800 p-3 rounded-lg rounded-bl-none animate-pulse">
             <div className="w-2 h-2 bg-green-600 rounded-full"></div>

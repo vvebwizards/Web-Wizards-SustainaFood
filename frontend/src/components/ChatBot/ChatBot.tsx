@@ -1,17 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import ChatHeader from './ChatHeader';
-import MessageList from './MessageList';
-import InputArea from './InputArea';
-import { Message } from '../../types/chat';
-import { generateBotResponse } from '../../utils/chatUtils';
-import { MessageCircle } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import ChatHeader from "./ChatHeader";
+import MessageList from "./MessageList";
+import InputArea from "./InputArea";
+import { Message } from "../../types/chat";
+import { generateBotResponse } from "../../utils/chatUtils";
+import { MessageCircle } from "lucide-react";
+import { roleConfigs } from "../../utils/roleConfigs";
+import { getUserId } from "../../utils/chatHelpers";
+import { useAuth } from "../../context/AuthContext";
+import { useLocation } from "react-router-dom";
 
 const ChatBot: React.FC = () => {
+  const { search } = useLocation();
+  const { user } = useAuth();
+  const currentUserId = getUserId(user);
+  const params = new URLSearchParams(search);
+  const initialPartner = params.get("user") || "";
+
+  const userRole = user?.role || "donor";
+  const theme =
+    roleConfigs[userRole]?.theme.colors || roleConfigs.donor.theme.colors;
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: '1',
-      text: 'Hello! I\'m here to help with any food rescue questions. How can I assist you today?',
-      sender: 'bot',
+      id: "1",
+      text: "Hello! I'm here to help with any food rescue questions. How can I assist you today?",
+      sender: "bot",
       timestamp: new Date(),
     },
   ]);
@@ -20,29 +33,29 @@ const ChatBot: React.FC = () => {
 
   const handleSendMessage = async (text: string) => {
     if (!text.trim()) return;
-    
+
     const newUserMessage: Message = {
       id: Date.now().toString(),
       text,
-      sender: 'user',
+      sender: "user",
       timestamp: new Date(),
     };
-    
+
     setMessages((prevMessages) => [...prevMessages, newUserMessage]);
     setIsTyping(true);
-    
+
     try {
       const botResponse = await generateBotResponse(text);
       const newBotMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: botResponse,
-        sender: 'bot',
+        sender: "bot",
         timestamp: new Date(),
       };
-      
+
       setMessages((prevMessages) => [...prevMessages, newBotMessage]);
     } catch (error) {
-      console.error('Error handling message:', error);
+      console.error("Error handling message:", error);
     } finally {
       setIsTyping(false);
     }
@@ -57,15 +70,17 @@ const ChatBot: React.FC = () => {
       {!isOpen && (
         <button
           onClick={toggleChat}
-          className="flex items-center justify-center p-4 bg-green-600 text-white rounded-full shadow-lg hover:bg-green-700 transition-all duration-300 transform hover:scale-105"
+          className={`flex items-center justify-center p-4 ${theme.button} text-white rounded-full shadow-lg hover:brightness-110 transition-all duration-300 transform hover:scale-105`}
           aria-label="Open chat"
         >
           <MessageCircle size={24} />
         </button>
       )}
-      
+
       {isOpen && (
-        <div className="flex flex-col w-full sm:w-96 h-[500px] bg-white rounded-lg shadow-xl overflow-hidden border border-gray-200 animate-fade-in">
+        <div
+          className={`flex flex-col w-full sm:w-96 h-[500px] bg-white rounded-lg shadow-xl overflow-hidden border ${theme.bg} animate-fade-in`}
+        >
           <ChatHeader onClose={toggleChat} />
           <MessageList messages={messages} isTyping={isTyping} />
           <InputArea onSendMessage={handleSendMessage} />

@@ -44,6 +44,7 @@ import { StatisticsProvider } from "./context/StatisticsContext";
 import { Overview } from "./pages/overview";
 import Leaderboard from "./pages/Leaderboard";
 import Redeem from "./pages/Redeem";
+import ChatBot from "./components/ChatBot/ChatBot";
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user } = useAuth();
@@ -59,6 +60,7 @@ function ProtectedRoute({ children }: { children: JSX.Element }) {
 function App() {
   return (
     <>
+      <ChatBot />
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
       <Routes>
         <Route path="/" element={<Home />} />
