@@ -1,6 +1,6 @@
 import express from "express";
 
-import { addFoodItem ,getAll,deleteOne,updateOne,getToDonationFood,donate,toBedonatedFoodByDonor,cancelDonation,getFoodBank,predictSupplyDemand, getPendingDonationsByUser} from "../controllers/foodItemController.js";
+import { addFoodItem ,getAll,deleteOne,updateOne,getToDonationFood,donate,toBedonatedFoodByDonor,cancelDonation,getFoodBank,predictSupplyDemand, getPendingDonationsByUser, getAllPendingDonations} from "../controllers/foodItemController.js";
 
 const router = express.Router();
 
@@ -14,6 +14,7 @@ router.get("/toBedonatedFoodByDonor",toBedonatedFoodByDonor);
 
 router.put("/cancelDonation/:id", cancelDonation);
 router.get('/getToDonationFood', getPendingDonationsByUser);
+router.get('/getAllDonationFood', getAllPendingDonations);
 router.get("/:id", async (req, res) => {
     try {
       const { id } = req.params;

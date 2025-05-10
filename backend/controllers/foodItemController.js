@@ -507,3 +507,13 @@ export async function getPendingDonationsByUser(req, res) {
     res.status(500).json({ error: "Internal server error while fetching pending donations" });
   }
 }
+
+export async function getAllPendingDonations(req, res) {
+  try {
+    const pendingDonations = await Donation.find({ status: "Pending Donation" });
+    res.status(200).json(pendingDonations);
+  } catch (error) {
+    console.error("Error fetching pending donations:", error);
+    res.status(500).json({ error: "Internal server error while fetching pending donations" });
+  }
+}
