@@ -1,4 +1,7 @@
-Flask
+flask
 numpy
-joblib
+pandas
+scikit-learn
 tensorflow
+keras-tuner
+joblib
