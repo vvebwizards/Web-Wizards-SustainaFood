@@ -35,6 +35,7 @@ import {
   Gamepad2,
   Gift,
   Crown,
+  Leaf,
 } from "lucide-react";
 import defaultProfileImage from "../assets/images/default_user_img.jpg";
 
@@ -175,6 +176,12 @@ const roleConfigs: Record<string, any> = {
       { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
       { to: "/dashboard/orders", icon: Package, label: "Orders" },
       { to: "/dashboard/deliveries", icon: Truck, label: "Deliveries" },
+      {
+        to: "/dashboard/carbon",
+        icon: Leaf,
+        label: "Carbon FootPrint Prediction",
+      },
+      { to: "/dashboard/locations", icon: MapPin, label: "Delivery Locations" },
       { to: "/dashboard/schedule", icon: Calendar, label: "My Schedule" },
       { to: "/dashboard/active", icon: Clock, label: "Active Deliveries" },
       { to: "/dashboard/chat", icon: MessageSquare, label: "Communications" },

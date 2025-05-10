@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import Home from "./pages/HomePage";
 import SignUp from "./pages/signup";
@@ -45,6 +45,7 @@ import { Overview } from "./pages/overview";
 import Leaderboard from "./pages/Leaderboard";
 import Redeem from "./pages/Redeem";
 import ChatBot from "./components/ChatBot/ChatBot";
+import CarbonFootprintCalculator from "./components/Carbon/CarbonFootprintCalculator";
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user } = useAuth();
@@ -58,9 +59,15 @@ function ProtectedRoute({ children }: { children: JSX.Element }) {
 }
 
 function App() {
+  const location = useLocation();
+
+  // Define the path(s) where ChatBot should be hidden
+  const hideChatbotOnPaths = ["/dashboard/chat"];
+
+  const shouldShowChatbot = !hideChatbotOnPaths.includes(location.pathname);
   return (
     <>
-      <ChatBot />
+      {shouldShowChatbot && <ChatBot />}
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
       <Routes>
         <Route path="/" element={<Home />} />
@@ -156,6 +163,7 @@ function App() {
           <Route path="orders" element={<OrdersList />} />
           <Route path="orders/:id" element={<OrderDetails />} />
           <Route path="deliveries" element={<Deliveries />} />
+          <Route path="carbon" element={<CarbonFootprintCalculator />} />
           <Route path="/dashboard/tictactoe" element={<TicTacToe />} />
           <Route
             path="/dashboard/StatsDashboard"
