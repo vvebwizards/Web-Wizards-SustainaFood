@@ -137,165 +137,181 @@ const Profile = () => {
       case 'admin':
         return (
           <>
-            <div className={`${theme.colors.bg} p-6 rounded-xl shadow-md border border-${theme.primary}-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-${theme.primary}-300`}>
-              <div className="flex items-start">
-                <div className={`flex items-center justify-center w-12 h-12 rounded-lg bg-${theme.primary}-100 ${theme.colors.text}`}>
-                  <Users />
-                </div>
-                <div className="ml-4">
-                  <h3 className="text-base font-medium text-gray-700">Total Users</h3>
-                  <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{roleConfigs.admin.stats.totalUsers}</p>
-                </div>
-              </div>
+                    <div className="bg-white p-6 rounded-xl shadow-md border border-${theme.primary}-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-${theme.primary}-300">
+          <div className="flex items-start">
+            <div className={`flex items-center justify-center w-12 h-12 rounded-lg bg-${theme.primary}-100 ${theme.colors.text}`}>
+              <Users />
             </div>
-            
-            <div className={`${theme.colors.bg} p-6 rounded-xl shadow-md border border-${theme.primary}-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-${theme.primary}-300`}>
-              <div className="flex items-start">
-                <div className={`flex items-center justify-center w-12 h-12 rounded-lg bg-${theme.primary}-100 ${theme.colors.text}`}>
-                  <HandHeart />
-                </div>
-                <div className="ml-4">
-                  <h3 className="text-base font-medium text-gray-700">Active Volunteers</h3>
-                  <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{roleConfigs.admin.stats.activeVolunteers}</p>
-                </div>
-              </div>
+            <div className="ml-4">
+              <h3 className="text-base font-medium text-gray-700">Total Users</h3>
+              <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{roleConfigs.admin.stats.totalUsers}</p>
             </div>
-            
-            <div className={`${theme.colors.bg} p-6 rounded-xl shadow-md border border-${theme.primary}-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-${theme.primary}-300`}>
-              <div className="flex items-start">
-                <div className={`flex items-center justify-center w-12 h-12 rounded-lg bg-${theme.primary}-100 ${theme.colors.text}`}>
-                  <Package />
-                </div>
-                <div className="ml-4">
-                  <h3 className="text-base font-medium text-gray-700">Monthly Donations</h3>
-                  <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{roleConfigs.admin.stats.monthlyDonations} kg</p>
-                </div>
-              </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl shadow-md border border-${theme.primary}-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-${theme.primary}-300">
+          <div className="flex items-start">
+            <div className={`flex items-center justify-center w-12 h-12 rounded-lg bg-${theme.primary}-100 ${theme.colors.text}`}>
+              <HandHeart />
             </div>
+            <div className="ml-4">
+              <h3 className="text-base font-medium text-gray-700">Active Volunteers</h3>
+              <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{roleConfigs.admin.stats.activeVolunteers}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl shadow-md border border-${theme.primary}-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-${theme.primary}-300">
+          <div className="flex items-start">
+            <div className={`flex items-center justify-center w-12 h-12 rounded-lg bg-${theme.primary}-100 ${theme.colors.text}`}>
+              <Package />
+            </div>
+            <div className="ml-4">
+              <h3 className="text-base font-medium text-gray-700">Monthly Donations</h3>
+              <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{roleConfigs.admin.stats.monthlyDonations} kg</p>
+            </div>
+          </div>
+        </div>
+
           </>
         );
 
       case 'donor':
         return (
           <>
-            <div className={`${theme.colors.bg} p-6 rounded-xl shadow-md border border-${theme.primary}-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-${theme.primary}-300`}>
-              <div className="flex items-start">
-                <div className={`flex items-center justify-center w-12 h-12 rounded-lg bg-${theme.primary}-100 ${theme.colors.text}`}>
-                  <Heart />
-                </div>
-                <div className="ml-4">
-                  <h3 className="text-base font-medium text-gray-700">Total Donations</h3>
-                  <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{totalDonations} kg</p>
-                </div>
+          <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-gray-300">
+            <div className="flex items-start">
+              <div className={`flex items-center justify-center w-12 h-12 rounded-lg bg-${theme.primary}-100 ${theme.colors.text}`}>
+                <Heart />
+              </div>
+              <div className="ml-4">
+                <h3 className="text-base font-medium text-gray-700">Total Donations</h3>
+                <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{totalDonations} kg</p>
               </div>
             </div>
-            
-            <div className={`${theme.colors.bg} p-6 rounded-xl shadow-md border border-${theme.primary}-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-${theme.primary}-300`}>
-              <div className="flex items-start">
-                <div className={`flex items-center justify-center w-12 h-12 rounded-lg bg-${theme.primary}-100 ${theme.colors.text}`}>
-                  <Hourglass />
-                </div>
-                <div className="ml-4">
-                  <h3 className="text-base font-medium text-gray-700">Average Shelf-Life</h3>
-                  <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{averageShelfLife} days</p>
-                </div>
+          </div>
+        
+          <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-gray-300">
+            <div className="flex items-start">
+              <div className={`flex items-center justify-center w-12 h-12 rounded-lg bg-${theme.primary}-100 ${theme.colors.text}`}>
+                <Hourglass />
+              </div>
+              <div className="ml-4">
+                <h3 className="text-base font-medium text-gray-700">Average Shelf-Life</h3>
+                <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{averageShelfLife} days</p>
               </div>
             </div>
-            
-            <div className={`${theme.colors.bg} p-6 rounded-xl shadow-md border border-${theme.primary}-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-${theme.primary}-300`}>
-              <div className="flex items-start">
-                <div className={`flex items-center justify-center w-12 h-12 rounded-lg bg-${theme.primary}-100 ${theme.colors.text}`}>
-                  <Timer />
-                </div>
-                <div className="ml-4">
-                  <h3 className="text-base font-medium text-gray-700">Expired Donations</h3>
-                  <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{expiredQuantity} kg</p>
-                </div>
+          </div>
+        
+          <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-gray-300">
+            <div className="flex items-start">
+              <div className={`flex items-center justify-center w-12 h-12 rounded-lg bg-${theme.primary}-100 ${theme.colors.text}`}>
+                <Timer />
+              </div>
+              <div className="ml-4">
+                <h3 className="text-base font-medium text-gray-700">Expired Donations</h3>
+                <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{expiredQuantity} kg</p>
               </div>
             </div>
-          </>
+          </div>
+        </>
+        
         );
 
       case 'recipient':
         return (
           <>
-            <div className={`${theme.colors.bg} p-6 rounded-xl shadow-md border border-${theme.primary}-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-${theme.primary}-300`}>
-              <div className="flex items-start">
-                <div className={`flex items-center justify-center w-12 h-12 rounded-lg bg-${theme.primary}-100 ${theme.colors.text}`}>
-                  <Package />
-                </div>
-                <div className="ml-4">
-                  <h3 className="text-base font-medium text-gray-700">Received Donations</h3>
-                  <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{roleConfigs.recipient.stats.receivedDonations} kg</p>
-                </div>
+          <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-gray-300">
+            <div className="flex items-start">
+              <div className={`flex items-center justify-center w-12 h-12 rounded-lg bg-${theme.primary}-100 ${theme.colors.text}`}>
+                <Package />
+              </div>
+              <div className="ml-4">
+                <h3 className="text-base font-medium text-gray-700">Received Donations</h3>
+                <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>
+                  {roleConfigs.recipient.stats.receivedDonations} kg
+                </p>
               </div>
             </div>
-            
-            <div className={`${theme.colors.bg} p-6 rounded-xl shadow-md border border-${theme.primary}-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-${theme.primary}-300`}>
-              <div className="flex items-start">
-                <div className={`flex items-center justify-center w-12 h-12 rounded-lg bg-${theme.primary}-100 ${theme.colors.text}`}>
-                  <Truck />
-                </div>
-                <div className="ml-4">
-                  <h3 className="text-base font-medium text-gray-700">Pending Deliveries</h3>
-                  <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{roleConfigs.recipient.stats.pendingDeliveries}</p>
-                </div>
+          </div>
+        
+          <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-gray-300">
+            <div className="flex items-start">
+              <div className={`flex items-center justify-center w-12 h-12 rounded-lg bg-${theme.primary}-100 ${theme.colors.text}`}>
+                <Truck />
+              </div>
+              <div className="ml-4">
+                <h3 className="text-base font-medium text-gray-700">Pending Deliveries</h3>
+                <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>
+                  {roleConfigs.recipient.stats.pendingDeliveries}
+                </p>
               </div>
             </div>
-            
-            <div className={`${theme.colors.bg} p-6 rounded-xl shadow-md border border-${theme.primary}-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-${theme.primary}-300`}>
-              <div className="flex items-start">
-                <div className={`flex items-center justify-center w-12 h-12 rounded-lg bg-${theme.primary}-100 ${theme.colors.text}`}>
-                  <CheckCircle />
-                </div>
-                <div className="ml-4">
-                  <h3 className="text-base font-medium text-gray-700">Completed Deliveries</h3>
-                  <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{roleConfigs.recipient.stats.completedDeliveries}</p>
-                </div>
+          </div>
+        
+          <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-gray-300">
+            <div className="flex items-start">
+              <div className={`flex items-center justify-center w-12 h-12 rounded-lg bg-${theme.primary}-100 ${theme.colors.text}`}>
+                <CheckCircle />
+              </div>
+              <div className="ml-4">
+                <h3 className="text-base font-medium text-gray-700">Completed Deliveries</h3>
+                <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>
+                  {roleConfigs.recipient.stats.completedDeliveries}
+                </p>
               </div>
             </div>
-          </>
+          </div>
+        </>
+        
         );
 
       case 'volunteer':
         return (
           <>
-            <div className={`${theme.colors.bg} p-6 rounded-xl shadow-md border border-${theme.primary}-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-${theme.primary}-300`}>
-              <div className="flex items-start">
-                <div className={`flex items-center justify-center w-12 h-12 rounded-lg bg-${theme.primary}-100 ${theme.colors.text}`}>
-                  <Truck />
-                </div>
-                <div className="ml-4">
-                  <h3 className="text-base font-medium text-gray-700">Deliveries Made</h3>
-                  <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{roleConfigs.volunteer.stats.deliveriesMade}</p>
-                </div>
+          <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-gray-300">
+            <div className="flex items-start">
+              <div className={`flex items-center justify-center w-12 h-12 rounded-lg bg-${theme.primary}-100 ${theme.colors.text}`}>
+                <Truck />
+              </div>
+              <div className="ml-4">
+                <h3 className="text-base font-medium text-gray-700">Deliveries Made</h3>
+                <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>
+                  {roleConfigs.volunteer.stats.deliveriesMade}
+                </p>
               </div>
             </div>
-            
-            <div className={`${theme.colors.bg} p-6 rounded-xl shadow-md border border-${theme.primary}-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-${theme.primary}-300`}>
-              <div className="flex items-start">
-                <div className={`flex items-center justify-center w-12 h-12 rounded-lg bg-${theme.primary}-100 ${theme.colors.text}`}>
-                  <Clock />
-                </div>
-                <div className="ml-4">
-                  <h3 className="text-base font-medium text-gray-700">Hours Volunteered</h3>
-                  <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{roleConfigs.volunteer.stats.hoursVolunteered}</p>
-                </div>
+          </div>
+        
+          <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-gray-300">
+            <div className="flex items-start">
+              <div className={`flex items-center justify-center w-12 h-12 rounded-lg bg-${theme.primary}-100 ${theme.colors.text}`}>
+                <Clock />
+              </div>
+              <div className="ml-4">
+                <h3 className="text-base font-medium text-gray-700">Hours Volunteered</h3>
+                <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>
+                  {roleConfigs.volunteer.stats.hoursVolunteered}
+                </p>
               </div>
             </div>
-            
-            <div className={`${theme.colors.bg} p-6 rounded-xl shadow-md border border-${theme.primary}-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-${theme.primary}-300`}>
-              <div className="flex items-start">
-                <div className={`flex items-center justify-center w-12 h-12 rounded-lg bg-${theme.primary}-100 ${theme.colors.text}`}>
-                  <ShieldCheck />
-                </div>
-                <div className="ml-4">
-                  <h3 className="text-base font-medium text-gray-700">Active Assignments</h3>
-                  <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{roleConfigs.volunteer.stats.activeAssignments}</p>
-                </div>
+          </div>
+        
+          <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-gray-300">
+            <div className="flex items-start">
+              <div className={`flex items-center justify-center w-12 h-12 rounded-lg bg-${theme.primary}-100 ${theme.colors.text}`}>
+                <ShieldCheck />
+              </div>
+              <div className="ml-4">
+                <h3 className="text-base font-medium text-gray-700">Active Assignments</h3>
+                <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>
+                  {roleConfigs.volunteer.stats.activeAssignments}
+                </p>
               </div>
             </div>
-          </>
+          </div>
+        </>
+        
         );
 
       default:
@@ -338,108 +354,110 @@ const Profile = () => {
 
         return (
           <>
-            <div className={`${theme.colors.bg} p-6 rounded-xl shadow-md border border-${theme.primary}-200 transition-all duration-300 hover:shadow-lg`}>
-              <div className="flex items-center gap-2 mb-4">
-                <LineChart className={theme.colors.text} size={24} />
-                <h3 className={`text-xl font-semibold ${theme.colors.text}`}>Monthly Donations Growth</h3>
-              </div>
-              <div className="h-80">
-                <Line
-                  data={monthlyGrowthData}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                      y: {
-                        beginAtZero: true,
-                        title: { display: true, text: 'Donations (kg)' }
-                      }
-                    }
-                  }}
-                />
-              </div>
+           <div className="bg-white p-6 rounded-xl shadow-md border border-${theme.primary}-200 transition-all duration-300 hover:shadow-lg">
+            <div className="flex items-center gap-2 mb-4">
+              <LineChart className={theme.colors.text} size={24} />
+              <h3 className={`text-xl font-semibold ${theme.colors.text}`}>Monthly Donations Growth</h3>
             </div>
+            <div className="h-80">
+              <Line
+                data={monthlyGrowthData}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      title: { display: true, text: 'Donations (kg)' }
+                    }
+                  }
+                }}
+              />
+            </div>
+          </div>
 
-            <div className={`${theme.colors.bg} p-6 rounded-xl shadow-md border border-${theme.primary}-200 transition-all duration-300 hover:shadow-lg`}>
-              <div className="flex items-center gap-2 mb-4">
-                <ChartPie className={theme.colors.text} size={24} />
-                <h3 className={`text-xl font-semibold ${theme.colors.text}`}>User Distribution</h3>
-              </div>
-              <div className="h-80">
-                <Pie
-                  data={userDistributionData}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: { position: 'bottom' }
-                    }
-                  }}
-                />
-              </div>
+          <div className="bg-white p-6 rounded-xl shadow-md border border-${theme.primary}-200 transition-all duration-300 hover:shadow-lg">
+            <div className="flex items-center gap-2 mb-4">
+              <ChartPie className={theme.colors.text} size={24} />
+              <h3 className={`text-xl font-semibold ${theme.colors.text}`}>User Distribution</h3>
             </div>
+            <div className="h-80">
+              <Pie
+                data={userDistributionData}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: { position: 'bottom' }
+                  }
+                }}
+              />
+            </div>
+          </div>
+
           </>
         );
 
       case 'donor':
         return (
           <>
-            <div className={`${theme.colors.bg} p-6 rounded-xl shadow-md border border-${theme.primary}-200 transition-all duration-300 hover:shadow-lg`}>
-              <div className="flex items-center gap-2 mb-4">
-                <BarChart3 className={theme.colors.text} size={24} />
-                <h3 className={`text-xl font-semibold ${theme.colors.text}`}>Donations by Food Item</h3>
-              </div>
-              <div className="h-80">
-                <Bar
-                  data={{
-                    labels: donationCountsByFoodItem.map(item => item.foodItem),
-                    datasets: [{
-                      label: 'Quantity',
-                      data: donationCountsByFoodItem.map(item => item.count),
-                      backgroundColor: currentColors.background,
-                      borderColor: currentColors.border,
-                      borderWidth: 1,
-                    }]
-                  }}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                      y: {
-                        beginAtZero: true,
-                        title: { display: true, text: 'Quantity (kg)' }
-                      }
-                    }
-                  }}
-                />
-              </div>
+          <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 transition-all duration-300 hover:shadow-lg">
+            <div className="flex items-center gap-2 mb-4">
+              <BarChart3 className={theme.colors.text} size={24} />
+              <h3 className={`text-xl font-semibold ${theme.colors.text}`}>Donations by Food Item</h3>
             </div>
-
-            <div className={`${theme.colors.bg} p-6 rounded-xl shadow-md border border-${theme.primary}-200 transition-all duration-300 hover:shadow-lg`}>
-              <div className="flex items-center gap-2 mb-4">
-                <ChartPie className={theme.colors.text} size={24} />
-                <h3 className={`text-xl font-semibold ${theme.colors.text}`}>Donation Status</h3>
-              </div>
-              <div className="h-80">
-                <Pie
-                  data={{
-                    labels: ['Active', 'Expired'],
-                    datasets: [{
-                      data: [totalDonations - expiredQuantity, expiredQuantity],
-                      backgroundColor: currentPieColors,
-                    }]
-                  }}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: { position: 'bottom' }
+            <div className="h-80">
+              <Bar
+                data={{
+                  labels: donationCountsByFoodItem.map(item => item.foodItem),
+                  datasets: [{
+                    label: 'Quantity',
+                    data: donationCountsByFoodItem.map(item => item.count),
+                    backgroundColor: currentColors.background,
+                    borderColor: currentColors.border,
+                    borderWidth: 1,
+                  }]
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      title: { display: true, text: 'Quantity (kg)' }
                     }
-                  }}
-                />
-              </div>
+                  }
+                }}
+              />
             </div>
-          </>
+          </div>
+        
+          <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 transition-all duration-300 hover:shadow-lg">
+            <div className="flex items-center gap-2 mb-4">
+              <ChartPie className={theme.colors.text} size={24} />
+              <h3 className={`text-xl font-semibold ${theme.colors.text}`}>Donation Status</h3>
+            </div>
+            <div className="h-80">
+              <Pie
+                data={{
+                  labels: ['Active', 'Expired'],
+                  datasets: [{
+                    data: [totalDonations - expiredQuantity, expiredQuantity],
+                    backgroundColor: currentPieColors,
+                  }]
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: { position: 'bottom' }
+                  }
+                }}
+              />
+            </div>
+          </div>
+        </>
+        
         );
 
       case 'recipient':
@@ -469,47 +487,48 @@ const Profile = () => {
 
         return (
           <>
-            <div className={`${theme.colors.bg} p-6 rounded-xl shadow-md border border-${theme.primary}-200 transition-all duration-300 hover:shadow-lg`}>
-              <div className="flex items-center gap-2 mb-4">
-                <LineChart className={theme.colors.text} size={24} />
-                <h3 className={`text-xl font-semibold ${theme.colors.text}`}>Delivery History</h3>
-              </div>
-              <div className="h-80">
-                <Line
-                  data={deliveryHistoryData}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                      y: {
-                        beginAtZero: true,
-                        title: { display: true, text: 'Deliveries' }
-                      }
-                    }
-                  }}
-                />
-              </div>
+          <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 transition-all duration-300 hover:shadow-lg">
+            <div className="flex items-center gap-2 mb-4">
+              <LineChart className={theme.colors.text} size={24} />
+              <h3 className={`text-xl font-semibold ${theme.colors.text}`}>Delivery History</h3>
             </div>
-
-            <div className={`${theme.colors.bg} p-6 rounded-xl shadow-md border border-${theme.primary}-200 transition-all duration-300 hover:shadow-lg`}>
-              <div className="flex items-center gap-2 mb-4">
-                <ChartPie className={theme.colors.text} size={24} />
-                <h3 className={`text-xl font-semibold ${theme.colors.text}`}>Food Categories</h3>
-              </div>
-              <div className="h-80">
-                <Pie
-                  data={foodCategoriesData}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: { position: 'bottom' }
+            <div className="h-80">
+              <Line
+                data={deliveryHistoryData}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      title: { display: true, text: 'Deliveries' }
                     }
-                  }}
-                />
-              </div>
+                  }
+                }}
+              />
             </div>
-          </>
+          </div>
+        
+          <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 transition-all duration-300 hover:shadow-lg">
+            <div className="flex items-center gap-2 mb-4">
+              <ChartPie className={theme.colors.text} size={24} />
+              <h3 className={`text-xl font-semibold ${theme.colors.text}`}>Food Categories</h3>
+            </div>
+            <div className="h-80">
+              <Pie
+                data={foodCategoriesData}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: { position: 'bottom' }
+                  }
+                }}
+              />
+            </div>
+          </div>
+        </>
+        
         );
 
       case 'volunteer':
@@ -538,47 +557,48 @@ const Profile = () => {
 
         return (
           <>
-            <div className={`${theme.colors.bg} p-6 rounded-xl shadow-md border border-${theme.primary}-200 transition-all duration-300 hover:shadow-lg`}>
-              <div className="flex items-center gap-2 mb-4">
-                <LineChart className={theme.colors.text} size={24} />
-                <h3 className={`text-xl font-semibold ${theme.colors.text}`}>Weekly Deliveries</h3>
-              </div>
-              <div className="h-80">
-                <Line
-                  data={weeklyDeliveriesData}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                      y: {
-                        beginAtZero: true,
-                        title: { display: true, text: 'Deliveries' }
-                      }
-                    }
-                  }}
-                />
-              </div>
-            </div>
+  <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-gray-300">
+    <div className="flex items-center gap-2 mb-4">
+      <LineChart className={theme.colors.text} size={24} />
+      <h3 className={`text-xl font-semibold ${theme.colors.text}`}>Weekly Deliveries</h3>
+    </div>
+    <div className="h-80">
+      <Line
+        data={weeklyDeliveriesData}
+        options={{
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: { display: true, text: 'Deliveries' }
+            }
+          }
+        }}
+      />
+    </div>
+  </div>
 
-            <div className={`${theme.colors.bg} p-6 rounded-xl shadow-md border border-${theme.primary}-200 transition-all duration-300 hover:shadow-lg`}>
-              <div className="flex items-center gap-2 mb-4">
-                <ChartPie className={theme.colors.text} size={24} />
-                <h3 className={`text-xl font-semibold ${theme.colors.text}`}>Delivery Types</h3>
-              </div>
-              <div className="h-80">
-                <Pie
-                  data={deliveryTypesData}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: { position: 'bottom' }
-                    }
-                  }}
-                />
-              </div>
-            </div>
-          </>
+  <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-gray-300">
+    <div className="flex items-center gap-2 mb-4">
+      <ChartPie className={theme.colors.text} size={24} />
+      <h3 className={`text-xl font-semibold ${theme.colors.text}`}>Delivery Types</h3>
+    </div>
+    <div className="h-80">
+      <Pie
+        data={deliveryTypesData}
+        options={{
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }}
+      />
+    </div>
+  </div>
+</>
+
         );
 
       default:
