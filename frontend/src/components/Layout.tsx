@@ -174,7 +174,7 @@ const roleConfigs: Record<string, any> = {
       { to: "/dashboard/profile", icon: User, label: "Profile" },
       { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
       { to: "/dashboard/orders", icon: Package, label: "Orders" },
-      { to: "/dashboard/deliveries", icon: Truck, label: "Deliveries" },
+      { to: "/dashboard/deliveries", icon: Truck, label: "Deliveries suggested routes " },
       { to: "/dashboard/schedule", icon: Calendar, label: "My Schedule" },
       { to: "/dashboard/active", icon: Clock, label: "Active Deliveries" },
       { to: "/dashboard/chat", icon: MessageSquare, label: "Communications" },
