@@ -34,10 +34,7 @@ export const FoodCard: React.FC<FoodCardProps> = ({ item }) => {
               {isExpiringSoon && " (Expiring Soon!)"}
             </span>
           </div>
-          <div className="flex items-center text-gray-600">
-            <User className="w-4 h-4 mr-2" />
-            <span>Donor: {item.donor}</span>
-          </div>
+       
           <div className="flex items-center text-gray-600">
             <Tag className="w-4 h-4 mr-2" />
             <span>Category: {item.category}</span>

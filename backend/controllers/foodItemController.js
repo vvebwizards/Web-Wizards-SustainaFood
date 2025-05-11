@@ -139,32 +139,17 @@ export async function getAll (req,res){
       
 }
 
-export async function getFoodBank(req, res) {
+export async function getFoodBank (req,res){
   try {
-    const user = await getAuthenticatedUser(req); 
-    const foodItems = await FoodItem.find().populate("donorId", "username");
-
-    const formattedFoodItems = foodItems.map(item => ({
-      id: item._id,
-      title: item.title,
-      category: item.category,
-      quantityInStock: item.quantityInStock,
-      unit: item.unit,
-      expirationDate: item.expirationDate,
-      status: item.status,
-      donor: item.donorId?.username || "Unknown",
-      imageUrl: item.imageUrl,
-      type: item.type,
-      quantityToDonation: item.quantityToDonation,
-      freshness: item.freshness
-    }));
-
-    res.status(200).json(formattedFoodItems);
-  } catch (error) {
-    console.error('Error fetching food items:', error);
-    res.status(500).json({ error: 'Error fetching food items' });
-  }
-}
+      const user = await getAuthenticatedUser(req); 
+      const donorId = user._id;
+      const foodItems = await Donation.find();
+      
+      res.status(200).json(foodItems);
+    } catch (error) {
+      console.error('Error fetching food items:', error);
+      res.status(500).json({ error: 'Error fetching food items' });
+    }}
 
 export async function deleteOne (req,res) {
   try {
