@@ -86,7 +86,12 @@ const Profile = () => {
     donationCountsByFoodItem,
     loading,
     error,
-    refetchStatistics
+    refetchStatistics,
+    totalUsers,
+    activeVolunteers,
+    monthlyDonations,
+    monthlyGrowth,
+    userTypes
   } = useStatistics();
 
   const defaultImage = 'https://via.placeholder.com/150';
@@ -121,7 +126,7 @@ const Profile = () => {
                 </div>
                 <div className="ml-4">
                   <h3 className="text-base font-medium text-gray-700">Total Users</h3>
-                  <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{totalDonations}</p>
+                  <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{totalUsers}</p>
                 </div>
               </div>
             </div>
@@ -133,7 +138,7 @@ const Profile = () => {
                 </div>
                 <div className="ml-4">
                   <h3 className="text-base font-medium text-gray-700">Active Volunteers</h3>
-                  <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{expiredQuantity}</p>
+                  <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{activeVolunteers}</p>
                 </div>
               </div>
             </div>
@@ -145,7 +150,7 @@ const Profile = () => {
                 </div>
                 <div className="ml-4">
                   <h3 className="text-base font-medium text-gray-700">Monthly Donations</h3>
-                  <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{averageShelfLife} kg</p>
+                  <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{monthlyDonations} kg</p>
                 </div>
               </div>
             </div>
@@ -289,10 +294,10 @@ const Profile = () => {
     switch (user.role) {
       case 'admin':
         const monthlyGrowthData = {
-          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
           datasets: [{
             label: 'Monthly Donations Growth',
-            data: [totalDonations, totalDonations * 1.1, totalDonations * 1.2, totalDonations * 1.3, totalDonations * 1.4],
+            data: monthlyGrowth || [],
             borderColor: currentColors.border,
             backgroundColor: currentColors.background,
             tension: 0.4,
@@ -302,7 +307,7 @@ const Profile = () => {
         const userDistributionData = {
           labels: ['Donors', 'Recipients', 'Volunteers'],
           datasets: [{
-            data: [totalDonations, expiredQuantity, averageShelfLife],
+            data: [userTypes?.donors || 0, userTypes?.recipients || 0, userTypes?.volunteers || 0],
             backgroundColor: [
               'rgba(239, 68, 68, 0.6)',
               'rgba(59, 130, 246, 0.6)',

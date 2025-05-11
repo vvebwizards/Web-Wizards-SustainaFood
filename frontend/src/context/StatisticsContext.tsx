@@ -41,7 +41,30 @@ export const StatisticsProvider: React.FC<StatisticsProviderProps> = ({ children
   const [averageShelfLife, setAverageShelfLife] = useState<number>(0);
   const [donationCountsByFoodItem, setDonationCountsByFoodItem] = useState<DonationByFoodItem[]>([]);
   
-  // We can add more state variables for other roles if needed
+  // Recipient statistics
+  const [receivedDonations, setReceivedDonations] = useState<number>(0);
+  const [pendingDeliveries, setPendingDeliveries] = useState<number>(0);
+  const [completedDeliveries, setCompletedDeliveries] = useState<number>(0);
+  const [deliveryHistory, setDeliveryHistory] = useState<number[]>([]);
+  const [foodCategories, setFoodCategories] = useState<Record<string, number>>({});
+  
+  // Volunteer statistics
+  const [deliveriesMade, setDeliveriesMade] = useState<number>(0);
+  const [hoursVolunteered, setHoursVolunteered] = useState<number>(0);
+  const [activeAssignments, setActiveAssignments] = useState<number>(0);
+  const [weeklyDeliveries, setWeeklyDeliveries] = useState<number[]>([]);
+  const [deliveryTypes, setDeliveryTypes] = useState<Record<string, number>>({});
+  
+  // Admin statistics
+  const [totalUsers, setTotalUsers] = useState<number>(0);
+  const [activeVolunteers, setActiveVolunteers] = useState<number>(0);
+  const [monthlyDonations, setMonthlyDonations] = useState<number>(0);
+  const [monthlyGrowth, setMonthlyGrowth] = useState<number[]>([]);
+  const [userTypes, setUserTypes] = useState<{donors: number; recipients: number; volunteers: number}>({
+    donors: 0,
+    recipients: 0,
+    volunteers: 0
+  });
 
   const fetchStatistics = async () => {
     if (!user) {
@@ -77,7 +100,7 @@ export const StatisticsProvider: React.FC<StatisticsProviderProps> = ({ children
 
       // Add user ID to the request if available
       const userId = user.id || user._id;
-      if (userId) {
+      if (user.role !== 'admin' && userId) {
         endpoint += `?userId=${userId}`;
       }
 
@@ -95,16 +118,13 @@ export const StatisticsProvider: React.FC<StatisticsProviderProps> = ({ children
           updateDonorStatistics(data);
           break;
         case 'recipient':
-          // We'd update recipient statistics here if needed in the UI
-          updateDonorStatistics(data); // Fallback to donor stats for now
+          updateRecipientStatistics(data);
           break;
         case 'volunteer':
-          // We'd update volunteer statistics here if needed in the UI
-          updateDonorStatistics(data); // Fallback to donor stats for now
+          updateVolunteerStatistics(data);
           break;
         case 'admin':
-          // We'd update admin statistics here if needed in the UI
-          updateDonorStatistics(data); // Fallback to donor stats for now
+          updateAdminStatistics(data);
           break;
       }
     } catch (err) {
@@ -122,7 +142,29 @@ export const StatisticsProvider: React.FC<StatisticsProviderProps> = ({ children
     setDonationCountsByFoodItem(data.donationCountsByFoodItem || []);
   };
 
-  // We can add more update functions for other roles if needed
+  const updateRecipientStatistics = (data: RecipientStatistics) => {
+    setReceivedDonations(data.receivedDonations || 0);
+    setPendingDeliveries(data.pendingDeliveries || 0);
+    setCompletedDeliveries(data.completedDeliveries || 0);
+    setDeliveryHistory(data.deliveryHistory || []);
+    setFoodCategories(data.foodCategories || {});
+  };
+
+  const updateVolunteerStatistics = (data: VolunteerStatistics) => {
+    setDeliveriesMade(data.deliveriesMade || 0);
+    setHoursVolunteered(data.hoursVolunteered || 0);
+    setActiveAssignments(data.activeAssignments || 0);
+    setWeeklyDeliveries(data.weeklyDeliveries || []);
+    setDeliveryTypes(data.deliveryTypes || {});
+  };
+
+  const updateAdminStatistics = (data: AdminStatistics) => {
+    setTotalUsers(data.totalUsers || 0);
+    setActiveVolunteers(data.activeVolunteers || 0);
+    setMonthlyDonations(data.monthlyDonations || 0);
+    setMonthlyGrowth(data.monthlyGrowth || []);
+    setUserTypes(data.userTypes || { donors: 0, recipients: 0, volunteers: 0 });
+  };
 
   useEffect(() => {
     fetchStatistics();
@@ -135,13 +177,37 @@ export const StatisticsProvider: React.FC<StatisticsProviderProps> = ({ children
 
   // Combine all statistics into one context value
   const contextValue: StatisticsContextType = {
+    // Common fields
+    loading,
+    error,
+    refetchStatistics,
+    
+    // Donor statistics
     totalDonations,
     expiredQuantity,
     averageShelfLife,
     donationCountsByFoodItem,
-    loading,
-    error,
-    refetchStatistics
+    
+    // Recipient statistics
+    receivedDonations,
+    pendingDeliveries,
+    completedDeliveries,
+    deliveryHistory,
+    foodCategories,
+    
+    // Volunteer statistics
+    deliveriesMade,
+    hoursVolunteered,
+    activeAssignments,
+    weeklyDeliveries,
+    deliveryTypes,
+    
+    // Admin statistics
+    totalUsers,
+    activeVolunteers,
+    monthlyDonations,
+    monthlyGrowth,
+    userTypes
   };
 
   return (

@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import User from '../models/User.js';
 import Donation from '../models/Donation.js';
 import { Order } from '../models/order.js';
+import moment from 'moment'; // npm install moment
 
 export const getStatisticsByRole = async (req, res) => {
   const role = req.params.role;  
@@ -12,25 +13,47 @@ export const getStatisticsByRole = async (req, res) => {
   try {
     switch (role) {
       // ADMIN STATS
-      case 'admin': {
-        console.log('🟢 Entering admin branch');
-        // For admin, we ignore userId and compute system-wide stats
-        const totalUsers = await User.countDocuments();
-        const activeVolunteers = await User.countDocuments({ role: 'volunteer', active: true });
-  
-        const totalDonationWeight = await Donation.aggregate([
-          { $match: { quantityToDonation: { $exists: true, $ne: null } } },
-          { $group: { _id: null, total: { $sum: '$quantityToDonation' } } }
-        ]);
-  
-        console.log(`Admin stats -> totalUsers: ${totalUsers}, activeVolunteers: ${activeVolunteers}, totalDonationWeight: ${totalDonationWeight[0]?.total || 0}`);
-  
-        return res.json({
-          totalDonations: totalUsers,
-          expiredQuantity: activeVolunteers,
-          averageShelfLife: totalDonationWeight[0]?.total || 0,
-        });
-      }
+     case 'admin': {
+  console.log('🟢 Entering admin branch');
+
+  const totalUsers = await User.countDocuments();
+  const activeVolunteers = await User.countDocuments({ role: 'volunteer' });
+
+  const totalDonationWeight = await Donation.aggregate([
+    { $match: { quantityToDonation: { $exists: true, $ne: null } } },
+    { $group: { _id: null, total: { $sum: '$quantityToDonation' } } }
+  ]);
+
+  const donors = await User.countDocuments({ role: 'donor' });
+  const recipients = await User.countDocuments({ role: 'recipient' });
+  const volunteers = activeVolunteers;
+
+  // Calculate monthly growth for the last 6 months
+  const months = 6;
+  const monthlyGrowth = [];
+
+  for (let i = months - 1; i >= 0; i--) {
+    const start = moment().subtract(i, 'months').startOf('month').toDate();
+    const end = moment().subtract(i, 'months').endOf('month').toDate();
+    const count = await User.countDocuments({
+      createdAt: { $gte: start, $lte: end }
+    });
+    monthlyGrowth.push(count);
+  }
+
+  return res.json({
+    totalUsers,
+    activeVolunteers,
+    monthlyDonations: totalDonationWeight[0]?.total || 0,
+    monthlyGrowth,
+    userTypes: {
+      donors,
+      recipients,
+      volunteers
+    }
+  });
+}
+
   
       // DONOR STATS
       case 'donor': {
@@ -111,9 +134,11 @@ export const getStatisticsByRole = async (req, res) => {
         console.log(`Recipient stats -> completed: ${completed.length}, pending: ${pending.length}, totalReceived: ${totalReceived}`);
   
         return res.json({
-          totalDonations: totalReceived,
-          expiredQuantity: pending.length,
-          averageShelfLife: completed.length  // Replace with another metric if needed
+          receivedDonations: totalReceived,
+          pendingDeliveries: pending.length,
+          completedDeliveries: completed.length,
+          deliveryHistory: [], // Fill with actual data if available
+          foodCategories: {}   // Fill with actual data if available
         });
       }
   
@@ -135,9 +160,11 @@ export const getStatisticsByRole = async (req, res) => {
         console.log(`Volunteer stats -> deliveries: ${totalDeliveries}, totalHours: ${totalHours}, activeAssignments: ${activeAssignments}`);
   
         return res.json({
-          totalDonations: totalDeliveries,
-          expiredQuantity: totalHours,
-          averageShelfLife: activeAssignments
+          deliveriesMade: totalDeliveries,
+          hoursVolunteered: totalHours,
+          activeAssignments: activeAssignments,
+          weeklyDeliveries: [], // Fill with actual data if available
+          deliveryTypes: {}     // Fill with actual data if available
         });
       }
   

@@ -44,8 +44,40 @@ export type Statistics =
   | VolunteerStatistics 
   | AdminStatistics;
 
-export interface StatisticsContextType extends DonorStatistics {
+export interface StatisticsContextType {
+  // Common fields
   loading: boolean;
   error: string | null;
   refetchStatistics: () => Promise<void>;
+  
+  // Donor statistics
+  totalDonations?: number;
+  expiredQuantity?: number;
+  averageShelfLife?: number;
+  donationCountsByFoodItem?: DonationByFoodItem[];
+  
+  // Recipient statistics
+  receivedDonations?: number;
+  pendingDeliveries?: number;
+  completedDeliveries?: number;
+  deliveryHistory?: number[];
+  foodCategories?: Record<string, number>;
+  
+  // Volunteer statistics
+  deliveriesMade?: number;
+  hoursVolunteered?: number;
+  activeAssignments?: number;
+  weeklyDeliveries?: number[];
+  deliveryTypes?: Record<string, number>;
+  
+  // Admin statistics
+  totalUsers?: number;
+  activeVolunteers?: number;
+  monthlyDonations?: number;
+  monthlyGrowth?: number[];
+  userTypes?: {
+    donors: number;
+    recipients: number;
+    volunteers: number;
+  };
 }
