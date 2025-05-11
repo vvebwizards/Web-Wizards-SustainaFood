@@ -83,10 +83,18 @@ const roleConfigs: Record<string, any> = {
       { to: "/dashboard/chat", icon: MessageSquare, label: "Communications" },
       { to: "/dashboard/overview", icon: Gauge, label: "System Overview" },
       { to: "/dashboard/StatsDashboard", icon: LineChart, label: "Analytics" },
-      { to: "/dashboard/UsersManagement", icon: UserCog, label: "User Management"},
+      {
+        to: "/dashboard/UsersManagement",
+        icon: UserCog,
+        label: "User Management",
+      },
       { to: "/dashboard/donations", icon: Package, label: "Donations" },
-      { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard"},
-      { to: "/dashboard/notifications", icon: AlertTriangle, label: "System Alerts"},
+      { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
+      {
+        to: "/dashboard/notifications",
+        icon: AlertTriangle,
+        label: "System Alerts",
+      },
     ],
   },
   donor: {
@@ -131,7 +139,6 @@ const roleConfigs: Record<string, any> = {
       { to: "/dashboard/available", icon: Package, label: "Available Food" },
       { to: "/dashboard/my-requests", icon: Heart, label: "My Requests" },
       { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
-      
     ],
   },
   volunteer: {
@@ -152,8 +159,21 @@ const roleConfigs: Record<string, any> = {
       { to: "/dashboard/notifications", icon: Bell, label: "Notifications" },
       { to: "/dashboard/chat", icon: MessageSquare, label: "Communications" },
       { to: "/dashboard/orders", icon: Package, label: "Orders" },
-      { to: "/dashboard/deliveries", icon: Truck, label: "Deliveries suggested routes" },
-      { to: "/dashboard/carbon", icon: Leaf, label: "Carbon FootPrint Prediction" },
+      {
+        to: "/dashboard/Deliveriess",
+        icon: Truck,
+        label: "Scheduled Deliveries",
+      },
+      {
+        to: "/dashboard/deliveries",
+        icon: Truck,
+        label: "Deliveries suggested routes",
+      },
+      {
+        to: "/dashboard/carbon",
+        icon: Leaf,
+        label: "Carbon FootPrint Prediction",
+      },
       { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
       { to: "/dashboard/statistics", icon: LineChart, label: "Impact" },
     ],
@@ -259,7 +279,7 @@ const Layout: React.FC = () => {
     navigate("/signin");
     localStorage.removeItem("profileImage");
     localStorage.removeItem("points");
-    localStorage.removeItem("userRole"); 
+    localStorage.removeItem("userRole");
     localStorage.removeItem("user");
   };
 
