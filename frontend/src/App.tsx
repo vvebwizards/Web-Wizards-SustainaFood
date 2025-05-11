@@ -38,15 +38,16 @@ import MyRequests from "./pages/MyRequests";
 import QuizChallenge from "./games/QuizChallenge";
 import OrdersList from "./pages/OrdersList";
 import OrderDetails from "./pages/OrderDetails";
-import Deliveries from "./pages/Deliveries";
 import { StatisticsProvider } from "./context/StatisticsContext";
 import { Overview } from "./pages/overview";
 import Leaderboard from "./pages/Leaderboard";
 import Redeem from "./pages/Redeem";
 import ChatBot from "./components/ChatBot/ChatBot";
+import DeliveriesRoutes from "./pages/Deliveries";
 import CarbonFootprintCalculator from "./components/Carbon/CarbonFootprintCalculator";
 import MyDonations from "./pages/MyDonations";
 import AllDonations from "./pages/AllDonations";
+
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user } = useAuth();
@@ -157,8 +158,10 @@ function App() {
           <Route path="/dashboard/memory" element={<MemoryGame />} />
           <Route path="orders" element={<OrdersList />} />
           <Route path="orders/:id" element={<OrderDetails />} />
-          <Route path="deliveries" element={<Deliveries />} />
+
+          <Route path="deliveries" element={<DeliveriesRoutes />} />
           <Route path="carbon" element={<CarbonFootprintCalculator />} />
+
           <Route path="/dashboard/tictactoe" element={<TicTacToe />} />
           <Route
             path="/dashboard/StatsDashboard"
