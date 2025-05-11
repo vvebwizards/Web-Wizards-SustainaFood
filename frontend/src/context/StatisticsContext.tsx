@@ -11,13 +11,35 @@ import {
 
 // Default values for the context
 const defaultStatisticsContext: StatisticsContextType = {
+  loading: false,
+  error: null,
+  refetchStatistics: async () => {},
+  // Donor defaults
   totalDonations: 0,
   expiredQuantity: 0,
   averageShelfLife: 0,
   donationCountsByFoodItem: [],
-  loading: false,
-  error: null,
-  refetchStatistics: async () => {}
+  // Recipient defaults
+  receivedDonations: 0,
+  pendingDeliveries: 0,
+  completedDeliveries: 0,
+  monthlyReceived: [],
+  categoryLabels: [],
+  categoryData: [],
+  // Volunteer defaults
+  statusCounts: {},
+  monthlyDeliveries: [],
+  totalOrders: 0,
+  // Admin defaults
+  totalUsers: 0,
+  activeVolunteers: 0,
+  monthlyDonations: 0,
+  monthlyGrowth: [],
+  userTypes: {
+    donors: 0,
+    recipients: 0,
+    volunteers: 0
+  }
 };
 
 // Create the context
@@ -45,15 +67,14 @@ export const StatisticsProvider: React.FC<StatisticsProviderProps> = ({ children
   const [receivedDonations, setReceivedDonations] = useState<number>(0);
   const [pendingDeliveries, setPendingDeliveries] = useState<number>(0);
   const [completedDeliveries, setCompletedDeliveries] = useState<number>(0);
-  const [deliveryHistory, setDeliveryHistory] = useState<number[]>([]);
-  const [foodCategories, setFoodCategories] = useState<Record<string, number>>({});
+  const [monthlyReceived, setMonthlyReceived] = useState<number[]>([]);
+  const [categoryLabels, setCategoryLabels] = useState<string[]>([]);
+  const [categoryData, setCategoryData] = useState<number[]>([]);
   
   // Volunteer statistics
-  const [deliveriesMade, setDeliveriesMade] = useState<number>(0);
-  const [hoursVolunteered, setHoursVolunteered] = useState<number>(0);
-  const [activeAssignments, setActiveAssignments] = useState<number>(0);
-  const [weeklyDeliveries, setWeeklyDeliveries] = useState<number[]>([]);
-  const [deliveryTypes, setDeliveryTypes] = useState<Record<string, number>>({});
+  const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
+  const [monthlyDeliveries, setMonthlyDeliveries] = useState<number[]>([]);
+  const [totalOrders, setTotalOrders] = useState<number>(0);
   
   // Admin statistics
   const [totalUsers, setTotalUsers] = useState<number>(0);
@@ -146,16 +167,15 @@ export const StatisticsProvider: React.FC<StatisticsProviderProps> = ({ children
     setReceivedDonations(data.receivedDonations || 0);
     setPendingDeliveries(data.pendingDeliveries || 0);
     setCompletedDeliveries(data.completedDeliveries || 0);
-    setDeliveryHistory(data.deliveryHistory || []);
-    setFoodCategories(data.foodCategories || {});
+    setMonthlyReceived(data.monthlyReceived || []);
+    setCategoryLabels(data.categoryLabels || []);
+    setCategoryData(data.categoryData || []);
   };
 
   const updateVolunteerStatistics = (data: VolunteerStatistics) => {
-    setDeliveriesMade(data.deliveriesMade || 0);
-    setHoursVolunteered(data.hoursVolunteered || 0);
-    setActiveAssignments(data.activeAssignments || 0);
-    setWeeklyDeliveries(data.weeklyDeliveries || []);
-    setDeliveryTypes(data.deliveryTypes || {});
+    setStatusCounts(data.statusCounts || {});
+    setMonthlyDeliveries(data.monthlyDeliveries || []);
+    setTotalOrders(data.totalOrders || 0);
   };
 
   const updateAdminStatistics = (data: AdminStatistics) => {
@@ -192,15 +212,14 @@ export const StatisticsProvider: React.FC<StatisticsProviderProps> = ({ children
     receivedDonations,
     pendingDeliveries,
     completedDeliveries,
-    deliveryHistory,
-    foodCategories,
+    monthlyReceived,
+    categoryLabels,
+    categoryData,
     
     // Volunteer statistics
-    deliveriesMade,
-    hoursVolunteered,
-    activeAssignments,
-    weeklyDeliveries,
-    deliveryTypes,
+    statusCounts,
+    monthlyDeliveries,
+    totalOrders,
     
     // Admin statistics
     totalUsers,

@@ -14,16 +14,15 @@ export interface RecipientStatistics {
   receivedDonations: number;
   pendingDeliveries: number;
   completedDeliveries: number;
-  deliveryHistory: number[];
-  foodCategories: Record<string, number>;
+  monthlyReceived: number[];
+  categoryLabels: string[];
+  categoryData: number[];
 }
 
 export interface VolunteerStatistics {
-  deliveriesMade: number;
-  hoursVolunteered: number;
-  activeAssignments: number;
-  weeklyDeliveries: number[];
-  deliveryTypes: Record<string, number>;
+  statusCounts: Record<string, number>;
+  monthlyDeliveries: number[];
+  totalOrders: number;
 }
 
 export interface AdminStatistics {
@@ -51,31 +50,30 @@ export interface StatisticsContextType {
   refetchStatistics: () => Promise<void>;
   
   // Donor statistics
-  totalDonations?: number;
-  expiredQuantity?: number;
-  averageShelfLife?: number;
-  donationCountsByFoodItem?: DonationByFoodItem[];
+  totalDonations: number;
+  expiredQuantity: number;
+  averageShelfLife: number;
+  donationCountsByFoodItem: DonationByFoodItem[];
   
   // Recipient statistics
-  receivedDonations?: number;
-  pendingDeliveries?: number;
-  completedDeliveries?: number;
-  deliveryHistory?: number[];
-  foodCategories?: Record<string, number>;
+  receivedDonations: number;
+  pendingDeliveries: number;
+  completedDeliveries: number;
+  monthlyReceived: number[];
+  categoryLabels: string[];
+  categoryData: number[];
   
   // Volunteer statistics
-  deliveriesMade?: number;
-  hoursVolunteered?: number;
-  activeAssignments?: number;
-  weeklyDeliveries?: number[];
-  deliveryTypes?: Record<string, number>;
+  statusCounts: Record<string, number>;
+  monthlyDeliveries: number[];
+  totalOrders: number;
   
   // Admin statistics
-  totalUsers?: number;
-  activeVolunteers?: number;
-  monthlyDonations?: number;
-  monthlyGrowth?: number[];
-  userTypes?: {
+  totalUsers: number;
+  activeVolunteers: number;
+  monthlyDonations: number;
+  monthlyGrowth: number[];
+  userTypes: {
     donors: number;
     recipients: number;
     volunteers: number;

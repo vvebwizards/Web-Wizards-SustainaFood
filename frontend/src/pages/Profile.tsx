@@ -91,7 +91,16 @@ const Profile = () => {
     activeVolunteers,
     monthlyDonations,
     monthlyGrowth,
-    userTypes
+    userTypes,
+    receivedDonations,
+    pendingDeliveries,
+    completedDeliveries,
+    monthlyReceived,
+    categoryLabels,
+    categoryData,
+    statusCounts,
+    monthlyDeliveries,
+    totalOrders
   } = useStatistics();
 
   const defaultImage = 'https://via.placeholder.com/150';
@@ -208,7 +217,7 @@ const Profile = () => {
                 </div>
                 <div className="ml-4">
                   <h3 className="text-base font-medium text-gray-700">Received Donations</h3>
-                  <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{totalDonations} kg</p>
+                  <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{receivedDonations || 0} kg</p>
                 </div>
               </div>
             </div>
@@ -220,7 +229,7 @@ const Profile = () => {
                 </div>
                 <div className="ml-4">
                   <h3 className="text-base font-medium text-gray-700">Pending Deliveries</h3>
-                  <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{expiredQuantity}</p>
+                  <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{pendingDeliveries || 0}</p>
                 </div>
               </div>
             </div>
@@ -232,7 +241,7 @@ const Profile = () => {
                 </div>
                 <div className="ml-4">
                   <h3 className="text-base font-medium text-gray-700">Completed Deliveries</h3>
-                  <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{averageShelfLife}</p>
+                  <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{completedDeliveries || 0}</p>
                 </div>
               </div>
             </div>
@@ -248,8 +257,8 @@ const Profile = () => {
                   <Truck />
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-base font-medium text-gray-700">Deliveries Made</h3>
-                  <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{totalDonations}</p>
+                  <h3 className="text-base font-medium text-gray-700">Total Orders</h3>
+                  <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{totalOrders || 0}</p>
                 </div>
               </div>
             </div>
@@ -260,8 +269,8 @@ const Profile = () => {
                   <Clock />
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-base font-medium text-gray-700">Hours Volunteered</h3>
-                  <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{expiredQuantity}</p>
+                  <h3 className="text-base font-medium text-gray-700">Active Orders</h3>
+                  <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{statusCounts?.pending || 0}</p>
                 </div>
               </div>
             </div>
@@ -272,8 +281,8 @@ const Profile = () => {
                   <ShieldCheck />
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-base font-medium text-gray-700">Active Assignments</h3>
-                  <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{averageShelfLife}</p>
+                  <h3 className="text-base font-medium text-gray-700">Completed Orders</h3>
+                  <p className={`text-2xl font-bold ${theme.colors.text} mt-1`}>{statusCounts?.delivered || 0}</p>
                 </div>
               </div>
             </div>
@@ -423,26 +432,28 @@ const Profile = () => {
         );
 
       case 'recipient':
-        const deliveryHistoryData = {
-          labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'],
+        const recipientChartData = {
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
           datasets: [{
-            label: 'Completed Deliveries',
-            data: [totalDonations * 0.2, totalDonations * 0.4, totalDonations * 0.6, totalDonations * 0.8, totalDonations],
+            label: 'Monthly Received Donations',
+            data: monthlyReceived || [],
             borderColor: currentColors.border,
             backgroundColor: currentColors.background,
             tension: 0.4,
           }]
         };
 
-        const foodCategoriesData = {
-          labels: donationCountsByFoodItem.map(item => item.foodItem),
+        const recipientPieData = {
+          labels: categoryLabels || [],
           datasets: [{
-            data: donationCountsByFoodItem.map(item => item.count),
+            data: categoryData || [],
             backgroundColor: [
               'rgba(59, 130, 246, 0.6)',
               'rgba(16, 185, 129, 0.6)',
               'rgba(239, 68, 68, 0.6)',
               'rgba(245, 158, 11, 0.6)',
+              'rgba(139, 92, 246, 0.6)',
+              'rgba(236, 72, 153, 0.6)',
             ],
           }]
         };
@@ -452,18 +463,18 @@ const Profile = () => {
             <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 transition-all duration-300 hover:shadow-lg">
               <div className="flex items-center gap-2 mb-4">
                 <LineChart className={theme.colors.text} size={24} />
-                <h3 className={`text-xl font-semibold ${theme.colors.text}`}>Delivery History</h3>
+                <h3 className={`text-xl font-semibold ${theme.colors.text}`}>Monthly Received Donations</h3>
               </div>
               <div className="h-80">
                 <Line
-                  data={deliveryHistoryData}
+                  data={recipientChartData}
                   options={{
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
                       y: {
                         beginAtZero: true,
-                        title: { display: true, text: 'Deliveries' }
+                        title: { display: true, text: 'Donations (kg)' }
                       }
                     }
                   }}
@@ -474,11 +485,11 @@ const Profile = () => {
             <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 transition-all duration-300 hover:shadow-lg">
               <div className="flex items-center gap-2 mb-4">
                 <ChartPie className={theme.colors.text} size={24} />
-                <h3 className={`text-xl font-semibold ${theme.colors.text}`}>Food Categories</h3>
+                <h3 className={`text-xl font-semibold ${theme.colors.text}`}>Food Categories Distribution</h3>
               </div>
               <div className="h-80">
                 <Pie
-                  data={foodCategoriesData}
+                  data={recipientPieData}
                   options={{
                     responsive: true,
                     maintainAspectRatio: false,
@@ -493,25 +504,33 @@ const Profile = () => {
         );
 
       case 'volunteer':
-        const weeklyDeliveriesData = {
-          labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'],
+        const volunteerChartData = {
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
           datasets: [{
-            label: 'Weekly Deliveries',
-            data: [totalDonations * 0.2, totalDonations * 0.4, totalDonations * 0.6, totalDonations * 0.8, totalDonations],
+            label: 'Monthly Deliveries',
+            data: monthlyDeliveries || [],
             borderColor: currentColors.border,
             backgroundColor: currentColors.background,
             tension: 0.4,
           }]
         };
 
-        const deliveryTypesData = {
-          labels: ['Standard', 'Express', 'Scheduled'],
+        // Get all possible statuses from the backend
+        const statusLabels = statusCounts ? Object.keys(statusCounts) : [];
+        const statusData = statusCounts ? Object.values(statusCounts) : [];
+
+        const volunteerPieData = {
+          labels: statusLabels,
           datasets: [{
-            data: [totalDonations * 0.5, totalDonations * 0.3, totalDonations * 0.2],
+            data: statusData,
             backgroundColor: [
-              'rgba(139, 92, 246, 0.6)',
-              'rgba(239, 68, 68, 0.6)',
-              'rgba(16, 185, 129, 0.6)',
+              'rgba(139, 92, 246, 0.6)',  // pending
+              'rgba(59, 130, 246, 0.6)',  // processing
+              'rgba(16, 185, 129, 0.6)',  // packed
+              'rgba(245, 158, 11, 0.6)',  // shipped
+              'rgba(239, 68, 68, 0.6)',   // delivered
+              'rgba(236, 72, 153, 0.6)',  // cancelled
+              'rgba(168, 85, 247, 0.6)',  // returned
             ],
           }]
         };
@@ -521,18 +540,18 @@ const Profile = () => {
             <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 transition-all duration-300 hover:shadow-lg">
               <div className="flex items-center gap-2 mb-4">
                 <LineChart className={theme.colors.text} size={24} />
-                <h3 className={`text-xl font-semibold ${theme.colors.text}`}>Weekly Deliveries</h3>
+                <h3 className={`text-xl font-semibold ${theme.colors.text}`}>Monthly Deliveries</h3>
               </div>
               <div className="h-80">
                 <Line
-                  data={weeklyDeliveriesData}
+                  data={volunteerChartData}
                   options={{
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
                       y: {
                         beginAtZero: true,
-                        title: { display: true, text: 'Deliveries' }
+                        title: { display: true, text: 'Number of Deliveries' }
                       }
                     }
                   }}
@@ -543,16 +562,37 @@ const Profile = () => {
             <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 transition-all duration-300 hover:shadow-lg">
               <div className="flex items-center gap-2 mb-4">
                 <ChartPie className={theme.colors.text} size={24} />
-                <h3 className={`text-xl font-semibold ${theme.colors.text}`}>Delivery Types</h3>
+                <h3 className={`text-xl font-semibold ${theme.colors.text}`}>Order Status Distribution</h3>
               </div>
               <div className="h-80">
                 <Pie
-                  data={deliveryTypesData}
+                  data={volunteerPieData}
                   options={{
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                      legend: { position: 'bottom' }
+                      legend: { 
+                        position: 'bottom',
+                        labels: {
+                          // Capitalize first letter of each status
+                          generateLabels: (chart: any) => {
+                            const datasets = chart.data.datasets;
+                            return chart.data.labels.map((label: string, i: number) => ({
+                              text: label.charAt(0).toUpperCase() + label.slice(1),
+                              fillStyle: datasets[0].backgroundColor[i],
+                              hidden: false,
+                              lineCap: 'butt',
+                              lineDash: [],
+                              lineDashOffset: 0,
+                              lineJoin: 'miter',
+                              lineWidth: 1,
+                              strokeStyle: '#fff',
+                              pointStyle: 'circle',
+                              rotation: 0
+                            }));
+                          }
+                        }
+                      }
                     }
                   }}
                 />

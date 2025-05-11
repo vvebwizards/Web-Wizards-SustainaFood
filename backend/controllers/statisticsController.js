@@ -129,42 +129,98 @@ export const getStatisticsByRole = async (req, res) => {
   
         const completed = orders.filter(o => o.status === 'delivered');
         const pending = orders.filter(o => o.status === 'pending');
-        const totalReceived = completed.reduce((sum, o) => sum + (o.totalQuantity || 0), 0);
+        const totalReceived = completed.reduce((sum, o) => {
+          return sum + o.items.reduce((itemSum, item) => itemSum + (item.orderedQuantity || 0), 0);
+        }, 0);
   
         console.log(`Recipient stats -> completed: ${completed.length}, pending: ${pending.length}, totalReceived: ${totalReceived}`);
+  
+        const months = 6;
+        const monthlyReceived = [];
+  
+        for (let i = months - 1; i >= 0; i--) {
+          const start = moment().subtract(i, 'months').startOf('month').toDate();
+          const end = moment().subtract(i, 'months').endOf('month').toDate();
+  
+          // Find delivered orders for this recipient in this month
+          const orders = await Order.find({
+            recipientId,
+            status: 'delivered',
+            createdAt: { $gte: start, $lte: end }
+          });
+  
+          // Sum all orderedQuantity for delivered orders in this month
+          const total = orders.reduce((sum, o) => {
+            return sum + o.items.reduce((itemSum, item) => itemSum + (item.orderedQuantity || 0), 0);
+          }, 0);
+  
+          monthlyReceived.push(total);
+        }
+  
+        const deliveredOrders = await Order.find({ recipientId, status: 'delivered' }).populate('items.productId');
+        const categoryCounts = {};
+  
+        deliveredOrders.forEach(order => {
+          order.items.forEach(item => {
+            const category = item.productId?.category || 'Unknown';
+            categoryCounts[category] = (categoryCounts[category] || 0) + (item.orderedQuantity || 0);
+          });
+        });
+  
+        const categories = Object.keys(categoryCounts);
+        const categoryData = categories.map(cat => categoryCounts[cat]);
   
         return res.json({
           receivedDonations: totalReceived,
           pendingDeliveries: pending.length,
           completedDeliveries: completed.length,
-          deliveryHistory: [], // Fill with actual data if available
-          foodCategories: {}   // Fill with actual data if available
+          monthlyReceived,
+          categoryLabels: categories,
+          categoryData: categoryData
         });
       }
   
       // VOLUNTEER STATS
       case 'volunteer': {
-        console.log('🟢 Entering volunteer branch');
-        if (!mongoose.Types.ObjectId.isValid(userId)) {
-          console.error('❌ Invalid volunteer ID:', userId);
-          return res.status(400).json({ message: 'Invalid volunteer ID' });
+        console.log('🟢 Entering global volunteer stats branch');
+
+        // List all possible statuses from your model
+        const statuses = [
+          "pending",
+          "processing",
+          "packed",
+          "shipped",
+          "delivered",
+          "cancelled",
+          "returned"
+        ];
+
+        // Count orders for each status
+        const statusCounts = {};
+        for (const status of statuses) {
+          statusCounts[status] = await Order.countDocuments({ status });
         }
-  
-        const volunteerId = new mongoose.Types.ObjectId(userId);
-        const orders = await Order.find({ volunteerId });
-  
-        const activeAssignments = await Order.countDocuments({ volunteerId, status: 'in-progress' });
-        const totalDeliveries = orders.length;
-        const totalHours = orders.reduce((sum, o) => sum + (o.deliveryTimeHours || 1), 0);
-  
-        console.log(`Volunteer stats -> deliveries: ${totalDeliveries}, totalHours: ${totalHours}, activeAssignments: ${activeAssignments}`);
-  
+
+        // Monthly deliveries for the last 6 months
+        const months = 6;
+        const monthlyDeliveries = [];
+        for (let i = months - 1; i >= 0; i--) {
+          const start = moment().subtract(i, 'months').startOf('month').toDate();
+          const end = moment().subtract(i, 'months').endOf('month').toDate();
+          const count = await Order.countDocuments({
+            status: 'delivered',
+            createdAt: { $gte: start, $lte: end }
+          });
+          monthlyDeliveries.push(count);
+        }
+
+        // Total orders (for a summary card)
+        const totalOrders = await Order.countDocuments();
+
         return res.json({
-          deliveriesMade: totalDeliveries,
-          hoursVolunteered: totalHours,
-          activeAssignments: activeAssignments,
-          weeklyDeliveries: [], // Fill with actual data if available
-          deliveryTypes: {}     // Fill with actual data if available
+          statusCounts,      // Object with status counts
+          monthlyDeliveries, // Array of monthly deliveries
+          totalOrders        // Total number of orders
         });
       }
   
