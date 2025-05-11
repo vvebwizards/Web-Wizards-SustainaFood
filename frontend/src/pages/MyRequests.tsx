@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { MapPin, PackageCheck, Clock, ClipboardList, ChevronDown, ChevronUp, Package } from "lucide-react";
 import { Order, OrderItem } from "../types";
+import { roleConfigs } from "../utils/roleConfigs";
 
 const MyRequests: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -89,8 +90,8 @@ const MyRequests: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-6 pt-8">
-      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center gap-2">
-        <ClipboardList className="w-6 h-6 text-blue-600" />
+      <h2 className={`text-2xl md:text-3xl font-bold mb-6 flex items-center gap-2 ${roleConfigs.recipient.theme.colors.text}`}>
+        <ClipboardList className={`w-6 h-6 ${roleConfigs.recipient.theme.colors.text}`} />
         <span>My Requests</span>
       </h2>
 

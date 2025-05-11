@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { fetchStats, Stats } from '../context/statsService';
+import { roleConfigs } from '../utils/roleConfigs';
 import {
   PieChart, Pie, Cell,
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -212,7 +213,7 @@ export const StatsDashboard: React.FC = () => {
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 space-y-4 sm:space-y-0">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className={`text-3xl font-bold ${roleConfigs.admin.theme.colors.text}`}>
               Analytics Dashboard
             </h1>
             <p className="mt-1 text-sm text-gray-500">

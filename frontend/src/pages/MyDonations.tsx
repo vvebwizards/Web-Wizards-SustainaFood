@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Package, PackageCheck, Clock, ClipboardList } from "lucide-react";
+import { roleConfigs } from "../utils/roleConfigs";
 
 interface Donation {
   _id: string;
@@ -68,9 +69,9 @@ const MyDonations = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4 md:p-6 pt-8">
-      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center gap-2">
-        <ClipboardList className="w-6 h-6 text-blue-600" />
+    <div className={`max-w-4xl mx-auto p-4 md:p-6 pt-8 ${roleConfigs.donor.theme.colors.bg}`}>
+      <h2 className={`text-2xl md:text-3xl font-bold mb-6 ${roleConfigs.donor.theme.colors.text} flex items-center gap-2`}>
+        <ClipboardList className={`w-6 h-6 ${roleConfigs.donor.theme.colors.text}`} />
         <span>My Donations</span>
       </h2>
 
@@ -80,17 +81,17 @@ const MyDonations = () => {
             <Package className="w-16 h-16 text-gray-300" />
           </div>
           <h3 className="text-xl font-semibold text-gray-700 mb-2">No donations found</h3>
-          <p className="text-gray-500">You haven’t donated any items yet.</p>
+          <p className="text-gray-500">You haven't donated any items yet.</p>
         </div>
       ) : (
         <ul className="space-y-4">
           {donations.map((donation) => (
             <li
               key={donation._id}
-              className="bg-white p-5 border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
+              className={`bg-white p-5 border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 ${roleConfigs.donor.theme.colors.hover}`}
             >
               <div className="flex items-start gap-3">
-                <div className="p-2 rounded-full bg-blue-100 text-blue-600">
+                <div className={`p-2 rounded-full ${roleConfigs.donor.theme.colors.bg} ${roleConfigs.donor.theme.colors.text}`}>
                   <PackageCheck className="w-5 h-5" />
                 </div>
 

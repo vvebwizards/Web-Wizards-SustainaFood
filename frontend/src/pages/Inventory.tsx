@@ -7,6 +7,7 @@ import AddCategoryForm from "../components/AddCategoryForm";
 import AddFoodItemForm from '../components/AddFoodItemForm';
 import DonationZone from '../components/DonationZone';
 import PredictionModal from '../components/PredictionModalProps';
+import { roleConfigs } from '../utils/roleConfigs';
 
 interface Category {
   _id: string;
@@ -201,7 +202,7 @@ const Inventory: React.FC = () => {
   return (
     <div className="p-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 space-y-4 md:space-y-0">
-        <h2 className="text-xl font-semibold text-gray-800">Inventory Management</h2>
+        <h2 className={`text-xl font-semibold ${roleConfigs.donor.theme.colors.text}`}>Inventory Management</h2>
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
           <div className="relative">
             <input

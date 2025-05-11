@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Ban, Eye, Trash2 } from "lucide-react";
 import { UserDetailsModal } from "../components/UserDetailsModal";
 import axios from "axios";
+import { roleConfigs } from "../utils/roleConfigs";
 
 const BASE_URL = "http://localhost:5000";
 
@@ -60,7 +61,7 @@ export function UserManagement() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-semibold">Users Management</h2>
+        <h2 className={`text-2xl font-semibold ${roleConfigs.admin.theme.colors.text}`}>Users Management</h2>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">

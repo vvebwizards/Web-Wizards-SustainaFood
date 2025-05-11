@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { fetchStats, Stats } from '../context/statsService';
+import { roleConfigs } from '../utils/roleConfigs';
 import {
   Users,
   Tag,
@@ -68,7 +69,7 @@ export const Overview: React.FC = () => {
   return (
     <div className="p-6 max-w-[1600px] mx-auto">
       <div className="flex items-center justify-between mb-8">
-        <h2 className="text-2xl font-bold text-gray-900">Dashboard Overview</h2>
+        <h2 className={`text-2xl font-bold ${roleConfigs.admin.theme.colors.text}`}>Dashboard Overview</h2>
         <div className="flex items-center space-x-4">
           <select className="bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm">
             <option>Last 7 days</option>
