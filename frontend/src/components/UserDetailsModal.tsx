@@ -1,5 +1,5 @@
-import React from "react";
-
+import React, { useEffect, useState } from "react";
+import defaultProfileImage from "../assets/images/default_user_img.jpg";
 interface User {
   _id: string;
   username: string;
@@ -18,7 +18,7 @@ interface UserDetailsModalProps {
 }
 
 const BASE_URL = "http://localhost:5000";
-
+ const [profileImage, setProfileImage] = useState<string>(defaultProfileImage);
 export function UserDetailsModal({
   user,
   isOpen,
@@ -27,15 +27,14 @@ export function UserDetailsModal({
 }: UserDetailsModalProps) {
   if (!isOpen || !user) return null;
 
-  // Helper to get the full image URL
-  const getProfileImageUrl = (profileImage: string) => {
-    if (profileImage && profileImage.trim() !== "") {
-      return profileImage.startsWith("/")
-        ? BASE_URL + profileImage
-        : profileImage;
+  useEffect(() => {
+    if (user?.profileImage) {
+      const url = user.profileImage.startsWith("http")
+        ? user.profileImage
+        : `http://localhost:5000${user.profileImage}`;
+      setProfileImage(`${url}?t=${Date.now()}`);
     }
-    return "https://via.placeholder.com/64";
-  };
+  }, [user]);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -49,13 +48,13 @@ export function UserDetailsModal({
         <div className="space-y-4">
           <div className="flex items-center">
             <img
-              src={getProfileImageUrl(user.profileImage)}
-              alt={user.username}
-              className="h-16 w-16 rounded-full"
-              onError={(e) => {
-                e.currentTarget.src = "https://via.placeholder.com/64";
-              }}
-            />
+            src={profileImage}
+            alt="Profile"
+            className="h-8 w-8 rounded-full border"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).src = defaultProfileImage;
+            }}
+          />
             <div className="ml-4">
               <h4 className="text-xl font-medium">{user.username}</h4>
               <p className="text-gray-500">{user.email}</p>
