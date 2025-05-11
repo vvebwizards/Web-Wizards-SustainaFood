@@ -1,218 +1,152 @@
 import mongoose from 'mongoose';
+import User from '../models/User.js';
 import Donation from '../models/Donation.js';
-import { getAuthenticatedUser } from "../utils/helpers.js";
-import FoodItem from "../models/FoodItem.js";
+import { Order } from '../models/order.js';
 
-export const countDonationsByFoodItem = async (req, res) => {
-  const user = await getAuthenticatedUser(req); 
-  const donorId = user._id;
-
+export const getStatisticsByRole = async (req, res) => {
+  const role = req.params.role;  
+  const userId = req.query.userId;
+  
+  console.log(`📥 Incoming stats request -> role: ${role}, userId: ${userId}`);
+  
   try {
-    const donationCounts = await Donation.aggregate([
-      { 
-        $match: { 
-          donorId: new mongoose.Types.ObjectId(donorId), 
-          status: 'Donated' 
-        } 
-      },
-      { 
-        $group: { 
-          _id: '$foodItemId', 
-          totalDonations: { $sum: '$quantityToDonation' } 
-        } 
-      },
-      { 
-        $lookup: { 
-          from: 'fooditems', 
-          localField: '_id', 
-          foreignField: '_id', 
-          as: 'foodItem' 
-        } 
-      },
-      { $unwind: '$foodItem' },
-      { 
-        $project: { 
-          foodItemTitle: '$foodItem.title', 
-          unit: '$foodItem.unit',
-          totalDonations: 1 
-        } 
+    switch (role) {
+      // ADMIN STATS
+      case 'admin': {
+        console.log('🟢 Entering admin branch');
+        // For admin, we ignore userId and compute system-wide stats
+        const totalUsers = await User.countDocuments();
+        const activeVolunteers = await User.countDocuments({ role: 'volunteer', active: true });
+  
+        const totalDonationWeight = await Donation.aggregate([
+          { $match: { quantityToDonation: { $exists: true, $ne: null } } },
+          { $group: { _id: null, total: { $sum: '$quantityToDonation' } } }
+        ]);
+  
+        console.log(`Admin stats -> totalUsers: ${totalUsers}, activeVolunteers: ${activeVolunteers}, totalDonationWeight: ${totalDonationWeight[0]?.total || 0}`);
+  
+        return res.json({
+          totalDonations: totalUsers,
+          expiredQuantity: activeVolunteers,
+          averageShelfLife: totalDonationWeight[0]?.total || 0,
+        });
       }
-    ]);
-
-    return res.status(200).json(donationCounts || []);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Error fetching donations by food item.", error });
-  }
-};
-
-export const totalDonationsByUnit = async (req, res) => {
-  const user = await getAuthenticatedUser(req);
-  const donorId = user._id;
-
-  try {
-    const totalByUnit = await Donation.aggregate([
-      { 
-        $match: { 
-          donorId: new mongoose.Types.ObjectId(donorId), 
-          status: 'Donated' 
-        } 
-      },
-      { 
-        $group: { 
-          _id: '$unit',
-          totalQuantity: { $sum: '$quantityToDonation' }
+  
+      // DONOR STATS
+      case 'donor': {
+        console.log('🟢 Entering donor branch');
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+          console.error('❌ Invalid donor ID:', userId);
+          return res.status(400).json({ message: 'Invalid donor ID' });
         }
-      },
-      {
-        $project: {
-          unit: '$_id',
-          totalQuantity: 1,
-          _id: 0
-        }
-      }
-    ]);
-
-    return res.status(200).json(totalByUnit || []);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Error calculating total donations by unit.", error });
-  }
-};
-
-export const totalExpiredQuantityByUnit = async (req, res) => {
-  try {
-    const user = await getAuthenticatedUser(req); 
-    const donorId = user._id;
-
-    const expiredStats = await FoodItem.aggregate([
-      {
-        $match: {
-          donorId: new mongoose.Types.ObjectId(donorId),
-          status: "Expired",
-        },
-      },
-      {
-        $group: {
-          _id: "$unit",
-          totalExpiredQuantity: { $sum: "$quantityToDonation" }
-        }
-      },
-      {
-        $project: {
-          unit: "$_id",
-          totalExpiredQuantity: 1,
-          _id: 0
-        }
-      }
-    ]);
-
-    return res.status(200).json(expiredStats || []);
-  } catch (error) {
-    console.error("Error getting expired food quantities:", error);
-    return res.status(500).json({ message: "Server error", error });
-  }
-};
-
-export const averageShelfLifeBeforeDonation = async (req, res) => {
-  try {
-    const user = await getAuthenticatedUser(req);
-    const donorId = user._id;
-
-    const result = await FoodItem.aggregate([
-      {
-        $match: {
-          donorId: new mongoose.Types.ObjectId(donorId),
-          expirationDate: { $ne: null }
-        }
-      },
-      {
-        $addFields: {
-          expirationDateParsed: {
-            $toDate: "$expirationDate"
+        const donorId = new mongoose.Types.ObjectId(userId);
+  
+        const donorDonations = await Donation.find({ donorId });
+        console.log(`Donor donations count: ${donorDonations.length}`);
+  
+        const total = donorDonations.reduce((sum, d) => sum + (d.quantityToDonation || 0), 0);
+        const expired = donorDonations.filter(d => new Date(d.expirationDate) < new Date())
+                                      .reduce((sum, d) => sum + (d.quantityToDonation || 0), 0);
+  
+        const avgShelfLife = donorDonations.length
+          ? donorDonations.reduce((sum, d) => {
+              const created = new Date(d.createdAt);
+              const expiry = new Date(d.expirationDate);
+              const days = (expiry - created) / (1000 * 60 * 60 * 24);
+              return sum + (isNaN(days) ? 0 : days);
+            }, 0) / donorDonations.length
+          : 0;
+  
+        const donationCountsByFoodItem = await Donation.aggregate([
+          { $match: { donorId, foodItemId: { $exists: true, $ne: null } } },
+          {
+            $lookup: {
+              from: 'fooditems', // ensure this matches your collection name exactly
+              localField: 'foodItemId',
+              foreignField: '_id',
+              as: 'foodInfo'
+            }
+          },
+          { $unwind: '$foodInfo' },
+          {
+            $group: {
+              _id: '$foodInfo.title', // use title instead of name
+              count: { $sum: '$quantityToDonation' }
+            }
+          },
+          {
+            $project: {
+              foodItem: '$_id',
+              count: 1,
+              _id: 0
+            }
           }
-        }
-      },
-      {
-        $project: {
-          shelfLifeInDays: {
-            $divide: [
-              { $subtract: ["$expirationDateParsed", "$createdAt"] },
-              1000 * 60 * 60 * 24 
-            ]
-          }
-        }
-      },
-      {
-        $group: {
-          _id: null,
-          averageShelfLife: { $avg: "$shelfLifeInDays" }
-        }
-      },
-      {
-        $project: {
-          _id: 0,
-          averageShelfLife: { $round: ["$averageShelfLife", 2] }
-        }
+        ]);
+  
+        console.log('Donor aggregation result:', donationCountsByFoodItem);
+  
+        return res.json({
+          totalDonations: total,
+          expiredQuantity: expired,
+          averageShelfLife: Math.round(avgShelfLife),
+          donationCountsByFoodItem
+        });
       }
-    ]);
-
-    const average = result?.[0]?.averageShelfLife ?? 0;
-    return res.status(200).json({ averageShelfLife: `${average} days` });
+  
+      // RECIPIENT STATS
+      case 'recipient': {
+        console.log('🟢 Entering recipient branch');
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+          console.error('❌ Invalid recipient ID:', userId);
+          return res.status(400).json({ message: 'Invalid recipient ID' });
+        }
+  
+        const recipientId = new mongoose.Types.ObjectId(userId);
+        const orders = await Order.find({ recipientId });
+  
+        const completed = orders.filter(o => o.status === 'delivered');
+        const pending = orders.filter(o => o.status === 'pending');
+        const totalReceived = completed.reduce((sum, o) => sum + (o.totalQuantity || 0), 0);
+  
+        console.log(`Recipient stats -> completed: ${completed.length}, pending: ${pending.length}, totalReceived: ${totalReceived}`);
+  
+        return res.json({
+          totalDonations: totalReceived,
+          expiredQuantity: pending.length,
+          averageShelfLife: completed.length  // Replace with another metric if needed
+        });
+      }
+  
+      // VOLUNTEER STATS
+      case 'volunteer': {
+        console.log('🟢 Entering volunteer branch');
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+          console.error('❌ Invalid volunteer ID:', userId);
+          return res.status(400).json({ message: 'Invalid volunteer ID' });
+        }
+  
+        const volunteerId = new mongoose.Types.ObjectId(userId);
+        const orders = await Order.find({ volunteerId });
+  
+        const activeAssignments = await Order.countDocuments({ volunteerId, status: 'in-progress' });
+        const totalDeliveries = orders.length;
+        const totalHours = orders.reduce((sum, o) => sum + (o.deliveryTimeHours || 1), 0);
+  
+        console.log(`Volunteer stats -> deliveries: ${totalDeliveries}, totalHours: ${totalHours}, activeAssignments: ${activeAssignments}`);
+  
+        return res.json({
+          totalDonations: totalDeliveries,
+          expiredQuantity: totalHours,
+          averageShelfLife: activeAssignments
+        });
+      }
+  
+      default:
+        console.error('❌ Unknown role:', role);
+        return res.status(400).json({ message: 'Invalid role specified' });
+    }
   } catch (error) {
-    console.error("Error calculating average shelf life:", error);
-    return res.status(500).json({ message: "Server error", error });
-  }
-};
-
-export const getWastedVsDonatedRatio = async (req, res) => {
-  try {
-    const user = await getAuthenticatedUser(req);
-    const donorId = user._id;
-
-    const donated = await Donation.aggregate([
-      {
-        $match: {
-          donorId: new mongoose.Types.ObjectId(donorId),
-          status: "Donated",
-        },
-      },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: "$quantityToDonation" },
-        },
-      },
-    ]);
-    const donatedQuantity = donated[0]?.total || 0;
-
-    const expired = await FoodItem.aggregate([
-      {
-        $match: {
-          donorId: new mongoose.Types.ObjectId(donorId),
-          status: "Expired",
-        },
-      },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: "$quantityToDonation" },
-        },
-      },
-    ]);
-    const wastedQuantity = expired[0]?.total || 0;
-
-    const total = donatedQuantity + wastedQuantity;
-    const ratio = total === 0 ? 0 : wastedQuantity / total;
-
-    return res.status(200).json({
-      donorId,
-      donatedQuantity,
-      wastedQuantity,
-      wasteToDonationRatio: ratio.toFixed(3),
-    });
-  } catch (error) {
-    console.error("Error calculating waste-to-donation ratio:", error);
-    return res.status(500).json({ message: "Server error", error });
+    console.error('❌ Statistics error:', error);
+    return res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
