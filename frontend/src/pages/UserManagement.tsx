@@ -3,7 +3,7 @@ import { Ban, Eye, Trash2 } from "lucide-react";
 import { UserDetailsModal } from "../components/UserDetailsModal";
 import axios from "axios";
 import { roleConfigs } from "../utils/roleConfigs";
-
+import defaultProfileImage from "../assets/images/default_user_img.jpg";
 const BASE_URL = "http://localhost:5000";
 
 export function UserManagement() {
@@ -55,7 +55,7 @@ export function UserManagement() {
         ? BASE_URL + profileImage
         : profileImage;
     }
-    return "https://via.placeholder.com/40";
+    return defaultProfileImage;
   };
 
   return (
@@ -95,7 +95,7 @@ export function UserManagement() {
                       src={getProfileImageUrl(user.profileImage)}
                       alt={user.username}
                       onError={(e) => {
-                        e.currentTarget.src = "https://via.placeholder.com/40";
+                        e.currentTarget.src = "https://static.wixstatic.com/media/fc51d8_31b6f7eba7c04c35a9d9c310bf7334f6~mv2.webp/v1/fill/w_287,h_287,al_c,lg_1,q_80,enc_auto/headshot-filler.webp";
                       }}
                     />
                     <div className="ml-4">
