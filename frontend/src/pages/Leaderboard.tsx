@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Trophy, Medal, Users, ChevronUp, ChevronDown, Award, Zap, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
-
+import defaultProfileImage from "../assets/images/default_user_img.jpg";
 // Role-based theme configuration
 const roleConfigs = {
   admin: {
@@ -148,7 +148,7 @@ const Leaderboard: React.FC = () => {
         ? BASE_URL + profileImage
         : profileImage;
     }
-    return "https://via.placeholder.com/40";
+    return defaultProfileImage;
   };
 
   const getRankBadge = (index: number) => {
