@@ -2,9 +2,7 @@ import React from "react";
 import { User } from "../../types.ts";
 import { roleConfigs } from "../../utils/roleConfigs";
 
-// This would be imported from your assets
-const defaultProfileImage = "https://images.pexels.com/photos/1089438/pexels-photo-1089438.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=300";
-
+import defaultProfileImage from "../../assets/images/default_user_img.jpg";
 interface UserAvatarProps {
   user: User | null;
   size?: 'sm' | 'md' | 'lg';
