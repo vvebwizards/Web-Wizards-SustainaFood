@@ -20,33 +20,33 @@ export interface OrganizationData {
 
 export const organizationInfo: OrganizationData = {
   name: "SustainaFood",
-  mainPhone: "(555) 123-4567",
+  mainPhone: "+216 26762772",
   email: "info@sustainafood.org",
   website: "www.sustainafood.org",
   mission: "Our mission is to create a sustainable food ecosystem by rescuing surplus food from restaurants, grocers, and farms, redistributing it to those in need while reducing food waste and building a more sustainable community.",
-  locations: [
-    {
-      name: "Main Distribution Center",
-      address: "123 Main Street, Cityville, ST 12345",
-      hours: "Monday-Friday 9am-7pm, Saturday 10am-4pm",
-      phone: "(555) 123-4567",
-      services: ["Food Distribution", "Donation Drop-off", "Volunteer Check-in"]
-    },
-    {
-      name: "North District Hub",
-      address: "456 North Ave, Cityville, ST 12346",
-      hours: "Monday-Saturday 10am-6pm",
-      phone: "(555) 234-5678",
-      services: ["Food Distribution", "Donation Drop-off"]
-    },
-    {
-      name: "South Community Center",
-      address: "789 South Blvd, Cityville, ST 12347",
-      hours: "Tuesday-Sunday 9am-5pm",
-      phone: "(555) 345-6789",
-      services: ["Food Distribution", "Community Kitchen"]
-    }
-  ],
+locations: [
+  {
+    name: "Centre de Distribution Principal",
+    address: "Rue de Marseille, Lafayette, Tunis 1002",
+    hours: "Lundi-Vendredi 9h-19h, Samedi 10h-16h",
+    phone: "+216 71 234 567",
+    services: ["Distribution Alimentaire", "Dépôt de Dons", "Accueil des Bénévoles"]
+  },
+  {
+    name: "Hub District Nord",
+    address: "Avenue Hédi Nouira, Ennasr 2, Ariana 2037",
+    hours: "Lundi-Samedi 10h-18h",
+    phone: "+216 71 345 678",
+    services: ["Distribution Alimentaire", "Dépôt de Dons"]
+  },
+  {
+    name: "Centre Communautaire Sud",
+    address: "Avenue Habib Bourguiba, Mégrine, Ben Arous 2033",
+    hours: "Mardi-Dimanche 9h-17h",
+    phone: "+216 71 456 789",
+    services: ["Distribution Alimentaire", "Cuisine Communautaire"]
+  }
+],
   acceptedItems: [
     "Non-perishable canned goods",
     "Fresh fruits and vegetables",

@@ -83,3 +83,17 @@ export interface OrderFilters {
   sortBy?: keyof Order;
   sortOrder?: 'asc' | 'desc';
 }
+
+export interface InputValues {
+  miles_driven_per_week: number;
+  meat_meals_per_week: number;
+  electricity_usage_kwh: number;
+  flight_hours_per_year: number;
+  monthly_online_orders: number;
+}
+
+export interface PredictionResult {
+  score: number;
+  category: 'low' | 'moderate' | 'high' | 'very-high';
+  recommendations: string[];
+}
