@@ -3,7 +3,8 @@ import { Order } from '../models/order.js';
 import {
   createOrder,
   getOrdersByRecipient ,
-  assignClustersToOrders
+  assignClustersToOrders,
+  updateDeliveryStatus
 } from "../controllers/orderController.js";
 
 const router = express.Router();
@@ -33,21 +34,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.patch('/:id/status', async (req, res) => {
-  try {
-    const order = await Order.findByIdAndUpdate(
-      req.params.id,
-      { status: req.body.status },
-      { new: true }
-    );
-    if (!order) {
-      return res.status(404).json({ message: 'Order not found' });
-    }
-    res.json(order);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
+router.patch('/:id/status', updateDeliveryStatus)
 
 router.post('/:id/delivery', async (req, res) => {
   try {

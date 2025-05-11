@@ -500,7 +500,7 @@ export async function getPendingDonationsByUser(req, res) {
       return res.status(401).json({ error: "Unauthorized: No authenticated user found" });
     }
 
-    const pendingDonations = await Donation.find({ donorId: user._id, status: "Pending Donation" });
+    const pendingDonations = await Donation.find({ donorId: user._id, status: "Donated" });
     res.status(200).json(pendingDonations);
   } catch (error) {
     console.error("Error fetching pending donations:", error);
