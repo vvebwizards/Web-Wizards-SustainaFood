@@ -15,7 +15,6 @@ import Profile from "./pages/Profile";
 import Statistics from "./pages/Statistics";
 import { StatsDashboard } from "./components/StatsDashboard";
 import TicTacToe from "./games/TicTacToe";
-import Settings from "./pages/Settings";
 import Notifications from "./pages/Notifications";
 import Users from "./pages/UserManagement";
 import UpdateProfile from "./pages/UpdateProfile ";
@@ -46,6 +45,8 @@ import Redeem from "./pages/Redeem";
 import ChatBot from "./components/ChatBot/ChatBot";
 import DeliveriesRoutes from "./pages/Deliveries";
 import CarbonFootprintCalculator from "./components/Carbon/CarbonFootprintCalculator";
+import MyDonations from "./pages/MyDonations";
+import AllDonations from "./pages/AllDonations";
 
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
@@ -117,6 +118,8 @@ function App() {
             }
           />
           <Route path="redeem" element={<Redeem />} />
+          <Route path="my-donations" element={<MyDonations />} />
+          <Route path="donations" element={<AllDonations />} />
           <Route
             path="UsersManagement"
             element={
@@ -127,17 +130,9 @@ function App() {
           />
           <Route path="leaderboard" element={<Leaderboard />} />
           <Route path="statistics" element={<Statistics />} />
-          <Route
-            path="settings"
-            element={
-              <SettingsProvider>
-                <Settings />
-              </SettingsProvider>
-            }
-          />
           <Route path="my-requests" element={<MyRequests />} />
           <Route path="notifications" element={<Notifications />} />
-          <Route path="UpdateProfile/:userId" element={<UpdateProfile />} />
+          <Route path="UpdateProfile/:userId" element={<SettingsProvider><UpdateProfile /></SettingsProvider>} />
 
           <Route
             path="inventory"
