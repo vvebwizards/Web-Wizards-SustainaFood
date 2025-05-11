@@ -293,6 +293,9 @@ const Layout: React.FC = () => {
     logout();
     navigate("/signin");
     localStorage.removeItem("profileImage");
+    localStorage.removeItem("points");
+    localStorage.removeItem("userRole"); 
+    localStorage.removeItem("user");
   };
 
   return (

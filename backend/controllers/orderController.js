@@ -323,8 +323,9 @@ export const assignClustersToOrders = async (req, res) => {
     console.log("Request received for assigning clusters");
 
     const orders = await Order.find({
+       status: 'shipped',
       "location.latitude": { $exists: true },
-      "location.longitude": { $exists: true },
+      "location.longitude": { $exists: true }
     });
 
     if (!orders.length) {
