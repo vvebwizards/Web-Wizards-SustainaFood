@@ -26,12 +26,44 @@ function SignUp() {
     }
   }, [location]);
 
+  const validatePassword = (password: string): string | null => {
+    const minLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+    if (password.length < minLength) {
+      return "Password must be at least 8 characters long.";
+    }
+    if (!hasUpperCase) {
+      return "Password must contain at least one uppercase letter.";
+    }
+    if (!hasLowerCase) {
+      return "Password must contain at least one lowercase letter.";
+    }
+    if (!hasNumber) {
+      return "Password must contain at least one number.";
+    }
+    if (!hasSpecialChar) {
+      return "Password must contain at least one special character.";
+    }
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(""); // Reset previous errors
 
+    // Validate password requirements
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      setError(passwordError);
+      return;
+    }
+
     if (password !== confirmPassword) {
-      setError(" Passwords do not match.");
+      setError("Passwords do not match.");
       return;
     }
 
@@ -44,7 +76,6 @@ function SignUp() {
       });
 
       await signup(name, email, password, role);
-
       console.log("✅ Signup Successful. Redirecting to login...");
       navigate("/signin"); // ✅ Only navigate if signup succeeds
     } catch (err: any) {
