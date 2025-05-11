@@ -15,7 +15,6 @@ import Profile from "./pages/Profile";
 import Statistics from "./pages/Statistics";
 import { StatsDashboard } from "./components/StatsDashboard";
 import TicTacToe from "./games/TicTacToe";
-import Settings from "./pages/Settings";
 import Notifications from "./pages/Notifications";
 import Users from "./pages/UserManagement";
 import UpdateProfile from "./pages/UpdateProfile ";
@@ -130,17 +129,9 @@ function App() {
           />
           <Route path="leaderboard" element={<Leaderboard />} />
           <Route path="statistics" element={<Statistics />} />
-          <Route
-            path="settings"
-            element={
-              <SettingsProvider>
-                <Settings />
-              </SettingsProvider>
-            }
-          />
           <Route path="my-requests" element={<MyRequests />} />
           <Route path="notifications" element={<Notifications />} />
-          <Route path="UpdateProfile/:userId" element={<UpdateProfile />} />
+          <Route path="UpdateProfile/:userId" element={<SettingsProvider><UpdateProfile /></SettingsProvider>} />
 
           <Route
             path="inventory"

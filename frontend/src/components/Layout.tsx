@@ -27,7 +27,6 @@ import {
   Calendar,
   MapPin,
   History,
-  Settings,
   Users,
   Clock,
   MessageSquare,
@@ -103,7 +102,6 @@ const roleConfigs: Record<string, any> = {
         icon: AlertTriangle,
         label: "System Alerts",
       },
-      { to: "/dashboard/settings", icon: Settings, label: "System Settings" },
     ],
   },
   donor: {
@@ -129,7 +127,6 @@ const roleConfigs: Record<string, any> = {
       { to: "/dashboard/history", icon: History, label: "History" },
       { to: "/dashboard/chat", icon: MessageSquare, label: "Communications" },
       { to: "/dashboard/notifications", icon: Bell, label: "Notifications" },
-      { to: "/dashboard/settings", icon: Settings, label: "Settings" },
     ],
   },
   recipient: {
@@ -155,7 +152,6 @@ const roleConfigs: Record<string, any> = {
       { to: "/dashboard/history", icon: History, label: "History" },
       { to: "/dashboard/chat", icon: MessageSquare, label: "Communications" },
       { to: "/dashboard/notifications", icon: Bell, label: "Notifications" },
-      { to: "/dashboard/settings", icon: Settings, label: "Settings" },
     ],
   },
   volunteer: {
@@ -188,7 +184,6 @@ const roleConfigs: Record<string, any> = {
       { to: "/dashboard/statistics", icon: LineChart, label: "Impact" },
       { to: "/dashboard/history", icon: History, label: "History" },
       { to: "/dashboard/notifications", icon: Bell, label: "Notifications" },
-      { to: "/dashboard/settings", icon: Settings, label: "Settings" },
     ],
   },
 };
