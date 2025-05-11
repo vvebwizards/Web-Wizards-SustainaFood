@@ -78,6 +78,15 @@ const MyRequests: React.FC = () => {
     );
   }
 
+  const parseLocation = (location: any) => {
+  if (typeof location === "string") {
+    const [lat, lon] = location.split(",").map(Number);
+    return { latitude: lat, longitude: lon };
+  }
+  return location;
+};
+
+
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-6 pt-8">
       <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800 flex items-center gap-2">
@@ -145,8 +154,8 @@ const MyRequests: React.FC = () => {
                           <p className="flex items-center gap-1">
                             <MapPin className="w-3.5 h-3.5" />
                             <span>
-                              {order.location.latitude.toFixed(5)},{" "}
-                              {order.location.longitude.toFixed(5)}
+                              {parseLocation(order.location).latitude.toFixed(5)}, {parseLocation(order.location).longitude.toFixed(5)}
+
                             </span>
                           </p>
                           <p className="flex items-center gap-1">

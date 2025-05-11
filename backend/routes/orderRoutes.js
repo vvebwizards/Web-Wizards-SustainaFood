@@ -2,14 +2,15 @@ import express from "express";
 import { Order } from '../models/order.js';
 import {
   createOrder,
-  getOrdersByRecipient
+  getOrdersByRecipient ,
+  assignClustersToOrders
 } from "../controllers/orderController.js";
 
 const router = express.Router();
 
 router.post("/", createOrder);
 router.get('/my', getOrdersByRecipient);
-
+router.get('/assign_clusters',assignClustersToOrders);
 
 router.get('/', async (req, res) => {
   try {
@@ -120,6 +121,7 @@ router.get('/stats/overview', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
 
 
 export default router;

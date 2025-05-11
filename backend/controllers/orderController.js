@@ -4,12 +4,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { getAuthenticatedUser } from "../utils/helpers.js";
 import User from '../models/User.js'; 
 import Donation from '../models/Donation.js';
-import { getPredictionUrgencyTransportation } from '../utils/predict.js';
+import { getPredictionUrgencyTransportation,getOptimizedRouteClusters } from '../utils/predict.js';
 export const createOrder = async (req, res) => {
   try {
     const { recipientId, location, items, userName, userEmail } = req.body;
 
-    // Validate required fields
+
     if (
       !recipientId ||
       !location ||
@@ -21,7 +21,6 @@ export const createOrder = async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Reverse geocoding to convert lat/lng to shipping address
     let shippingAddress;
     try {
       const response = await fetch(
@@ -106,13 +105,14 @@ export const createOrder = async (req, res) => {
 
     await order.save();
 
-    // for (const item of order.items) {
-    //   const urgencyScore = await getPredictionUrgencyTransportation(
-    //     order._id,
-    //     item.productId
-    //   );
-    //   item.urgencyScore = urgencyScore;
-    // }
+    for (const item of order.items) {
+      const urgencyScore = await getTransportationUrgency(
+        order._id,
+        item.productId,
+        item.orderedQuantity
+      );
+      item.urgencyScore = urgencyScore;
+    }
 
     await order.save();
 
@@ -150,7 +150,7 @@ async function getExpiryDaysLeft(orderId, productId) {
   try {
     const order = await Order.findById(orderId);
     await order.populate('items.productId');
-    const orderedItem = order.items.find(item => item._id.equals(productId));
+    const orderedItem = order.items.find(item => item.productId.equals(productId));
     const donationItem = await Donation.findOne({ _id: orderedItem.productId });
     const expirationDate = new Date(donationItem.expirationDate);
     const currentDate = new Date();
@@ -163,19 +163,6 @@ async function getExpiryDaysLeft(orderId, productId) {
   }
 }
 
-async function getOrderedQuantity(orderId,productId) {
-  try {
-    const order = await Order.findById(orderId);
-    await order.populate('items.productId');
-    const orderedItem = order.items.find(item => item._id.equals(productId));
-    const orderedQuantity = orderedItem.orderedQuantity;
-    console.log("orderred quantity : ",orderedQuantity);
-    return orderedQuantity
-  } catch (error) {
-    console.error('Error getting ordered quantity:', error.message);
-    throw error;
-  }
-}
 function getHourFromTime(timeString) {
   if (!timeString) return 12; 
   const hour = parseInt(timeString.split(':')[0], 10);
@@ -186,8 +173,9 @@ function getHourFromTime(timeString) {
 export async function getDonationTimeHour(orderId, productId) {
   try {
     const order = await Order.findById(orderId);
+  
     await order.populate('items.productId');
-    const orderedItem = order.items.find(item => item._id.equals(productId));
+    const orderedItem = order.items.find(item => item.productId.equals(productId));
     const donationItem = await Donation.findOne({ _id: orderedItem.productId });
     const timePart = donationItem.createdAt.toISOString().split('T')[1].split('.')[0];
     const hourFromTime = getHourFromTime(timePart);
@@ -217,7 +205,6 @@ async function getRecipientDemandScore(orderId) {
 }
 
 async function calculateDistance(fromLocation, toAddress) {
-  // Placeholder; replace with a real geocoding API (e.g., Google Maps)
   return 1; 
 }
 async function getDistanceToRecipientKm(orderId) {
@@ -293,12 +280,10 @@ async function getFoodCategories(orderId) {
   }
 }
 
- async function getTransportationUrgency (orderId,productId) {
+async function getTransportationUrgency(orderId, productId, orderedQuantity) {
   try {
-
     const [
       expiryDaysLeft,
-      orderedQuantity,
       donationTimeHour,
       recipientDemandScore,
       distanceToRecipientKm,
@@ -307,7 +292,6 @@ async function getFoodCategories(orderId) {
       foodCategories
     ] = await Promise.all([
       getExpiryDaysLeft(orderId, productId),
-      getOrderedQuantity(orderId, productId),
       getDonationTimeHour(orderId, productId),
       getRecipientDemandScore(orderId),
       getDistanceToRecipientKm(orderId),
@@ -324,12 +308,71 @@ async function getFoodCategories(orderId) {
       distanceToRecipientKm,
       storageTypeRefrigerated,
       storageTypeRoomTemp,
-      ...foodCategories
+      ...foodCategories 
     ]);
 
-    return urgencyScore ;
+    return urgencyScore;
   } catch (error) {
-    console.error('Error calculating urgency transportation :', error.message);
+    console.error('Error calculating urgency transportation:', error.message);
     throw error;
+  }
 }
-}
+
+export const assignClustersToOrders = async (req, res) => {
+  try {
+    console.log("Request received for assigning clusters");
+
+    const orders = await Order.find({
+      "location.latitude": { $exists: true },
+      "location.longitude": { $exists: true },
+    });
+
+    if (!orders.length) {
+      return res.status(404).json({ message: "No orders with location found." });
+    }
+
+    console.log(`Found ${orders.length} orders with location.`);
+
+    const clusteredOrders = [];
+    for (let order of orders) {
+      const features = [order.location.latitude, order.location.longitude];
+      const clusterLabel = await getOptimizedRouteClusters(features); 
+      order.cluster = clusterLabel;
+      await order.save();
+      clusteredOrders.push(order);
+    }
+
+    const clusterGroups = {};
+    const colors = ["blue", "red", "green"]; 
+
+    clusteredOrders.forEach((order) => {
+      const clusterLabel = order.cluster;
+      if (!clusterGroups[clusterLabel]) {
+        clusterGroups[clusterLabel] = {
+          name: `Cluster ${clusterLabel + 1}`, 
+          color: colors[clusterLabel], 
+          orders: [],
+        };
+      }
+
+      clusterGroups[clusterLabel].orders.push({
+        id: order._id,
+        lat: order.location.latitude,
+        lng: order.location.longitude,
+        name: order.name || `Order ${order._id}`,
+      });
+    });
+
+    const formattedClusters = Object.values(clusterGroups);
+
+    res.status(200).json({
+      message: "Clusters assigned successfully",
+      clusters: formattedClusters,
+    });
+
+  } catch (error) {
+    console.error("Clustering error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+

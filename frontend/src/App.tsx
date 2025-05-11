@@ -15,7 +15,6 @@ import Profile from "./pages/Profile";
 import Statistics from "./pages/Statistics";
 import { StatsDashboard } from "./components/StatsDashboard";
 import TicTacToe from "./games/TicTacToe";
-import Settings from "./pages/Settings";
 import Notifications from "./pages/Notifications";
 import Users from "./pages/UserManagement";
 import UpdateProfile from "./pages/UpdateProfile ";
@@ -39,13 +38,16 @@ import MyRequests from "./pages/MyRequests";
 import QuizChallenge from "./games/QuizChallenge";
 import OrdersList from "./pages/OrdersList";
 import OrderDetails from "./pages/OrderDetails";
-import Deliveries from "./pages/Deliveries";
 import { StatisticsProvider } from "./context/StatisticsContext";
 import { Overview } from "./pages/overview";
 import Leaderboard from "./pages/Leaderboard";
 import Redeem from "./pages/Redeem";
 import ChatBot from "./components/ChatBot/ChatBot";
+import DeliveriesRoutes from "./pages/Deliveries";
 import CarbonFootprintCalculator from "./components/Carbon/CarbonFootprintCalculator";
+import MyDonations from "./pages/MyDonations";
+import AllDonations from "./pages/AllDonations";
+
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user } = useAuth();
@@ -116,6 +118,8 @@ function App() {
             }
           />
           <Route path="redeem" element={<Redeem />} />
+          <Route path="my-donations" element={<MyDonations />} />
+          <Route path="donations" element={<AllDonations />} />
           <Route
             path="UsersManagement"
             element={
@@ -126,17 +130,9 @@ function App() {
           />
           <Route path="leaderboard" element={<Leaderboard />} />
           <Route path="statistics" element={<Statistics />} />
-          <Route
-            path="settings"
-            element={
-              <SettingsProvider>
-                <Settings />
-              </SettingsProvider>
-            }
-          />
           <Route path="my-requests" element={<MyRequests />} />
           <Route path="notifications" element={<Notifications />} />
-          <Route path="UpdateProfile/:userId" element={<UpdateProfile />} />
+          <Route path="UpdateProfile/:userId" element={<SettingsProvider><UpdateProfile /></SettingsProvider>} />
 
           <Route
             path="inventory"
@@ -162,8 +158,10 @@ function App() {
           <Route path="/dashboard/memory" element={<MemoryGame />} />
           <Route path="orders" element={<OrdersList />} />
           <Route path="orders/:id" element={<OrderDetails />} />
-          <Route path="deliveries" element={<Deliveries />} />
+
+          <Route path="deliveries" element={<DeliveriesRoutes />} />
           <Route path="carbon" element={<CarbonFootprintCalculator />} />
+
           <Route path="/dashboard/tictactoe" element={<TicTacToe />} />
           <Route
             path="/dashboard/StatsDashboard"

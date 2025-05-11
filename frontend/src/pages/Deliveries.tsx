@@ -1,86 +1,105 @@
-import React, { useState, useEffect } from 'react';
-import { Truck, Calendar, MapPin, Search, Filter } from 'lucide-react';
-import DeliveriesList from '../components/DeliveriesList';
-import { fetchOrders } from '../services/api';
-import { Order } from '../types';
+import React, { useEffect, useState } from 'react';
+import { MapContainer, TileLayer, Polyline, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
 
-const Deliveries: React.FC = () => {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterMethod, setFilterMethod] = useState<'all' | 'standard' | 'express'>('all');
+const hubIcon = new L.Icon({
+  iconUrl: 'https://www.pngplay.com/wp-content/uploads/9/Map-Marker-PNG-Pic-Background.png',
+  iconSize: [30, 30],
+  iconAnchor: [15, 30],
+});
 
-  useEffect(() => {
-    loadOrders();
-  }, []);
+interface Order {
+  lat: number;
+  lng: number;
+  address: string;
+  name?: string;
+}
 
-  const loadOrders = async () => {
+interface Cluster {
+  orders: Order[];
+  color: string;
+}
+
+const DeliveriesRoutes: React.FC = () => {
+  const [clusters, setClusters] = useState<Cluster[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [hub, setHub] = useState<[number, number] | null>(null);
+
+  const fetchClusters = async () => {
     try {
-      setLoading(true);
-      const data = await fetchOrders();
-      setOrders(data);
-    } catch (error) {
-      console.error('Error loading orders:', error);
+      const res = await fetch('http://localhost:5000/api/orders/assign_clusters', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!res.ok) throw new Error('Failed to fetch clusters');
+      const data = await res.json();
+      setClusters(data.clusters || []);
+    } catch (err) {
+      console.error('Error fetching clusters:', err);
     } finally {
       setLoading(false);
     }
   };
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setHub([latitude, longitude]);
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        setHub([36.8065, 10.1815]);
+      }
+    );
+  }, []);
 
-  const filteredOrders = orders
-    .filter(order => order.delivery) // Only show orders with delivery info
-    .filter(order => {
-      if (!searchQuery) return true;
-      const query = searchQuery.toLowerCase();
-      return (
-        order.orderNumber.toLowerCase().includes(query) ||
-        order.customer.name.toLowerCase().includes(query) ||
-        order.customer.email.toLowerCase().includes(query)
-      );
-    })
-    .filter(order => {
-      if (filterMethod === 'all') return true;
-      return order.delivery.method === filterMethod;
-    });
+  useEffect(() => {
+    fetchClusters();
+  }, []);
+
+  if (loading || !hub) {
+    return <div>Loading map and clusters...</div>;
+  }
+  const Routing: React.FC<{ orders: Order[]; color: string }> = ({ orders, color }) => {
+    if (!orders || orders.length === 0 || !hub) return null;
+
+    const routeCoords = [hub, ...orders.map(order => [order.lat, order.lng])];
+
+    return (
+      <>
+        <Marker position={hub} icon={hubIcon}>
+          <Popup>Main Hub (Your Location)</Popup>
+        </Marker>
+        {orders.map((order, i) => (
+          <Marker key={i} position={[order.lat, order.lng]}>
+            <Popup>{order.address || order.name || 'No address'}</Popup>
+          </Marker>
+        ))}
+        <Polyline positions={routeCoords} pathOptions={{ color, weight: 4 }} />
+      </>
+    );
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-gray-900">Deliveries</h1>
-        
-        <div className="flex flex-wrap gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search deliveries..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            />
-          </div>
-          
-          <select
-            value={filterMethod}
-            onChange={(e) => setFilterMethod(e.target.value as 'all' | 'standard' | 'express')}
-            className="block w-full sm:w-auto border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-base focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-          >
-            <option value="all">All Methods</option>
-            <option value="standard">Standard Delivery</option>
-            <option value="express">Express Delivery</option>
-          </select>
-        </div>
-      </div>
-
-      {loading ? (
-        <div className="text-center py-12">
-          <Truck className="mx-auto h-12 w-12 text-gray-400 animate-bounce" />
-          <p className="mt-2 text-gray-500">Loading deliveries...</p>
-        </div>
-      ) : (
-        <DeliveriesList orders={filteredOrders} />
-      )}
+    <div className="h-screen flex flex-col">
+     <div className="p-4">
+      <h2 className="text-xl font-semibold text-gray-800">Delivery Map</h2>
+      <p className="text-gray-600 ">
+        This map shows where your orders are going. Routes start from your current location and group nearby deliveries using different colors. This helps make deliveries faster, reduces travel distance and time, and cuts down on emissions. Click on a marker to view the order number.
+      </p>
+    </div>
+      <MapContainer center={hub} zoom={12} className="flex-1 w-full">
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution="© OpenStreetMap contributors"
+        />
+        {clusters.map((cluster, index) => (
+          <Routing key={index} orders={cluster.orders} color={cluster.color} />
+        ))}
+      </MapContainer>
     </div>
   );
 };
 
-export default Deliveries;
+export default DeliveriesRoutes;
