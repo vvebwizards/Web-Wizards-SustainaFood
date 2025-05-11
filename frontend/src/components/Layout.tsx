@@ -161,7 +161,7 @@ const roleConfigs: Record<string, any> = {
       { to: "/dashboard/orders", icon: Package, label: "Orders" },
       {
         to: "/dashboard/Deliveriess",
-        icon: Truck,
+        icon: Clock ,
         label: "Scheduled Deliveries",
       },
       {
