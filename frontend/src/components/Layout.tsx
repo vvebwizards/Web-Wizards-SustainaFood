@@ -27,7 +27,6 @@ import {
   Calendar,
   MapPin,
   History,
-  Settings,
   Users,
   Clock,
   MessageSquare,
@@ -35,6 +34,7 @@ import {
   Gamepad2,
   Gift,
   Crown,
+  Leaf,
 } from "lucide-react";
 import defaultProfileImage from "../assets/images/default_user_img.jpg";
 
@@ -80,29 +80,21 @@ const roleConfigs: Record<string, any> = {
     },
     navigation: [
       { to: "/dashboard/profile", icon: User, label: "Profile" },
+      { to: "/dashboard/chat", icon: MessageSquare, label: "Communications" },
       { to: "/dashboard/overview", icon: Gauge, label: "System Overview" },
+      { to: "/dashboard/StatsDashboard", icon: LineChart, label: "Analytics" },
       {
         to: "/dashboard/UsersManagement",
         icon: UserCog,
         label: "User Management",
       },
-      { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
-      {
-        to: "/dashboard/organizations",
-        icon: Building2,
-        label: "Organizations",
-      },
       { to: "/dashboard/donations", icon: Package, label: "Donations" },
-      { to: "/dashboard/deliveries", icon: Truck, label: "Deliveries" },
-      { to: "/dashboard/StatsDashboard", icon: LineChart, label: "Analytics" },
-      { to: "/dashboard/database", icon: Database, label: "Database" },
-      { to: "/dashboard/chat", icon: MessageSquare, label: "Communications" },
+      { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
       {
         to: "/dashboard/notifications",
         icon: AlertTriangle,
         label: "System Alerts",
       },
-      { to: "/dashboard/settings", icon: Settings, label: "System Settings" },
     ],
   },
   donor: {
@@ -120,15 +112,11 @@ const roleConfigs: Record<string, any> = {
     },
     navigation: [
       { to: "/dashboard/profile", icon: User, label: "Profile" },
-      { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
-      { to: "/dashboard/inventory", icon: Package, label: "Inventory" },
-      { to: "/dashboard/donations", icon: Heart, label: "My Donations" },
-      { to: "/dashboard/schedule", icon: Calendar, label: "Schedule Pickup" },
-      { to: "/dashboard/statistics", icon: LineChart, label: "Impact" },
-      { to: "/dashboard/history", icon: History, label: "History" },
-      { to: "/dashboard/chat", icon: MessageSquare, label: "Communications" },
       { to: "/dashboard/notifications", icon: Bell, label: "Notifications" },
-      { to: "/dashboard/settings", icon: Settings, label: "Settings" },
+      { to: "/dashboard/chat", icon: MessageSquare, label: "Communications" },
+      { to: "/dashboard/inventory", icon: Package, label: "Inventory" },
+      { to: "/dashboard/my-donations", icon: Heart, label: "My Donations" },
+      { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
     ],
   },
   recipient: {
@@ -146,15 +134,11 @@ const roleConfigs: Record<string, any> = {
     },
     navigation: [
       { to: "/dashboard/profile", icon: User, label: "Profile" },
-      { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
+      { to: "/dashboard/notifications", icon: Bell, label: "Notifications" },
+      { to: "/dashboard/chat", icon: MessageSquare, label: "Communications" },
       { to: "/dashboard/available", icon: Package, label: "Available Food" },
       { to: "/dashboard/my-requests", icon: Heart, label: "My Requests" },
-      { to: "/dashboard/location", icon: MapPin, label: "Delivery Location" },
-      { to: "/dashboard/statistics", icon: LineChart, label: "Received Items" },
-      { to: "/dashboard/history", icon: History, label: "History" },
-      { to: "/dashboard/chat", icon: MessageSquare, label: "Communications" },
-      { to: "/dashboard/notifications", icon: Bell, label: "Notifications" },
-      { to: "/dashboard/settings", icon: Settings, label: "Settings" },
+      { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
     ],
   },
   volunteer: {
@@ -172,16 +156,26 @@ const roleConfigs: Record<string, any> = {
     },
     navigation: [
       { to: "/dashboard/profile", icon: User, label: "Profile" },
-      { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
-      { to: "/dashboard/orders", icon: Package, label: "Orders" },
-      { to: "/dashboard/deliveries", icon: Truck, label: "Deliveries" },
-      { to: "/dashboard/schedule", icon: Calendar, label: "My Schedule" },
-      { to: "/dashboard/active", icon: Clock, label: "Active Deliveries" },
-      { to: "/dashboard/chat", icon: MessageSquare, label: "Communications" },
-      { to: "/dashboard/statistics", icon: LineChart, label: "Impact" },
-      { to: "/dashboard/history", icon: History, label: "History" },
       { to: "/dashboard/notifications", icon: Bell, label: "Notifications" },
-      { to: "/dashboard/settings", icon: Settings, label: "Settings" },
+      { to: "/dashboard/chat", icon: MessageSquare, label: "Communications" },
+      { to: "/dashboard/orders", icon: Package, label: "Orders" },
+      {
+        to: "/dashboard/Deliveriess",
+        icon: Truck,
+        label: "Scheduled Deliveries",
+      },
+      {
+        to: "/dashboard/deliveries",
+        icon: Truck,
+        label: "Deliveries suggested routes",
+      },
+      {
+        to: "/dashboard/carbon",
+        icon: Leaf,
+        label: "Carbon FootPrint Prediction",
+      },
+      { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
+      { to: "/dashboard/statistics", icon: LineChart, label: "Impact" },
     ],
   },
 };
@@ -284,6 +278,9 @@ const Layout: React.FC = () => {
     logout();
     navigate("/signin");
     localStorage.removeItem("profileImage");
+    localStorage.removeItem("points");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("user");
   };
 
   return (

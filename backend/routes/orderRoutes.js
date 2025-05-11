@@ -2,14 +2,16 @@ import express from "express";
 import { Order } from '../models/order.js';
 import {
   createOrder,
-  getOrdersByRecipient
+  getOrdersByRecipient ,
+  assignClustersToOrders,
+  updateDeliveryStatus
 } from "../controllers/orderController.js";
 
 const router = express.Router();
 
 router.post("/", createOrder);
 router.get('/my', getOrdersByRecipient);
-
+router.get('/assign_clusters',assignClustersToOrders);
 
 router.get('/', async (req, res) => {
   try {
@@ -32,21 +34,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.patch('/:id/status', async (req, res) => {
-  try {
-    const order = await Order.findByIdAndUpdate(
-      req.params.id,
-      { status: req.body.status },
-      { new: true }
-    );
-    if (!order) {
-      return res.status(404).json({ message: 'Order not found' });
-    }
-    res.json(order);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
+router.patch('/:id/status', updateDeliveryStatus)
 
 router.post('/:id/delivery', async (req, res) => {
   try {
@@ -120,6 +108,7 @@ router.get('/stats/overview', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
 
 
 export default router;

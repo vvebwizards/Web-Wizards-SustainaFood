@@ -13,7 +13,7 @@ export interface FoodItem {
     createdAt?: string;
     updatedAt?: string;
     price?: number;
-    donorId?: { username: string };
+    donor?: string ;
     type: 'free' | 'reduced';
     quantityToDonation: number;
   }

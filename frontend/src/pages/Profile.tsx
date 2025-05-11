@@ -29,7 +29,7 @@ ChartJS.register(
   Tooltip,
   Legend
 );
-
+import defaultProfileImage from "../assets/images/default_user_img.jpg";
 const roleConfigs = {
   admin: {
     theme: {
@@ -652,7 +652,7 @@ const Profile = () => {
                       src={profileImageUrl}
                       alt="Profile"
                       className="h-full w-full object-cover"
-                      onError={(e) => { (e.target as HTMLImageElement).src = ''; }}
+                      onError={(e) => { (e.target as HTMLImageElement).src = defaultProfileImage; }}
                     />
                   : <UserCircle className="h-16 w-16 text-gray-400" />
                 }

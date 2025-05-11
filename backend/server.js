@@ -15,7 +15,6 @@ import settingsRoutes from "./routes/settingsRoutes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import CategoryRoutes from "./routes/CategoryRoutes.js"
-import {refreshUserCronJobs} from './utils/scheduler.js';
 import orderRoutes from "./routes/orderRoutes.js";
 import quizRoutes from './routes/quizRoutes.js';
 import statistics from './routes/statisticRoute.js';
@@ -63,9 +62,6 @@ app.options("*", (req, res) => {
 app.use(morgan("dev"));
 
 app.use(passport.initialize());
-
-refreshUserCronJobs();
-
 
 app.use("/api/auth", authRoutes);
 app.use("/api/auth/me", getMe);
