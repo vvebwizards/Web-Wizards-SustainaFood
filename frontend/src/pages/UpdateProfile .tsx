@@ -8,7 +8,7 @@ import { useSettings } from "../context/SettingsContext";
 import axios from "axios";
 import OtpModal from './OtpModal';
 import Cookies from "js-cookie";
-
+import defaultProfileImage from "../assets/images/default_user_img.jpg";
 const roleConfigs = {
   admin: {
     theme: {
@@ -339,10 +339,9 @@ const UpdateProfile = () => {
                       src={preview}
                       alt="Profile"
                       className="w-full h-full object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = defaultImage;
-                      }}
+                    onError={(e) => {
+              (e.currentTarget as HTMLImageElement).src = defaultProfileImage;
+            }}
                     />
                   </div>
                   <input
