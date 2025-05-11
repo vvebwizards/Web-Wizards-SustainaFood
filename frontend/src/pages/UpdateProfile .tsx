@@ -88,8 +88,16 @@ const UpdateProfile = () => {
   const [showSettings, setShowSettings] = useState(false);
 
   const defaultImage = 'https://via.placeholder.com/150';
+  const defaultNotificationTime = '00:00';
+  const defaultDaysBeforeExpiration = '1';
 
   const toggleSettings = () => setShowSettings(prev => !prev);
+
+  const resetToDefault = () => {
+    setNotificationTime(defaultNotificationTime);
+    setDaysBeforeExpiration(defaultDaysBeforeExpiration);
+    setIsChanged(true);
+  };
 
   useEffect(() => {
     setIs2FAEnabled(user?.twofa || false);
@@ -447,7 +455,10 @@ const UpdateProfile = () => {
 
               {showSettings && (
                 <div>
-                  <button className={`${theme.colors.button} px-6 py-1 rounded-md text-white`}>
+                  <button 
+                    onClick={resetToDefault}
+                    className={`${theme.colors.button} px-6 py-1 rounded-md text-white`}
+                  >
                     Reset to Default
                   </button>
 
