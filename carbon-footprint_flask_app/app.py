@@ -8,13 +8,13 @@ model = load_model("carbon_footprint_model.h5")
 scaler = joblib.load("scaler.pkl")
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True, origins=["http://localhost:5173"])  # <- Allow all origins (you can restrict it if needed)
+CORS(app, supports_credentials=True, origins=["http://localhost:5173"])  
 
 @app.route('/predict', methods=['POST'])
 def predict():
     data = request.json
     try:
-        features = np.array([[  # Shape (1, 5)
+        features = np.array([[  
             data['miles_driven_per_week'],
             data['meat_meals_per_week'],
             data['electricity_usage_kwh'],

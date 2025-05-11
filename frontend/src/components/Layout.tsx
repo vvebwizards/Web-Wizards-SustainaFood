@@ -80,6 +80,11 @@ const roleConfigs: Record<string, any> = {
     },
     navigation: [
       { to: "/dashboard/profile", icon: User, label: "Profile" },
+        {
+        to: "/dashboard/notifications",
+        icon: AlertTriangle,
+        label: "System Alerts",
+      },
       { to: "/dashboard/chat", icon: MessageSquare, label: "Communications" },
       { to: "/dashboard/overview", icon: Gauge, label: "System Overview" },
       { to: "/dashboard/StatsDashboard", icon: LineChart, label: "Analytics" },
@@ -90,11 +95,7 @@ const roleConfigs: Record<string, any> = {
       },
       { to: "/dashboard/donations", icon: Package, label: "Donations" },
       { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
-      {
-        to: "/dashboard/notifications",
-        icon: AlertTriangle,
-        label: "System Alerts",
-      },
+    
     ],
   },
   donor: {
@@ -175,7 +176,7 @@ const roleConfigs: Record<string, any> = {
         label: "Carbon FootPrint Prediction",
       },
       { to: "/dashboard/leaderboard", icon: Crown, label: "Leaderboard" },
-      { to: "/dashboard/statistics", icon: LineChart, label: "Impact" },
+   
     ],
   },
 };
