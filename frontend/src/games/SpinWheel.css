@@ -1,0 +1,98 @@
+.wheel-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+  }
+  
+  .wheel-wrapper {
+    position: relative;
+    width: 320px;
+    height: 320px;
+    margin-bottom: 1rem;
+  }
+  
+  .wheel {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 10px solid #22c55e;
+    background: conic-gradient(
+  #d1fae5 0% 12.5%, #bbf7d0 12.5% 25%,
+  #d1fae5 25% 37.5%, #bbf7d0 37.5% 50%,
+  #d1fae5 50% 62.5%, #bbf7d0 62.5% 75%,
+  #d1fae5 75% 87.5%, #bbf7d0 87.5% 100%
+);
+
+    transition: transform 4s cubic-bezier(0.33, 1, 0.68, 1);
+  }
+  
+  .segment {
+    position: absolute;
+    width: 50%;
+    height: 50%;
+    left: 50%;
+    top: 0;
+    transform-origin: 0% 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    padding-bottom: 24px;
+  }
+  
+  .prize-text {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #1e3a8a;
+    white-space: nowrap;
+  }
+  
+  .indicator {
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-top: 15px solid transparent;
+    border-bottom: 15px solid transparent;
+    border-right: 20px solid #e11d48; /* 🍉 red (Tailwind rose-600) */
+  }
+  
+  
+  
+  
+  .spin-button {
+    margin-top: 1rem;
+    background-color: #fb7185; /* 🍉 pink (Tailwind rose-400) */
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+  }
+  
+  .spin-button:hover {
+    background-color: #f43f5e; /* 🍉 darker red (rose-500) */
+    box-shadow: inset 0 0 0 3px #1e3a1e, 0 4px 12px rgba(0, 0, 0, 0.25); /* seed border */
+  }
+  
+  .spin-button:disabled {
+    background-color: #fecdd3; /* 🍉 pale pink (rose-200) */
+    cursor: not-allowed;
+  }
+  
+  
+  
+  .result {
+    margin-top: 1rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #4f46e5;
+  }
+  
