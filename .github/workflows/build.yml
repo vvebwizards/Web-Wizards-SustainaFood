@@ -8,35 +8,35 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  # sonarqube:
-  #   name: SonarQube
-  #   runs-on: ubuntu-latest # Changed to ubuntu for better Docker support
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         fetch-depth: 0
+  sonarqube:
+    name: SonarQube
+    runs-on: ubuntu-latest # Changed to ubuntu for better Docker support
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-  #     - name: Setup Node
-  #       uses: actions/setup-node@v3
-  #       with:
-  #         node-version: "20"
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
 
-  #     - name: Install dependencies and run tests (frontend)
-  #       working-directory: frontend
-  #       run: |
-  #         npm ci
-  #         npm test -- --coverage
+      - name: Install dependencies and run tests (frontend)
+        working-directory: frontend
+        run: |
+          npm ci
+          npm test -- --coverage
 
-  #     # - name: Install dependencies and run tests (backend)
-  #     #   working-directory: backend
-  #     #   run: |
-  #     #     npm ci
-  #     #     npm test -- --coverage
+      # - name: Install dependencies and run tests (backend)
+      #   working-directory: backend
+      #   run: |
+      #     npm ci
+      #     npm test -- --coverage
 
-  #     - name: SonarQube Scan
-  #       uses: SonarSource/sonarqube-scan-action@v5
-  #       env:
-  #         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   docker-build-push:
     name: Build and Push Docker Images
@@ -60,8 +60,8 @@ jobs:
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/mern-frontend:latest
 
       # Build and push backend image (uncomment when ready)
-      # - name: Build and push backend
-      #   working-directory: backend
-      #   run: |
-      #     docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/mern-backend:latest .
-      #     docker push ${{ secrets.DOCKERHUB_USERNAME }}/mern-backend:latest
+      - name: Build and push backend
+        working-directory: backend
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/mern-backend:latest .
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/mern-backend:latest
