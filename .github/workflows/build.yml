@@ -40,7 +40,7 @@ jobs:
 
   docker-build-push:
     name: Build and Push Docker Images
-    # needs: sonarqube # Wait for SonarQube to complete
+    needs: sonarqube # Wait for SonarQube to complete
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -59,7 +59,7 @@ jobs:
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/mern-frontend:latest .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/mern-frontend:latest
 
-      # Build and push backend image (uncomment when ready)
+      #Build and push backend image (uncomment when ready)
       - name: Build and push backend
         working-directory: backend
         run: |

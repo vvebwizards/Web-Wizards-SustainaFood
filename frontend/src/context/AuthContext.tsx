@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { toast } from "react-toastify";
@@ -21,17 +27,38 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string, captchaToken: string) => Promise<void>;
-  signup: (username: string, email: string, password: string, role: string) => Promise<void>;
-  logout: () => void;
+  login: (
+    email: string,
+    password: string,
+    captchaToken: string
+  ) => Promise<void>;
+  signup: (
+    username: string,
+    email: string,
+    password: string,
+    role: string
+  ) => Promise<void>;
+  logout: () => Promise<void>;
   requestPasswordReset: (email: string) => Promise<void>;
   resetPassword: (token: string, newPassword: string) => Promise<void>;
   verifyTwoFactor: (userId: string, code: string) => Promise<void>;
-  updateUserInfo: (userId: string, username: string, profileImage: File | null) => Promise<void>;
+  updateUserInfo: (
+    userId: string,
+    username: string,
+    profileImage: File | null
+  ) => Promise<void>;
   sendOtp: (userId: string) => Promise<void>;
-  updateTwoFaStatus: (userId: string, status: boolean, code: string) => Promise<void>;
+  updateTwoFaStatus: (
+    userId: string,
+    status: boolean,
+    code: string
+  ) => Promise<void>;
   setUser: (user: User | null) => void;
-  updatePassword: (userId: string, currentPassword: string, newPassword: string) => Promise<void>;
+  updatePassword: (
+    userId: string,
+    currentPassword: string,
+    newPassword: string
+  ) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -102,7 +129,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     checkSession();
   }, []);
 
-  const login = async (email: string, password: string, captchaToken: string) => {
+  const login = async (
+    email: string,
+    password: string,
+    captchaToken: string
+  ) => {
     const res = await axios.post("http://localhost:5000/api/auth/login", {
       email,
       password,
@@ -124,7 +155,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const signup = async (username: string, email: string, password: string, role: string) => {
+  const signup = async (
+    username: string,
+    email: string,
+    password: string,
+    role: string
+  ) => {
     const res = await axios.post("http://localhost:5000/api/auth/signup", {
       username,
       email,
@@ -141,39 +177,63 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem("profileImage");
   };
 
-  const updatePassword = async (userId: string, currentPassword: string, newPassword: string) => {
+  const updatePassword = async (
+    userId: string,
+    currentPassword: string,
+    newPassword: string
+  ) => {
     try {
-      await axios.put(`http://localhost:5000/api/users/update-password/${userId}`, {
-        currentPassword,
-        newPassword,
-      });
+      await axios.put(
+        `http://localhost:5000/api/users/update-password/${userId}`,
+        {
+          currentPassword,
+          newPassword,
+        }
+      );
       toast.success("Password updated successfully!");
     } catch {
       toast.error("Failed to update password. Please try again.");
     }
   };
 
-const updateUserInfo = async (userId: string, username: string, profileImage: File | null) => {
-  const resolvedUserId = userId === ":userId" ? getUserId(user) : userId;
-  const form = new FormData();
-  form.append("username", username);
-  if (profileImage) form.append("profileImage", profileImage);
+  const updateUserInfo = async (
+    userId: string,
+    username: string,
+    profileImage: File | null
+  ) => {
+    const resolvedUserId = userId === ":userId" ? getUserId(user) : userId;
+    const form = new FormData();
+    form.append("username", username);
+    if (profileImage) form.append("profileImage", profileImage);
 
-  const res = await axios.put(`http://localhost:5000/api/auth/update/${resolvedUserId}`, form);
-  setUser(res.data.user);
-};
+    const res = await axios.put(
+      `http://localhost:5000/api/auth/update/${resolvedUserId}`,
+      form
+    );
+    setUser(res.data.user);
+  };
 
   const sendOtp = async (userId: string) => {
     await axios.post(`http://localhost:5000/api/auth/send-otp/${userId}`);
   };
 
   const verifyTwoFactor = async (userId: string, code: string) => {
-    const res = await axios.post(`http://localhost:5000/api/auth/verify-2fa/${userId}`, { code });
+    const res = await axios.post(
+      `http://localhost:5000/api/auth/verify-2fa/${userId}`,
+      { code }
+    );
     setUser(res.data.user);
   };
 
-  const updateTwoFaStatus = async (userId: string, status: boolean, code: string) => {
-    await axios.post(`http://localhost:5000/api/auth/updatetwofa/${userId}`, { twofa: status, code });
+  const updateTwoFaStatus = async (
+    userId: string,
+    status: boolean,
+    code: string
+  ) => {
+    await axios.post(`http://localhost:5000/api/auth/updatetwofa/${userId}`, {
+      twofa: status,
+      code,
+    });
     toast.success("2FA status updated successfully");
   };
 
@@ -183,7 +243,10 @@ const updateUserInfo = async (userId: string, username: string, profileImage: Fi
   };
 
   const resetPassword = async (token: string, newPassword: string) => {
-    await axios.post("http://localhost:5000/api/auth/reset-password", { token, newPassword });
+    await axios.post("http://localhost:5000/api/auth/reset-password", {
+      token,
+      newPassword,
+    });
     toast.success("Password successfully changed!");
   };
 
