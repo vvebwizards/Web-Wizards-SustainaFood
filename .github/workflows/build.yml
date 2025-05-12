@@ -21,11 +21,11 @@ jobs:
         with:
           node-version: "20"
 
-      #   - name: Install dependencies and run tests (frontend)
-      #     working-directory: frontend
-      #     run: |
-      #       npm ci
-      #       npm test -- --coverage
+      - name: Install dependencies and run tests (frontend)
+        working-directory: frontend
+        run: |
+          npm ci
+          npm test -- --coverage
 
       #   - name: Install dependencies and run tests (backend)
       #     working-directory: backend
