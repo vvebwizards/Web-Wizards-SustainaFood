@@ -40,10 +40,18 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(express.json());
 app.use(cookieParser());
 
+// Security headers
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  next();
+});
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
     credentials: true,
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     allowedHeaders: "Origin, X-Requested-With, Content-Type, Accept, Authorization",
@@ -52,7 +60,7 @@ app.use(
 
 
 app.options("*", (req, res) => {
-  res.header("Access-Control-Allow-Origin", "http://localhost:5173");
+  res.header("Access-Control-Allow-Origin", process.env.FRONTEND_URL || "http://localhost:5173");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
   res.header("Access-Control-Allow-Credentials", "true");
@@ -77,6 +85,29 @@ app.use('/api/chat', chatRoutes);
 app.use("/api/settings", settingsRoutes);
 app.get("/", (req, res) => {
   res.send("Backend connected to frontend");
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(err.status || 500).json({
+    error: {
+      message: process.env.NODE_ENV === 'production' 
+        ? 'Internal server error' 
+        : err.message,
+      status: err.status || 500
+    }
+  });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    error: {
+      message: 'Route not found',
+      status: 404
+    }
+  });
 });
 
 setupSocket(server);

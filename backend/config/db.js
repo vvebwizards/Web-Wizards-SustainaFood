@@ -2,10 +2,15 @@ import mongoose from 'mongoose';
 
 const connectDB = async () => {
   try {
-    await mongoose.connect('mongodb://localhost:27017/FoodReduce');
-    console.log('MongoDB Connected');
+    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/FoodReduce';
+    await mongoose.connect(mongoURI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log('MongoDB Connected Successfully');
   } catch (err) {
-    console.log(err);
+    console.error('MongoDB Connection Error:', err.message);
+    process.exit(1);
   }
 };
 
