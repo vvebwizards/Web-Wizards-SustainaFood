@@ -364,18 +364,6 @@ export async function requestPasswordReset(req, res) {
       </div>
     `,
     };
-    /* html: ` <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background-color: #f9f9f9;">
-     <p>Click the link below to reset your password:</p>
-            <a href="${resetLink}">${resetLink}</a>
-            <p>If you did not request this, please ignore this email.</p>`,
-   };
-*/
-    /* /*
-            <p style="font-size: 14px; color: #777;">Ou copiez et collez ce lien dans votre navigateur :</p>
-            <p style="word-wrap: break-word; color: #3498db;"><a href="${resetLink}">${resetLink}</a></p>
-      
-            
-    */
 
     await sendEmail(emailData);
     console.log("✅ Email de réinitialisation envoyé avec succès !");
@@ -537,49 +525,3 @@ export const updateTwoFaStatus = async (req, res) => {
     res.status(500).json({ message: 'Failed to update 2FA status' });
   }
 };
-
-/*
-const sendVerificationEmail = async (user, token) => {
-  const verificationLink = `http://localhost:5173/confirm-email?token=${token}`;
-
-  const emailData = {
-    from: process.env.MAILER_EMAIL_ID,
-    to: user.email,
-    subject: "Verify Your Email",
-    html: `
-      <h2>Welcome, ${user.username}!</h2>
-      <p>Click the button below to verify your email and activate your account:</p>
-      <a href="${verificationLink}" style="display:inline-block; padding:10px 20px; background-color:green; color:white; text-decoration:none; border-radius:5px;">Verify Email</a>
-      <p>If you did not sign up, please ignore this email.</p>
-    `,
-  };
-
-  return transporter.sendMail(emailData);
-};*/
-
-/*
-export async function resetPassword(req, res) {
-  try {
-    const { token, newPassword } = req.body;
-
-    const user = await User.findOne({
-      resetPasswordToken: token,
-      resetPasswordExpires: { $gt: Date.now() }, // Vérifie si le token est encore valide
-    });
-
-    if (!user) {
-      return res.status(400).json({ message: "Invalid or expired reset token." });
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(newPassword, salt);
-    user.resetPasswordToken = undefined; // Supprimer le token après usage
-    user.resetPasswordExpires = undefined;
-    await user.save();
-
-    res.status(200).json({ message: "Password reset successful. You can now log in." });
-  } catch (error) {
-    console.error("Error resetting password:", error);
-    res.status(500).json({ message: "Internal server error." });
-  }
-}
