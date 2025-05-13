@@ -6,7 +6,7 @@ on:
       - azure
     paths:
       - 'backend/**'
-      - '.github/workflows/deploy.yml'
+      - '.github/workflows/azure_foodreduce-backend.yml'
   workflow_dispatch:
 
 jobs:
