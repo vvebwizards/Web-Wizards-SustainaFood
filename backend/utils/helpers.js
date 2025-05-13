@@ -38,24 +38,54 @@ const smtpTransport = nodemailer.createTransport({
 
 
 export async function getAuthenticatedUser(req) {
-  const token = req.cookies.token;
+  // Try to get token from cookies first
+  let token = req.cookies.token;
+  
+  // If not in cookies, check Authorization header
+  if (!token && req.headers.authorization) {
+    const authHeader = req.headers.authorization;
+    if (authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+    }
+  }
+  
   if (!token) throw new Error("Not authenticated");
 
-  const decoded = jwt.verify(token, process.env.JWT_SECRET);
-  const user = await User.findById(decoded.id).select("-password");
-  if (!user) throw new Error("User not found");
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select("-password");
+    if (!user) throw new Error("User not found");
 
-  return user;
+    return user;
+  } catch (error) {
+    console.error('JWT verification error:', error.message);
+    throw new Error("Authentication failed");
+  }
 }
 export async function getAuthenticatedUserwithPassword(req) {
-  const token = req.cookies.token;
+  // Try to get token from cookies first
+  let token = req.cookies.token;
+  
+  // If not in cookies, check Authorization header
+  if (!token && req.headers.authorization) {
+    const authHeader = req.headers.authorization;
+    if (authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+    }
+  }
+  
   if (!token) throw new Error("Not authenticated");
 
-  const decoded = jwt.verify(token, process.env.JWT_SECRET);
-  const user = await User.findById(decoded.id);
-  if (!user) throw new Error("User not found");
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+    if (!user) throw new Error("User not found");
 
-  return user;
+    return user;
+  } catch (error) {
+    console.error('JWT verification error:', error.message);
+    throw new Error("Authentication failed");
+  }
 }
 
 export const sendNewDeviceLoginAlert = async (userId, deviceInfo) => {
