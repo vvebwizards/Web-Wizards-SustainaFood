@@ -24,6 +24,7 @@ export const updateSettings = async (req, res) => {
 
     res.json(settings);
   } catch (error) {
+    console.error("❌ Error in updateSettings:", error);
     res.status(500).json({ message: 'Error updating settings' });
   }
 };

@@ -59,11 +59,19 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             if (!response.ok) throw new Error(`Failed to update settings: ${response.status}`);
             const data = await response.json();
             setSettings(data);
+            // Show toast only on success
+            if (typeof window !== 'undefined' && window.toast) {
+                window.toast.success("Settings updated successfully!");
+            }
         } catch (err) {
             setError(err.message || 'Error updating settings');
             console.error("❌ Error updating settings:", err);
+            if (typeof window !== 'undefined' && window.toast) {
+                window.toast.error("Failed to update settings.");
+            }
         }
     };
+
 
     return (
         <SettingsContext.Provider value={{ settings, fetchSettings, updateSettings, error }}>
