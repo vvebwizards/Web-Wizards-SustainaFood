@@ -57,7 +57,7 @@ const SpinWheel: React.FC = () => {
       // ✅ Send request to backend to add points & update lastSpinDate
       try {
         const res = await axios.put(
-          `http://localhost:5000/api/users/${userId}/add-points`,
+          `http://foodreduce-backend.azurewebsites.net/api/users/${userId}/add-points`,
           { points: result.points },
           { withCredentials: true }
         );

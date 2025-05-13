@@ -61,7 +61,7 @@ const DeliveriesRoutes: React.FC = () => {
 
   const fetchClusters = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/orders/assign_clusters', {
+      const res = await fetch('http://foodreduce-backend.azurewebsites.net/api/orders/assign_clusters', {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });

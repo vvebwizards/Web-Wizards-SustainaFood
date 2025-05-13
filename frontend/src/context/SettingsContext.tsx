@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { useAuth } from './AuthContext';
 
-const SETTINGS_API_URL = "http://localhost:5000/api/settings";
+const SETTINGS_API_URL = "http://foodreduce-backend.azurewebsites.net/api/settings";
 
 interface Settings {
     userId: string;

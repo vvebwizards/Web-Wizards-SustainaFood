@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -16,7 +15,7 @@ function ConfirmEmail() {
     }
 
     axios
-    .get(`http://localhost:5000/api/auth/verify-email?token=${token}`)
+    .get(`http://foodreduce-backend.azurewebsites.net/api/auth/verify-email?token=${token}`)
     .then(() => {
         setStatus("Email has been verified! You can now log in.");
         setTimeout(() => navigate("/signin"), 3000);

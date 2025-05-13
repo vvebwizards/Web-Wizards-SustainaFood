@@ -86,7 +86,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       try {
-        const res = await axios.get("http://localhost:5000/api/auth/me");
+        const res = await axios.get("http://foodreduce-backend.azurewebsites.net/api/auth/me");
         if (res.data.user) {
           setUser(res.data.user);
         } else {
@@ -103,7 +103,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (email: string, password: string, captchaToken: string) => {
-    const res = await axios.post("http://localhost:5000/api/auth/login", {
+    const res = await axios.post("http://foodreduce-backend.azurewebsites.net/api/auth/login", {
       email,
       password,
       captchaToken,
@@ -119,13 +119,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     setUser(u);
     if (u.profileImage) {
-      const imageUrl = `http://localhost:5000${u.profileImage}?t=${Date.now()}`;
+      const imageUrl = `http://foodreduce-backend.azurewebsites.net${u.profileImage}?t=${Date.now()}`;
       localStorage.setItem("profileImage", imageUrl);
     }
   };
 
   const signup = async (username: string, email: string, password: string, role: string) => {
-    const res = await axios.post("http://localhost:5000/api/auth/signup", {
+    const res = await axios.post("http://foodreduce-backend.azurewebsites.net/api/auth/signup", {
       username,
       email,
       password,
@@ -136,14 +136,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = async () => {
-    await axios.post("http://localhost:5000/api/auth/logout");
+    await axios.post("http://foodreduce-backend.azurewebsites.net/api/auth/logout");
     setUser(null);
     localStorage.removeItem("profileImage");
   };
 
   const updatePassword = async (userId: string, currentPassword: string, newPassword: string) => {
     try {
-      await axios.put(`http://localhost:5000/api/users/update-password/${userId}`, {
+      await axios.put(`http://foodreduce-backend.azurewebsites.net/api/users/update-password/${userId}`, {
         currentPassword,
         newPassword,
       });
@@ -159,31 +159,31 @@ const updateUserInfo = async (userId: string, username: string, profileImage: Fi
   form.append("username", username);
   if (profileImage) form.append("profileImage", profileImage);
 
-  const res = await axios.put(`http://localhost:5000/api/auth/update/${resolvedUserId}`, form);
+  const res = await axios.put(`http://foodreduce-backend.azurewebsites.net/api/auth/update/${resolvedUserId}`, form);
   setUser(res.data.user);
 };
 
   const sendOtp = async (userId: string) => {
-    await axios.post(`http://localhost:5000/api/auth/send-otp/${userId}`);
+    await axios.post(`http://foodreduce-backend.azurewebsites.net/api/auth/send-otp/${userId}`);
   };
 
   const verifyTwoFactor = async (userId: string, code: string) => {
-    const res = await axios.post(`http://localhost:5000/api/auth/verify-2fa/${userId}`, { code });
+    const res = await axios.post(`http://foodreduce-backend.azurewebsites.net/api/auth/verify-2fa/${userId}`, { code });
     setUser(res.data.user);
   };
 
   const updateTwoFaStatus = async (userId: string, status: boolean, code: string) => {
-    await axios.post(`http://localhost:5000/api/auth/updatetwofa/${userId}`, { twofa: status, code });
+    await axios.post(`http://foodreduce-backend.azurewebsites.net/api/auth/updatetwofa/${userId}`, { twofa: status, code });
     toast.success("2FA status updated successfully");
   };
 
   const requestPasswordReset = async (email: string) => {
-    await axios.post("http://localhost:5000/api/auth/request-reset", { email });
+    await axios.post("http://foodreduce-backend.azurewebsites.net/api/auth/request-reset", { email });
     toast.success("Password reset email sent!");
   };
 
   const resetPassword = async (token: string, newPassword: string) => {
-    await axios.post("http://localhost:5000/api/auth/reset-password", { token, newPassword });
+    await axios.post("http://foodreduce-backend.azurewebsites.net/api/auth/reset-password", { token, newPassword });
     toast.success("Password successfully changed!");
   };
 
