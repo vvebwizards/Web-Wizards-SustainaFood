@@ -102,16 +102,16 @@ export const StatisticsProvider: React.FC<StatisticsProviderProps> = ({ children
       // Determine the appropriate endpoint based on user role
       switch (user.role) {
         case 'donor':
-          endpoint = '/api/statistics/donor';
+          endpoint = 'https://foodreduce-backend.azurewebsites.net/api/statistics/donor';
           break;
         case 'recipient':
-          endpoint = '/api/statistics/recipient';
+          endpoint = 'https://foodreduce-backend.azurewebsites.net/api/statistics/recipient';
           break;
         case 'volunteer':
-          endpoint = '/api/statistics/volunteer';
+          endpoint = 'https://foodreduce-backend.azurewebsites.net/api/statistics/volunteer';
           break;
         case 'admin':
-          endpoint = '/api/statistics/admin';
+          endpoint = 'https://foodreduce-backend.azurewebsites.net/api/statistics/admin';
           break;
         default:
           setError('Unknown user role');
