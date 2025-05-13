@@ -35,9 +35,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const fetchSettings = async () => {
         if (!user || !user.id) return;
         try {
+            const token = localStorage.getItem('token') || (typeof document !== 'undefined' && document.cookie.match(/(?:^|; )token=([^;]*)/)?.[1]);
             const response = await fetch(`${SETTINGS_API_URL}/get`, {
                 method: 'GET',
                 credentials: 'include',
+                headers: token ? { 'Authorization': `Bearer ${token}` } : {}
             });
             if (!response.ok) throw new Error(`Failed to fetch settings: ${response.status}`);
             const data = await response.json();
@@ -50,9 +52,13 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updateSettings = async (newSettings: Partial<Settings>) => {
         try {
+            const token = localStorage.getItem('token') || (typeof document !== 'undefined' && document.cookie.match(/(?:^|; )token=([^;]*)/)?.[1]);
             const response = await fetch(`${SETTINGS_API_URL}/update`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                },
                 body: JSON.stringify(newSettings),
                 credentials: 'include',
             });
