@@ -23,12 +23,12 @@ const AllDonations = () => {
   useEffect(() => {
     const fetchDonations = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/foodItem/getAllDonationFood");
+        const response = await axios.get("http://foodreduce-backend.azurewebsites.net/api/foodItem/getAllDonationFood");
         const donationsWithUsernames = await Promise.all(
           response.data.map(async (donation: Donation) => {
             if (donation.donorId) {
               try {
-                const userResponse = await axios.get(`http://localhost:5000/api/users/getUser/${donation.donorId}`);
+                const userResponse = await axios.get(`http://foodreduce-backend.azurewebsites.net/api/users/getUser/${donation.donorId}`);
                 donation.donorName = userResponse.data.username;
               } catch {
                 donation.donorName = "Unknown";

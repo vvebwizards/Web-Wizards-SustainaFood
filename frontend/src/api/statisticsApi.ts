@@ -3,7 +3,7 @@ import { DonorStatistics, RecipientStatistics, VolunteerStatistics, AdminStatist
 // Base URL for API requests
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
   ? '/api' 
-  : 'http://localhost:5000/api';
+  : 'http://foodreduce-backend.azurewebsites.net/api';
 
 /**
  * Fetch donor statistics from the backend

@@ -47,7 +47,7 @@ const Cart: FC = () => {
     console.log("➡️ POST /api/orders payload:", orderPayload);
 
     try {
-      const response = await fetch("http://localhost:5000/api/orders", {
+      const response = await fetch("http://foodreduce-backend.azurewebsites.net/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(orderPayload),
@@ -86,7 +86,7 @@ const Cart: FC = () => {
               >
                 <div className="flex gap-4 w-full sm:w-auto">
                   <img
-                    src={`http://localhost:5000${
+                    src={`http://foodreduce-backend.azurewebsites.net${
                       item.imageUrl.startsWith("/") ? "" : "/"
                     }${item.imageUrl}`}
                     alt={item.title}
