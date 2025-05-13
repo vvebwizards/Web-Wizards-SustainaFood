@@ -12,12 +12,12 @@
       "./jest.setup.js"
     ]
   },
-  "scripts": {
-    "build": "babel . -d ../dist --ignore 'node_modules','__tests__','*.test.js'",
-    "start": "node dist/server.js",
-    "dev": "nodemon server.js",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
-  },
+"scripts": {
+  "build": "babel . -d ../dist --ignore 'node_modules','__tests__','*.test.js'",
+  "start": "node ../dist/server.js",
+  "dev": "nodemon server.js",
+  "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
