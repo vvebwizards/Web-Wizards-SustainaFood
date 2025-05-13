@@ -37,7 +37,9 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
   
     try {
       console.log(`📡 Fetching notifications for user ${user.id}`);
-      const response = await axios.get(`${API_BASE_URL}/${user.id}`);
+      const response = await axios.get(`${API_BASE_URL}/${user.id}`, {
+        withCredentials: true
+      });
       setNotifications(response.data);
     } catch (error) {
       console.error("❌ Error fetching notifications:", error);
@@ -57,7 +59,9 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
  
   const markAsRead = async (notificationId: string) => {
     try {
-      await axios.put(`${API_BASE_URL}/${notificationId}/read`);
+      await axios.put(`${API_BASE_URL}/${notificationId}/read`, {}, {
+        withCredentials: true
+      });
       setNotifications((prev) =>
         prev.map((notif) =>
           notif._id === notificationId ? { ...notif, isRead: true } : notif

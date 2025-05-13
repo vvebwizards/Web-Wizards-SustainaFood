@@ -24,20 +24,31 @@ const AddCategoryForm: React.FC<AddCategoryFormProps> = ({ categories, addCatego
 
   const handleAddCategory = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newCategory.trim()) return;
-    if (categories.map(c => c.name.toLowerCase()).includes(newCategory.toLowerCase())) {
+    const trimmedCategory = newCategory.trim();
+    
+    if (!trimmedCategory) {
+      toast.error('Category name cannot be empty');
+      return;
+    }
+    
+    if (categories.map(c => c.name.toLowerCase()).includes(trimmedCategory.toLowerCase())) {
       toast.error('Category already exists');
       return;
     }
+    
     setIsAddingCategory(true);
     try {
-      await addCategory({ name: newCategory });
+      await addCategory({ name: formatCategory(trimmedCategory) });
       toast.success('Category added successfully');
       setNewCategory('');
       onClose();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error adding category:', err);
-      toast.error('Failed to add category');
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to add category';
+      toast.error(errorMessage);
+      if (err.response?.status === 500) {
+        console.error('Server error details:', err.response.data);
+      }
     } finally {
       setIsAddingCategory(false);
     }

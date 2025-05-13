@@ -10,7 +10,9 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Create the socket connection only once on mount
   useEffect(() => {
-    const newSocket = io("http://localhost:5000");
+    const newSocket = io("https://foodreduce-backend.azurewebsites.net", {
+      withCredentials: true
+    });
     setSocket(newSocket);
     return () => {
       newSocket.disconnect();
