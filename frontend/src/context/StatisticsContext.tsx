@@ -125,7 +125,16 @@ export const StatisticsProvider: React.FC<StatisticsProviderProps> = ({ children
         endpoint += `?userId=${userId}`;
       }
 
-      const response = await fetch(endpoint);
+      // Get token from localStorage or cookies
+      let token = localStorage.getItem('token');
+      if (!token && typeof document !== 'undefined') {
+        const match = document.cookie.match(/(?:^|; )token=([^;]*)/);
+        if (match) token = match[1];
+      }
+
+      const response = await fetch(endpoint, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
       
       if (!response.ok) {
         throw new Error('Failed to fetch statistics');
