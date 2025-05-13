@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api': 'http://foodreduce-backend.azurewebsites.net', // Updated to the deployed backend URL
+      '/api': 'https://foodreduce-backend.azurewebsites.net', // Updated to the deployed backend URL
     },
   },
   
