@@ -4,13 +4,16 @@ on:
   push:
     branches:
       - azure
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -20,10 +23,18 @@ jobs:
         with:
           node-version: '22.x'
 
-      - name: npm install and build
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: backend/node_modules
+          key: node-modules-${{ hashFiles('backend/package-lock.json') }}
+          restore-keys: |
+            node-modules-
+
+      - name: Install dependencies and build
         run: |
           cd backend
-          npm install
+          npm ci
           npm run build --if-present
 
       - name: Zip artifact for deployment
@@ -44,8 +55,8 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      id-token: write
+      contents: read
 
     steps:
       - name: Download artifact from build job
@@ -63,7 +74,7 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_CBDD1E233D234E16ADE3A027768FECD2 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_8501622DEA444CD8885BF4C87A33DD9C }}
 
-      - name: 'Deploy to Azure Web App'
+      - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
