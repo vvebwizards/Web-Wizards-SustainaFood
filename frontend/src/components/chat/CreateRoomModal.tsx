@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Check, Copy, Shield, MessageSquare, Info } from "lucide-react";
-import axios from "axios";
+import api from "../../config/axios";
 
 interface Room {
   id: string;
@@ -88,17 +88,18 @@ const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
     setIsSubmitting(true);
     
     try {
-      const newRoom = {
-        ...roomForm,
+      const response = await api.post("/chat/rooms", {
+        name: roomForm.name,
+        description: roomForm.description,
+        isPrivate: roomForm.isPrivate,
         createdBy: currentUserId,
         members: [currentUserId]
-      };
+      });
       
-      const res = await axios.post("/api/chat/rooms", newRoom);
-      onRoomCreated(res.data);
+      onRoomCreated(response.data);
       
-      if (res.data.isPrivate) {
-        setJoinCode(res.data.joinCode);
+      if (response.data.isPrivate) {
+        setJoinCode(response.data.joinCode);
       } else {
         handleClose();
       }

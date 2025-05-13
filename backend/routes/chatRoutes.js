@@ -4,11 +4,16 @@ import RoomMessage from '../models/RoomMessage.js';
 import Room from '../models/Room.js';
 import User from '../models/User.js';
 import Notification from "../models/Notification.js";
-import { sendNotification } from "../socket/socket.js"
+import { sendNotification } from "../socket/socket.js";
+import { isAuthenticated } from '../middleware/authMiddleware.js';
 const router = express.Router();
 
+// Apply authentication middleware to all routes
+router.use(isAuthenticated);
+
 // Get all rooms + lastMessage
-router.get('/rooms', async (req, res) => {
+// Get all rooms + lastMessage
+router.get('/rooms', isAuthenticated, async (req, res) => {
   try {
     const rooms = await Room.find().lean();
     const withLast = await Promise.all(rooms.map(async room => {
@@ -146,7 +151,30 @@ router.post('/rooms/:roomId/roommessages', async (req, res) => {
 });
 
 // Get all users
-router.get('/users', async (req, res) => {
+// Get recent messages for a user
+router.get('/recent/:userId', isAuthenticated, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const messages = await Message.find({
+      $or: [
+        { sender: userId },
+        { receiver: userId }
+      ]
+    })
+    .sort({ createdAt: -1 })
+    .limit(50)
+    .populate('sender', 'username profileImage')
+    .populate('receiver', 'username profileImage');
+    
+    res.json(messages);
+  } catch (error) {
+    console.error('Failed to fetch recent messages:', error);
+    res.status(500).json({ error: 'Failed to fetch recent messages' });
+  }
+});
+
+// Get all users
+router.get('/users', isAuthenticated, async (req, res) => {
   try {
     const users = await User.find({}, '_id username');
     res.json(users);

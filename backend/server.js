@@ -35,10 +35,35 @@ const server = http.createServer(app);
 connectDB();
 
 
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// Configure CORS with allowed origins
+const allowedOrigins = [
+  'https://zealous-glacier-0b57ac403.6.azurestaticapps.net',
+  'http://localhost:5173' // For local development
+];
 
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin) || origin.endsWith('.azurestaticapps.net')) {
+      callback(null, true);
+    } else {
+      console.warn('Blocked by CORS:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Range', 'X-Total-Count'],
+  maxAge: 86400 // 24 hours
+};
+
+// Apply middleware
 app.use(express.json());
 app.use(cookieParser());
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Security headers
 app.use((req, res, next) => {
@@ -49,22 +74,11 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(cors({
-  origin: 'https://zealous-glacier-0b57ac403.6.azurestaticapps.net',
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// Apply CORS middleware
+app.use(cors(corsOptions));
 
-
-
-app.options("*", (req, res) => {
-  res.header("Access-Control-Allow-Origin", process.env.FRONTEND_URL || "http://localhost:5173");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.sendStatus(204); 
-});
+// Handle pre-flight requests
+app.options('*', cors(corsOptions));
 
 app.use(morgan("dev"));
 

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Cpu, Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Cpu, Loader2, PlusCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { FoodItem } from '../components/FoodItemModal';
+import { useCategoryManager } from '../utils/categoryUtils';
 
 interface Category {
   _id: string;
@@ -34,10 +35,19 @@ const AddFoodItemForm: React.FC<AddFoodItemFormProps> = ({ categories, editingIt
   });
   const [isDetectingFreshness, setIsDetectingFreshness] = useState(false);
   const [isFoodRotten, setIsFoodRotten] = useState(false);
+  const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const { ensureCategoryExists } = useCategoryManager();
 
   const formatCategory = (category: string) => {
-    return category.charAt(0).toUpperCase() + category.slice(1);
+    if (!category) return '';
+    return category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
   };
+
+  // Sort categories alphabetically
+  const sortedCategories = [...categories].sort((a, b) => 
+    a.name.localeCompare(b.name)
+  );
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -50,9 +60,34 @@ const AddFoodItemForm: React.FC<AddFoodItemFormProps> = ({ categories, editingIt
     }
   };
 
+  const handleAddNewCategory = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!newCategoryName.trim()) {
+      toast.error('Please enter a category name');
+      return;
+    }
+
+    try {
+      await ensureCategoryExists(newCategoryName);
+      setFormData(prev => ({ ...prev, category: newCategoryName }));
+      setNewCategoryName('');
+      setShowNewCategoryInput(false);
+      toast.success('Category added successfully');
+    } catch (error) {
+      console.error('Error adding category:', error);
+      toast.error('Failed to add category');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsFoodRotten(false);
+
+    // If user is adding a new category but didn't save it
+    if (showNewCategoryInput && newCategoryName) {
+      toast.error('Please save the new category or select an existing one');
+      return;
+    }
 
     if (formData.quantityInStock <= 0) {
       toast.error('The quantity must be greater than 0');
@@ -148,36 +183,67 @@ const AddFoodItemForm: React.FC<AddFoodItemFormProps> = ({ categories, editingIt
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Image*{editingItem ? ' (Optional)' : ''}</label>
               <div className="relative">
-                  <input
-                    type="file"
-                    name="image"
-                    onChange={handleInputChange}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                    required={!editingItem}
-                  />
-                  <div className="flex items-center space-x-2">
-                    <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-600 text-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 z-0">
-                      {formData.imageFile ? formData.imageFile.name : "choose file"}
-                    </div>
+                <input
+                  type="file"
+                  name="image"
+                  onChange={handleInputChange}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                  required={!editingItem}
+                />
+                <div className="flex items-center space-x-2">
+                  <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-600 text-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 z-0">
+                    {formData.imageFile ? formData.imageFile.name : "choose file"}
                   </div>
                 </div>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Category*</label>
-              <select
-                name="category"
-                value={formData.category}
-                onChange={handleInputChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-              >
-                <option value="">Select Category</option>
-                {categories.map((category) => (
-                  <option key={category._id} value={category.name}>
-                    {formatCategory(category.name)}
-                  </option>
-                ))}
-              </select>
+            <div className="mb-4">
+              <div className="flex justify-between items-center mb-1">
+                <label htmlFor="category" className="block text-sm font-medium text-gray-700">
+                  Category
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowNewCategoryInput(!showNewCategoryInput)}
+                  className="text-xs text-green-600 hover:text-green-800 flex items-center"
+                >
+                  <PlusCircle className="w-4 h-4 mr-1" />
+                  {showNewCategoryInput ? 'Cancel' : 'New Category'}
+                </button>
+              </div>
+              {showNewCategoryInput ? (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    placeholder="Enter new category name"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddNewCategory}
+                    className="px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                  >
+                    Add
+                  </button>
+                </div>
+              ) : (
+                <select
+                  id="category"
+                  name="category"
+                  value={formData.category}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  required
+                >
+                  {sortedCategories.map((category) => (
+                    <option key={category._id} value={category.name}>
+                      {formatCategory(category.name)}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Quantity*</label>

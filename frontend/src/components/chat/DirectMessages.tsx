@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useSocket } from "../../context/SocketContext";
 import { useAuth } from "../../context/AuthContext";
-import axios from "axios";
+import api from "../../config/axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ChatMessage, User as UserType } from "../../types";
 import { roleConfigs } from "../../utils/roleConfigs";
@@ -110,7 +110,7 @@ const DirectMessages: React.FC = () => {
   useEffect(() => {
     (async () => {
       try {
-        const res = await axios.get("https://foodreduce-backend.azurewebsites.net/api/users");
+        const res = await api.get("/users");
         const list: UserType[] = Array.isArray(res.data)
           ? res.data
           : res.data.users;
@@ -132,9 +132,7 @@ const DirectMessages: React.FC = () => {
   // Load private chat history
   const loadHistory = async (partnerId: string) => {
     try {
-      const res = await axios.get(
-        `https://foodreduce-backend.azurewebsites.net/api/chat/private/${partnerId}/${currentUserId}`
-      );
+      const res = await api.get(`/chat/private/${partnerId}/${currentUserId}`);
       const loaded: ChatMessage[] = res.data.map((m: any) => ({
         content: m.content,
         senderId: getUserId(m.sender),
