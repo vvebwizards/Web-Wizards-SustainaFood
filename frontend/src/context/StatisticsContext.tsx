@@ -140,22 +140,23 @@ export const StatisticsProvider: React.FC<StatisticsProviderProps> = ({ children
         throw new Error('Failed to fetch statistics');
       }
 
-      const data = await response.json();
-      console.log('📊 Statistics data received:', data);
+      const responseBody = await response.json();
+      console.log('📊 Statistics data received:', responseBody);
+      const stats = responseBody.data || responseBody;
 
       // Update state based on user role
       switch (user.role) {
         case 'donor':
-          updateDonorStatistics(data);
+          updateDonorStatistics(stats);
           break;
         case 'recipient':
-          updateRecipientStatistics(data);
+          updateRecipientStatistics(stats);
           break;
         case 'volunteer':
-          updateVolunteerStatistics(data);
+          updateVolunteerStatistics(stats);
           break;
         case 'admin':
-          updateAdminStatistics(data);
+          updateAdminStatistics(stats);
           break;
       }
     } catch (err) {
