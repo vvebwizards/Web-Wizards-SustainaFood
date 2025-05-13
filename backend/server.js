@@ -108,13 +108,7 @@ app.use((req, res) => {
     }
   });
 });
-const io = require('socket.io')(server, {
-  cors: {
-    origin: 'https://zealous-glacier-0b57ac403.6.azurestaticapps.net',
-    methods: ['GET', 'POST'],
-    credentials: true
-  }
-});
+
 setupSocket(server);
 
 const PORT = process.env.PORT || 5000;
