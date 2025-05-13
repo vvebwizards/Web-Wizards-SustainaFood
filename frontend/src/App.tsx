@@ -40,7 +40,7 @@ import OrdersList from "./pages/OrdersList";
 import OrderDetails from "./pages/OrderDetails";
 import Deliveriess from "./pages/Deliveriess";
 import { StatisticsProvider } from "./context/StatisticsContext";
-import { Overview } from "./pages/overview";
+import { Overview } from "./pages/Overview";
 import Leaderboard from "./pages/Leaderboard";
 import Redeem from "./pages/Redeem";
 import ChatBot from "./components/ChatBot/ChatBot";
