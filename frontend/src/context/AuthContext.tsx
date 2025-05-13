@@ -66,6 +66,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const checkSession = async () => {
+      // Check for token first
+      const token = localStorage.getItem('token') || Cookies.get('token');
+      if (!token) {
+        console.log('🔍 No authentication token found');
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+      
+      // If we have a token, set it to axios default headers
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
       const stored = localStorage.getItem("user");
       const storedPoints = localStorage.getItem("points");
 
@@ -84,13 +96,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       try {
+        console.log('🔍 Checking session with backend');
         const res = await axios.get("https://foodreduce-backend.azurewebsites.net/api/auth/me");
         if (res.data.user) {
+          console.log('✅ Session verified, user loaded');
           setUser(res.data.user);
+          localStorage.setItem('user', JSON.stringify(res.data.user));
         } else {
+          console.log('⚠️ Session check returned no user');
           setUser(null);
         }
-      } catch {
+      } catch (error) {
+        console.error('❌ Session check error:', error);
         setUser(null);
       } finally {
         setLoading(false);
@@ -101,24 +118,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (email: string, password: string, captchaToken: string) => {
-    const res = await axios.post("https://foodreduce-backend.azurewebsites.net/api/auth/login", {
-      email,
-      password,
-      captchaToken,
-    });
-    const u: User = res.data.user;
-    const uid = getUserId(u);
+    try {
+      const res = await axios.post("https://foodreduce-backend.azurewebsites.net/api/auth/login", {
+        email,
+        password,
+        captchaToken,
+      });
+      
+      // Save the token from the response
+      if (res.data.token) {
+        localStorage.setItem('token', res.data.token);
+        Cookies.set('token', res.data.token, { expires: 7 });
+        console.log('📝 Token saved:', res.data.token);
+      } else {
+        console.warn('⚠️ No token received in login response');
+      }
+      
+      const u: User = res.data.user;
+      const uid = getUserId(u);
 
-    if (u.twofa) {
-      await sendOtp(uid);
-      window.location.href = `/2fa?userId=${uid}`;
-      return;
-    }
+      if (u.twofa) {
+        await sendOtp(uid);
+        window.location.href = `/2fa?userId=${uid}`;
+        return;
+      }
 
-    setUser(u);
-    if (u.profileImage) {
-      const imageUrl = `https://foodreduce-backend.azurewebsites.net${u.profileImage}?t=${Date.now()}`;
-      localStorage.setItem("profileImage", imageUrl);
+      setUser(u);
+      localStorage.setItem('user', JSON.stringify(u));
+      
+      if (u.profileImage) {
+        const imageUrl = `https://foodreduce-backend.azurewebsites.net${u.profileImage}?t=${Date.now()}`;
+        localStorage.setItem("profileImage", imageUrl);
+      }
+    } catch (error) {
+      console.error('❌ Login error:', error);
+      toast.error('Login failed. Please check your credentials and try again.');
+      throw error;
     }
   };
 
@@ -134,9 +169,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = async () => {
-    await axios.post("https://foodreduce-backend.azurewebsites.net/api/auth/logout");
-    setUser(null);
-    localStorage.removeItem("profileImage");
+    try {
+      await axios.post("https://foodreduce-backend.azurewebsites.net/api/auth/logout");
+      setUser(null);
+      // Clear all auth data
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      localStorage.removeItem('profileImage');
+      Cookies.remove('token');
+      Cookies.remove('user');
+      console.log('🔒 User logged out and auth data cleared');
+    } catch (error) {
+      console.error('❌ Logout error:', error);
+      // Still clear local data even if API call fails
+      setUser(null);
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      localStorage.removeItem('profileImage');
+      Cookies.remove('token');
+      Cookies.remove('user');
+    }
   };
 
   const updatePassword = async (userId: string, currentPassword: string, newPassword: string) => {

@@ -1,12 +1,7 @@
-// Added Node.js type definitions
-import { process } from "@types/node";
-
 import { DonorStatistics, RecipientStatistics, VolunteerStatistics, AdminStatistics } from '../types/statistics';
 
-// Base URL for API requests
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? '/api' 
-  : 'https://foodreduce-backend.azurewebsites.net/api';
+// Always use the backend URL for API requests
+const API_BASE_URL = 'https://foodreduce-backend.azurewebsites.net/api';
 
 /**
  * Fetch donor statistics from the backend
