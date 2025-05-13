@@ -256,6 +256,7 @@ export const getStatisticsByRole = async (req, res) => {
         });
     }
     
+    console.log('📊 Stats calculated:', stats);
     return res.json({
       success: true,
       data: stats

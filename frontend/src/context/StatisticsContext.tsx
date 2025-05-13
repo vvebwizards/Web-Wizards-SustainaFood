@@ -141,6 +141,7 @@ export const StatisticsProvider: React.FC<StatisticsProviderProps> = ({ children
       }
 
       const data = await response.json();
+      console.log('📊 Statistics data received:', data);
 
       // Update state based on user role
       switch (user.role) {
