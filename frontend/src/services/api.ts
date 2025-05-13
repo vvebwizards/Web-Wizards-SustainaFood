@@ -1,6 +1,6 @@
 import { Order, OrderStats, OrderFilters } from '../types';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'http://foodreduce-backend.azurewebsites.net/api'; // Updated to the deployed backend URL
 
 export const fetchOrders = async (filters?: OrderFilters): Promise<Order[]> => {
   try {
