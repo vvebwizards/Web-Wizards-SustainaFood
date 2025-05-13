@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext } from 'react';
+import axios from 'axios';
 import { FoodItem } from '../components/FoodItemModal';
 
 const FOOD_ITEM_API_URL = "https://foodreduce-backend.azurewebsites.net/api/foodItem";
@@ -17,13 +18,10 @@ export const FoodBankProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const fetchToDonationFood = async () => {
     try {
-      const response = await fetch(`${FOOD_ITEM_API_URL}/foodBank`, {
-        method: 'GET',
-        credentials: 'include',
+      const response = await axios.get(`${FOOD_ITEM_API_URL}/foodBank`, {
+        withCredentials: true
       });
-      if (!response.ok) throw new Error(`Failed to fetch ToDonation food: ${response.status}`);
-      const data = await response.json();
-      setToDonationFood(data);
+      setToDonationFood(response.data);
     } catch (err) {
       setError(err.message || 'Error fetching ToDonation food');
       console.error('Error:', err);

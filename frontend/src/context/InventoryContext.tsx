@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
+import axios from 'axios';
 import { FoodItem } from '../components/FoodItemModal';
 import { Category } from '../components/CategoryModal';
 
@@ -29,22 +30,17 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [inventory, setInventory] = useState<FoodItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchInventory = async () => {
       try {
         const [foodItemResponse, categoryResponse] = await Promise.all([
-          fetch(`${FOOD_ITEM_API_URL}/getAll`, { method: 'GET', credentials: 'include' }),
-          fetch(`${CATEGORY_API_URL}/getAll`, { method: 'GET', credentials: 'include' }),
+          axios.get(`${FOOD_ITEM_API_URL}/getAll`, { withCredentials: true }),
+          axios.get(`${CATEGORY_API_URL}/getAll`, { withCredentials: true }),
         ]);
 
-        if (!foodItemResponse.ok) throw new Error(`Failed to fetch inventory: ${foodItemResponse.status}`);
-        if (!categoryResponse.ok) throw new Error(`Failed to fetch categories: ${categoryResponse.status}`);
-
-        const foodItemData = await foodItemResponse.json();
-        const categoryData = await categoryResponse.json();
-
-        setInventory(foodItemData);
-        setCategories(categoryData);
+        setInventory(foodItemResponse.data);
+        setCategories(categoryResponse.data);
       } catch (err) {
         setError(err.message || 'Error fetching data');
         console.error('Error:', err);
@@ -67,19 +63,12 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       formData.append('status', item.status || 'In Stock');
       if (item.imageFile) formData.append('imageUrl', item.imageFile);
 
-      const response = await fetch(`${FOOD_ITEM_API_URL}/add`, {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
+      const response = await axios.post(`${FOOD_ITEM_API_URL}/add`, formData, {
+        withCredentials: true,
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to add food item: ${response.status} - ${errorText}`);
-      }
-
-      const data = await response.json();
-      setInventory(prev => [...prev, data.foodItem]);
+      setInventory(prev => [...prev, response.data.foodItem]);
     } catch (err) {
       setError(err.message || 'Error adding food item');
       console.warn('Error:', err);
@@ -101,19 +90,12 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (item.status !== undefined) formData.append('status', item.status);
       if (item.imageFile) formData.append('imageUrl', item.imageFile);
 
-      const response = await fetch(`${FOOD_ITEM_API_URL}/updateOne/${id}`, {
-        method: 'PUT',
-        body: formData,
-        credentials: 'include',
+      const response = await axios.put(`${FOOD_ITEM_API_URL}/updateOne/${id}`, formData, {
+        withCredentials: true,
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to update food item: ${response.status} - ${errorText}`);
-      }
-
-      const data = await response.json();
-      setInventory(prev => prev.map(i => (i._id === id ? data.foodItem : i)));
+      setInventory(prev => prev.map(i => (i._id === id ? response.data.foodItem : i)));
     } catch (err) {
       setError(err.message || 'Error updating food item');
       console.warn('Error:', err);
@@ -123,18 +105,10 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const addCategory = async (category: Omit<Category, '_id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      const response = await fetch(`${CATEGORY_API_URL}/add`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(category),
-        credentials: 'include',
+      const response = await axios.post(`${CATEGORY_API_URL}/add`, category, {
+        withCredentials: true,
       });
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to add category: ${response.status} - ${errorText}`);
-      }
-      const data = await response.json();
-      setCategories(prev => [...prev, data.category]);
+      setCategories(prev => [...prev, response.data.category]);
     } catch (err) {
       setError(err.message || 'Error adding category');
       console.warn('Error:', err);
@@ -144,11 +118,9 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const deleteFoodItem = async (id: string) => {
     try {
-      const response = await fetch(`${FOOD_ITEM_API_URL}/deleteOne/${id}`, {
-        method: 'DELETE',
-        credentials: 'include',
+      await axios.delete(`${FOOD_ITEM_API_URL}/deleteOne/${id}`, {
+        withCredentials: true,
       });
-      if (!response.ok) throw new Error(`Failed to delete food item: ${response.status}`);
       setInventory(prev => prev.filter(item => item._id !== id));
     } catch (err) {
       setError(err.message || 'Error deleting food item');
@@ -159,11 +131,9 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const deleteCategory = async (id: string) => {
     try {
-      const response = await fetch(`${CATEGORY_API_URL}/deleteOne/${id}`, {
-        method: 'DELETE',
-        credentials: 'include',
+      await axios.delete(`${CATEGORY_API_URL}/deleteOne/${id}`, {
+        withCredentials: true,
       });
-      if (!response.ok) throw new Error(`Failed to delete category: ${response.status}`);
       setCategories(prev => prev.filter(item => item._id !== id));
     } catch (err) {
       setError(err.message || 'Error deleting category');
@@ -174,20 +144,11 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const donateFoodItem = async (id: string, quantityToDonation: number) => {
     try {
-      const response = await fetch(`${FOOD_ITEM_API_URL}/donate/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quantityToDonation }),
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Failed to donate food item: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setInventory(prev => prev.map(item => (item._id === id ? data.foodItem : item)));
+      const response = await axios.put(`${FOOD_ITEM_API_URL}/donate/${id}`, 
+        { quantityToDonation },
+        { withCredentials: true }
+      );
+      setInventory(prev => prev.map(item => (item._id === id ? response.data.foodItem : item)));
     } catch (err) {
       setError(err.message || 'Error donating food item');
       console.warn('Error:', err);
@@ -195,36 +156,21 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
-
-
   const cancelDonation = async (id: string) => {
     try {
-      const response = await fetch(`${FOOD_ITEM_API_URL}/cancelDonation/${id}`, {
-        method: 'PUT',
-        credentials: 'include',
+      await axios.put(`${FOOD_ITEM_API_URL}/cancelDonation/${id}`, {}, {
+        withCredentials: true,
       });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Failed to cancel donation: ${response.status}`);
-      }
 
-     
-      const foodItemResponse = await fetch(`${FOOD_ITEM_API_URL}/getAll`, {
-        method: 'GET',
-        credentials: 'include',
+      const foodItemResponse = await axios.get(`${FOOD_ITEM_API_URL}/getAll`, {
+        withCredentials: true,
       });
-      if (!foodItemResponse.ok) throw new Error(`Failed to fetch inventory: ${foodItemResponse.status}`);
-      const foodItemData = await foodItemResponse.json();
-      setInventory(foodItemData);
+      setInventory(foodItemResponse.data);
 
-      
-      const donationResponse = await fetch(`${FOOD_ITEM_API_URL}/toBeDonatedFoodByDonor`, {
-        method: 'GET',
-        credentials: 'include',
+      const donationResponse = await axios.get(`${FOOD_ITEM_API_URL}/toBeDonatedFoodByDonor`, {
+        withCredentials: true,
       });
-      if (!donationResponse.ok) throw new Error(`Failed to fetch donation items: ${donationResponse.status}`);
-      const donationData = await donationResponse.json();
-      return donationData; 
+      return donationResponse.data;
     } catch (err) {
       setError(err.message || 'Error cancelling donation');
       console.warn('Error:', err);
@@ -232,21 +178,12 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
-
   const fetchFoodAvailableForDonation = async (): Promise<FoodItem[]> => {
     try {
-      const response = await fetch(`${FOOD_ITEM_API_URL}/toBedonatedFoodByDonor`, {
-        method: 'GET',
-        credentials: 'include',
+      const response = await axios.get(`${FOOD_ITEM_API_URL}/toBedonatedFoodByDonor`, {
+        withCredentials: true,
       });
-  
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to fetch food items for donation: ${response.status} - ${errorText}`);
-      }
-  
-      const data = await response.json();
-      return data.foodItems; 
+      return response.data.foodItems;
     } catch (err) {
       setError(err.message || 'Error fetching food items for donation');
       console.warn('Error:', err);
@@ -256,24 +193,13 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const predictQuantityRequested = async (foodItem: string, startDate: string, endDate: string): Promise<number> => {
     try {
-      const response = await fetch(`${FOOD_ITEM_API_URL}/predict-quantity-requested `, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ foodItem, startDate, endDate }),
-        credentials: 'include',
-      });
-  
-      if (!response.ok) {
-        const errorText = await response.text();
-        if (response.status === 404) {
-          throw new Error('No donation data found in the given time range.');
-        }
-        throw new Error(`Failed to predict quantity requested: ${response.status} - ${errorText}`);
-      }
-  
-      const data = await response.json();
-      if (typeof data.predictedQuantityRequested === 'number') {
-        return data.predictedQuantityRequested;
+      const response = await axios.post(`${FOOD_ITEM_API_URL}/predict-quantity-requested`,
+        { foodItem, startDate, endDate },
+        { withCredentials: true }
+      );
+      
+      if (typeof response.data.predictedQuantityRequested === 'number') {
+        return response.data.predictedQuantityRequested;
       } else {
         throw new Error('Invalid response from backend');
       }
@@ -282,7 +208,6 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       throw err;
     }
   };
-  
 
   return (
     <InventoryContext.Provider
