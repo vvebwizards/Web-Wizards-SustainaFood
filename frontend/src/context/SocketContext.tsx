@@ -8,18 +8,27 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
   const [socket, setSocket] = useState<Socket | null>(null);
 
-  // Create the socket connection only once on mount
   useEffect(() => {
     const newSocket = io("https://foodreduce-backend.azurewebsites.net", {
-      withCredentials: true
+      withCredentials: true,
+      transports: ['websocket', 'polling'],
+      path: '/socket.io',
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      autoConnect: true
     });
+
+    newSocket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
+    });
+
     setSocket(newSocket);
+
     return () => {
       newSocket.disconnect();
     };
   }, []);
 
-  // When both the socket and the user are available, register the user
   useEffect(() => {
     if (socket && user) {
       socket.emit("registerUser", user.id);
