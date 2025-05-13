@@ -122,34 +122,36 @@ const UpdateProfile = () => {
     Cookies.set("user", JSON.stringify(updatedUser), { expires: 7 });
   };
 
-  // Fixed type mismatch and improved error handling in the enable2FA function
   async function enable2FA() {
-    try {
-      if (is2FAEnabled) {
-        const confirmDeactivation = window.confirm('Are you sure you want to deactivate 2FA?');
-        if (confirmDeactivation && user?._id) {
+    if (is2FAEnabled) {
+      const confirmDeactivation = window.confirm('Are you sure you want to deactivate 2FA?');
+      if (confirmDeactivation && user?._id) {
+        try {
           console.log("Deactivating 2FA for user:", user._id);
           await updateTwoFaStatus(user._id, false, '');
           await updateUserStateAndCookies();
           setIs2FAEnabled(false);
-        } else {
-          if (!user?._id) {
-            console.error("User ID is undefined");
-          }
+        } catch (error) {
+          console.error('Error deactivating 2FA:', error);
+          alert('Failed to deactivate 2FA');
         }
       } else {
+        console.error("User ID is undefined or deactivation not confirmed");
+      }
+    } else {
+      try {
         setIsOtpModalOpen(true);
-        if (user?._id) {
-          console.log("Sending OTP to user:", user._id);
-          await sendOtp(user._id);
+        if (user?.id || user?._id) {
+          console.log("Sending OTP to user:", user.id || user._id);
+          await sendOtp(user.id || user._id);
           await updateUserStateAndCookies();
         } else {
           throw new Error('User ID is undefined');
         }
+      } catch (error) {
+        console.error('Error sending OTP:', error);
+        alert('Failed to send OTP');
       }
-    } catch (error) {
-      console.error('Error in 2FA process:', error);
-      alert('An error occurred while processing 2FA. Please try again.');
     }
   }
 
