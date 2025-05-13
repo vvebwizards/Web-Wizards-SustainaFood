@@ -193,10 +193,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const updatePassword = async (userId: string, currentPassword: string, newPassword: string) => {
     try {
-      await axios.put(`https://foodreduce-backend.azurewebsites.net/api/users/update-password/${userId}`, {
-        currentPassword,
-        newPassword,
-      });
+      let token = localStorage.getItem('token');
+      if (!token && typeof document !== 'undefined') {
+        const match = document.cookie.match(/(?:^|; )token=([^;]*)/);
+        if (match) token = match[1];
+      }
+      await axios.put(
+        `https://foodreduce-backend.azurewebsites.net/api/users/update-password/${userId}`,
+        { currentPassword, newPassword },
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+      );
       toast.success("Password updated successfully!");
     } catch {
       toast.error("Failed to update password. Please try again.");
