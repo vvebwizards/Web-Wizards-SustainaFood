@@ -1,3 +1,6 @@
+// Added Node.js type definitions
+import { process } from "@types/node";
+
 import { DonorStatistics, RecipientStatistics, VolunteerStatistics, AdminStatistics } from '../types/statistics';
 
 // Base URL for API requests

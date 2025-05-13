@@ -48,6 +48,7 @@
   },
   "devDependencies": {
     "@babel/preset-env": "^7.26.9",
+    "@types/node": "^22.15.17",
     "babel-jest": "^29.7.0",
     "chai": "^5.2.0",
     "chai-http": "^5.1.1",

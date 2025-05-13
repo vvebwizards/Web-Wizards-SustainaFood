@@ -47,7 +47,7 @@ export async function signup(req, res) {
 
     const userAgent = req.headers['user-agent'];
     const deviceFingerprint = crypto.createHash('sha256').update(userAgent).digest('hex');
-    const defaultImage = "http://foodreduce-backend.azurewebsites.net/../../frontend/src/assets/default_user_img.jpg";
+    const defaultImage = "http://foodreduce-backend.azurewebsites.net/../../frontend/src/assets/default_user_img.jpg"; // Ensure proper syntax
 
     // ✅ Créer un nouvel utilisateur non vérifié
     const newUser = new User({
