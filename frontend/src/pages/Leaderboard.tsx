@@ -75,7 +75,7 @@ interface User {
   role: keyof typeof roleConfigs;
 }
 
-const BASE_URL = "http://localhost:5000";
+const BASE_URL = "https://foodreduce-backend.azurewebsites.net";
 
 const calculateLevel = (points: number) => {
   const levelThresholds = [500, 1000, 1500, 2000, 5000];

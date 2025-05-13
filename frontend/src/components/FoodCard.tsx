@@ -16,7 +16,7 @@ export const FoodCard: React.FC<FoodCardProps> = ({ item }) => {
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
       <img
-        src={`http://localhost:5000${item.imageUrl}`}
+        src={`https://foodreduce-backend.azurewebsites.net${item.imageUrl}`}
         alt={item.title}
         className="w-full h-48 object-cover"
       />

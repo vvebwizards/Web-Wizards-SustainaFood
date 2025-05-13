@@ -108,7 +108,7 @@ const Profile = () => {
   const getImageUrl = (profileImage: string | undefined) => {
     if (!profileImage) return defaultImage;
     if (profileImage.startsWith('http')) return profileImage;
-    return `http://localhost:5000${profileImage}?t=${new Date().getTime()}`;
+    return `https://foodreduce-backend.azurewebsites.net${profileImage}?t=${new Date().getTime()}`;
   };
 
   const [profileImageUrl, setProfileImageUrl] = useState(getImageUrl(user?.profileImage));

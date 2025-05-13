@@ -18,7 +18,7 @@ interface UserDetailsModalProps {
   onBlock: (userId: string) => void;
 }
 
-const BASE_URL = "http://localhost:5000";
+const BASE_URL = "https://foodreduce-backend.azurewebsites.net";
 
 export function UserDetailsModal({
   user,

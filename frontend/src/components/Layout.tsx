@@ -208,7 +208,7 @@ const Layout: React.FC = () => {
     if (user?.profileImage) {
       const url = user.profileImage.startsWith("http")
         ? user.profileImage
-        : `http://localhost:5000${user.profileImage}`;
+        : `https://foodreduce-backend.azurewebsites.net${user.profileImage}`;
       setProfileImage(`${url}?t=${Date.now()}`);
     }
   }, [user]);

@@ -292,7 +292,7 @@ const Inventory: React.FC = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           {item.imageUrl ? (
                             <img
-                              src={`http://localhost:5000${item.imageUrl}`}
+                              src={`https://foodreduce-backend.azurewebsites.net${item.imageUrl}`}
                               alt={item.title || 'No Title'}
                               className="h-8 w-8 object-cover rounded"
                               onError={(e) => (e.currentTarget.src = '/placeholder-image.jpg')}

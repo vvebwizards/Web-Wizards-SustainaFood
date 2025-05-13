@@ -44,7 +44,7 @@ export interface Stats {
   }
   
   export async function fetchStats(): Promise<Stats> {
-    const res = await fetch('http://localhost:5000/api/stats');
+    const res = await fetch('https://foodreduce-backend.azurewebsites.net/api/stats');
     if (!res.ok) {
       throw new Error(`Failed to load stats: ${res.statusText}`);
     }

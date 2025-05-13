@@ -21,7 +21,7 @@ const MyDonations = () => {
   useEffect(() => {
     const fetchDonations = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/foodItem/getToDonationFood");
+        const response = await axios.get("https://foodreduce-backend.azurewebsites.net/api/foodItem/getToDonationFood");
         setDonations(response.data);
       } catch (err) {
         setError("Failed to fetch donations");

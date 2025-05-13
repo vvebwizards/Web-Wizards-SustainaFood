@@ -13,7 +13,7 @@ const MyRequests: React.FC = () => {
     const fetchOrders = async () => {
       try {
         console.log("📦 Fetching orders for the authenticated user");
-        const response = await fetch(`http://localhost:5000/api/orders/my`, {
+        const response = await fetch(`https://foodreduce-backend.azurewebsites.net/api/orders/my`, {
           credentials: "include",
         });
 
@@ -218,7 +218,7 @@ const MyRequests: React.FC = () => {
                         >
                           {item.imageUrl ? (
                             <img
-                              src={`http://localhost:5000${item.imageUrl}`}
+                              src={`https://foodreduce-backend.azurewebsites.net${item.imageUrl}`}
                               alt={item.title || item.name || "Product image"}
                               className="w-16 h-16 object-cover rounded-md shadow-sm"
                               onError={(e) => (e.currentTarget.src = "/placeholder-image.jpg")}

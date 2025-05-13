@@ -213,7 +213,7 @@ const UpdateProfile = () => {
         const isAbsolute = user.profileImage.startsWith("http");
         const imageUrl = isAbsolute
           ? user.profileImage
-          : `http://localhost:5000${user.profileImage}`;
+          : `https://foodreduce-backend.azurewebsites.net${user.profileImage}`;
         setPreview(`${imageUrl}?t=${Date.now()}`);
       } else {
         setPreview(defaultImage);

@@ -22,7 +22,7 @@ const UserAvatar: React.FC<UserAvatarProps> = ({ user, size = 'md' }) => {
     // Build a proper src URL:
     let src = user.profileImage.startsWith('http')
       ? user.profileImage
-      : `http://localhost:5000${user.profileImage}`;
+      : `https://foodreduce-backend.azurewebsites.net${user.profileImage}`;
     // Cache-bust
     src += `?t=${Date.now()}`;
 

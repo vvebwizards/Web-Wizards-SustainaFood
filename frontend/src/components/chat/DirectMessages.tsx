@@ -110,7 +110,7 @@ const DirectMessages: React.FC = () => {
   useEffect(() => {
     (async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/users");
+        const res = await axios.get("https://foodreduce-backend.azurewebsites.net/api/users");
         const list: UserType[] = Array.isArray(res.data)
           ? res.data
           : res.data.users;
@@ -133,7 +133,7 @@ const DirectMessages: React.FC = () => {
   const loadHistory = async (partnerId: string) => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/chat/private/${partnerId}/${currentUserId}`
+        `https://foodreduce-backend.azurewebsites.net/api/chat/private/${partnerId}/${currentUserId}`
       );
       const loaded: ChatMessage[] = res.data.map((m: any) => ({
         content: m.content,
