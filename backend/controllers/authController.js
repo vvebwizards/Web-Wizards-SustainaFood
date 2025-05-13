@@ -183,7 +183,7 @@ export async function login(req, res) {
     };
 
     console.log("✅ Login successful for:", email);
-    res.status(200).json({ message: "Login successful", user: userData });
+    res.status(200).json({ message: "Login successful", user: userData, token });
 
     const userAgent = req.headers['user-agent']; 
     const deviceFingerprint = crypto.createHash('sha256').update(userAgent).digest('hex'); 
