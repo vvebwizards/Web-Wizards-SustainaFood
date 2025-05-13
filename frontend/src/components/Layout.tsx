@@ -232,7 +232,7 @@ const Layout: React.FC = () => {
     if (!currentUserId) return;
 
     try {
-      const res = await fetch(`/api/chat/recent/${currentUserId}`);
+      const res = await fetch(`https://foodreduce-backend.azurewebsites.net/api/chat/recent/${currentUserId}`);
       if (!res.ok) throw new Error("Network response was not ok");
       const data: RecentMessage[] = await res.json();
       const filtered = data.filter((m) => m.senderId !== currentUserId);
@@ -246,7 +246,7 @@ const Layout: React.FC = () => {
 
   const markMessageAsRead = async (msgId: string) => {
     try {
-      await fetch(`/api/chat/read/${msgId}`, { method: "PUT" });
+      await fetch(`https://foodreduce-backend.azurewebsites.net/api/chat/read/${msgId}`, { method: "PUT" });
       setRecentMessages((prev) =>
         prev.map((m) => (m._id === msgId ? { ...m, isRead: true } : m))
       );
