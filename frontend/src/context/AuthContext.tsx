@@ -39,7 +39,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const verifyEmail = async (token: string) => {
   try {
     const res = await fetch(
-      `${process.env.REACT_APP_API_URL}/api/auth/verify-email?token=${token}`,
+      `https://zealous-glacier-0b57ac403.6.azurestaticapps.net/api/auth/verify-email?token=${token}`,
       { method: "GET" }
     );
     const data = await res.json();
