@@ -87,7 +87,7 @@ export default function MemoryGame() {
       const userId = user?._id || user?.id; // Use the correct user ID (either _id or id)
       if (userId) {
         axios.put(
-          `http://foodreduce-backend.azurewebsites.net/api/users/${userId}/add-points`,
+          `https://foodreduce-backend.azurewebsites.net/api/users/${userId}/add-points`,
           { points: award },
           { withCredentials: true }
         )

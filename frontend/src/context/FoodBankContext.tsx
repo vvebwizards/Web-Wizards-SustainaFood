@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext } from 'react';
 import { FoodItem } from '../components/FoodItemModal';
 
-const FOOD_ITEM_API_URL = "http://foodreduce-backend.azurewebsites.net/api/foodItem";
+const FOOD_ITEM_API_URL = "https://foodreduce-backend.azurewebsites.net/api/foodItem";
 
 interface FoodBankContextType {
   toDonationFood: FoodItem[];

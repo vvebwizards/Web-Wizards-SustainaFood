@@ -10,7 +10,7 @@ let onlineUsers = new Map();
 const setupSocket = (server) => {
   const io = new Server(server, {
     cors: {
-      origin: "http://localhost:5173",
+      origin: "https://zealous-glacier-0b57ac403.6.azurestaticapps.net",
       methods: ["GET", "POST"],
     },
   });

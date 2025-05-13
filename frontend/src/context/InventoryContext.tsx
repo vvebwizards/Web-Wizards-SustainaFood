@@ -2,8 +2,8 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import { FoodItem } from '../components/FoodItemModal';
 import { Category } from '../components/CategoryModal';
 
-const FOOD_ITEM_API_URL = "http://foodreduce-backend.azurewebsites.net/api/foodItem";
-const CATEGORY_API_URL = "http://foodreduce-backend.azurewebsites.net/api/category";
+const FOOD_ITEM_API_URL = "https://foodreduce-backend.azurewebsites.net/api/foodItem";
+const CATEGORY_API_URL = "https://foodreduce-backend.azurewebsites.net/api/category";
 
 interface InventoryContextType {
   inventory: FoodItem[];

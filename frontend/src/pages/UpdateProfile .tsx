@@ -116,7 +116,7 @@ const UpdateProfile = () => {
   }, [settings]);
 
   const updateUserStateAndCookies = async () => {
-    const response = await axios.get(`http://foodreduce-backend.azurewebsites.net/api/auth/me`, { withCredentials: true });
+    const response = await axios.get(`https://foodreduce-backend.azurewebsites.net/api/auth/me`, { withCredentials: true });
     const updatedUser = response.data.user;
     setUser(updatedUser);
     Cookies.set("user", JSON.stringify(updatedUser), { expires: 7 });

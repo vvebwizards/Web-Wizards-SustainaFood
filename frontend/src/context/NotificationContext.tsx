@@ -11,7 +11,7 @@ interface Notification {
   createdAt: string; 
 }
 
-const API_BASE_URL = "http://foodreduce-backend.azurewebsites.net/api/notifications";
+const API_BASE_URL = "https://foodreduce-backend.azurewebsites.net/api/notifications";
 
 
 interface NotificationContextType {

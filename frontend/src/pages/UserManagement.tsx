@@ -4,7 +4,7 @@ import { UserDetailsModal } from "../components/UserDetailsModal";
 import axios from "axios";
 import { roleConfigs } from "../utils/roleConfigs";
 import defaultProfileImage from "../assets/images/default_user_img.jpg";
-const BASE_URL = "http://foodreduce-backend.azurewebsites.net"; // Updated to the deployed backend URL
+const BASE_URL = "https://foodreduce-backend.azurewebsites.net"; // Updated to the deployed backend URL
 
 export function UserManagement() {
   const [users, setUsers] = useState<any[]>([]);

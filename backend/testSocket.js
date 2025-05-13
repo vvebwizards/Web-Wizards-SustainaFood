@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 
-const socket = io("http://foodreduce-backend.azurewebsites.net");
+const socket = io("https://foodreduce-backend.azurewebsites.net");
 
 socket.on("connect", () => {
   console.log("🟢 Connected to WebSocket server!");

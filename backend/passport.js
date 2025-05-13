@@ -11,7 +11,7 @@ passport.use(
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       // The URL Google will redirect to AFTER the user signs in
-      callbackURL: "http://foodreduce-backend.azurewebsites.net/api/auth/google/callback",
+      callbackURL: "https://foodreduce-backend.azurewebsites.net/api/auth/google/callback",
     },
     async (accessToken, refreshToken, profile, done) => {
       try {

@@ -24,7 +24,7 @@ describe('FoodItem Controller Tests', () => {
       email: 'donor@example.com',
       password: hashedPassword,
       role: 'donor',
-      profileImage: 'http://foodreduce-backend.azurewebsites.net/../../frontend/src/assets/default_user_img.jpg',
+      profileImage: 'https://foodreduce-backend.azurewebsites.net/../../frontend/src/assets/default_user_img.jpg',
       registeredDevices: [],
       blocked: false,
     });

@@ -145,7 +145,7 @@ const TicTacToe: React.FC = () => {
 
     try {
       const res = await axios.put(
-        `http://foodreduce-backend.azurewebsites.net/api/users/${userId}/add-points`,
+        `https://foodreduce-backend.azurewebsites.net/api/users/${userId}/add-points`,
         { points: awardedPoints },
         { withCredentials: true }
       );

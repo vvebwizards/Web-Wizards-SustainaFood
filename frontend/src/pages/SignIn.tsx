@@ -32,7 +32,7 @@ function Login() {
   };
 
   const handleGoogleSignIn = () => {
-    window.location.href = "http://foodreduce-backend.azurewebsites.net/api/auth/google"; // Updated to the deployed backend URL
+    window.location.href = "https://foodreduce-backend.azurewebsites.net/api/auth/google"; // Updated to the deployed backend URL
   };
 
   return (
