@@ -231,16 +231,30 @@ const Layout: React.FC = () => {
   const fetchRecentMessages = async () => {
     if (!currentUserId) return;
 
+    const token = localStorage.getItem('token');
+    console.log('Token:', token); // Debug: check if token is present
+
+    if (!token) {
+      // Handle missing token, e.g., redirect to login or show error
+      console.error('No token found. Please log in.');
+      return;
+    }
+
     try {
-      const res = await fetch(`https://foodreduce-backend.azurewebsites.net/api/chat/recent/${currentUserId}`);
-      if (!res.ok) throw new Error("Network response was not ok");
+      const res = await fetch(`https://foodreduce-backend.azurewebsites.net/api/chat/recent/${currentUserId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+      });
+      if (!res.ok) throw new Error('Network response was not ok');
       const data: RecentMessage[] = await res.json();
       const filtered = data.filter((m) => m.senderId !== currentUserId);
 
       setRecentMessages(filtered);
       setUnreadMessageCount(filtered.filter((m) => !m.isRead).length);
     } catch (err) {
-      console.error("Failed to fetch recent messages:", err);
+      console.error('Failed to fetch recent messages:', err);
     }
   };
 
