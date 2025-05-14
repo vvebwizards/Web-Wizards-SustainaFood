@@ -260,7 +260,18 @@ const Layout: React.FC = () => {
 
   const markMessageAsRead = async (msgId: string) => {
     try {
-      await fetch(`https://foodreduce-backend.azurewebsites.net/api/chat/read/${msgId}`, { method: "PUT" });
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No token found. Please log in.');
+        return;
+      }
+      await fetch(`https://foodreduce-backend.azurewebsites.net/api/chat/read/${msgId}`, {
+        method: "PUT",
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
       setRecentMessages((prev) =>
         prev.map((m) => (m._id === msgId ? { ...m, isRead: true } : m))
       );
