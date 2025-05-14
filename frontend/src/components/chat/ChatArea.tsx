@@ -36,7 +36,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   useEffect(() => {
     if (!selectedRoom?._id) return;
     const fetchHistory = async () => {
-      const url = `/api/chat/rooms/${selectedRoom._id}/roommessages?t=${Date.now()}`;
+      const url = `https://foodreduce-backend.azurewebsites.net/api/chat/rooms/${selectedRoom._id}/messages?t=${Date.now()}`;
       console.log('🔄 Fetching history from', url);
       try {
         const res = await axios.get(url, { params: { t: Date.now() } });
@@ -68,7 +68,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
     if (!selectedRoom?._id) return;
     (async () => {
       try {
-        const url = `/api/chat/rooms/${selectedRoom._id}/members`;
+        const url = `https://foodreduce-backend.azurewebsites.net/api/chat/rooms/${selectedRoom._id}/members`;
         console.log('🔄 Fetching members from', url);
         const res = await axios.get(url, { params: { t: Date.now() } });
         setRoomMembers(res.data);

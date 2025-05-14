@@ -10,7 +10,7 @@ const InviteModal = ({ roomId, currentUserId, onClose, theme, roomMembers }) => 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await axios.get("/api/chat/users");
+        const res = await axios.get("https://foodreduce-backend.azurewebsites.net/api/chat/users");
         setUsers(res.data);
       } catch (err) {
         console.error("Failed to fetch users", err);
@@ -22,7 +22,7 @@ const InviteModal = ({ roomId, currentUserId, onClose, theme, roomMembers }) => 
   const inviteUser = async (toUsername) => {
     setLoading(true);
     try {
-      await axios.post(`/api/chat/rooms/${roomId}/invite`, {
+      await axios.post(`https://foodreduce-backend.azurewebsites.net/api/chat/rooms/${roomId}/invite`, {
         fromUserId: currentUserId,
         toUsername,
       });

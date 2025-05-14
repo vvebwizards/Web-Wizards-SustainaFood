@@ -39,7 +39,7 @@ const RoomList: React.FC<RoomListProps> = ({
   useEffect(() => {
     const loadRooms = async () => {
       try {
-        const res = await api.get("/chat/rooms");
+        const res = await api.get("https://foodreduce-backend.azurewebsites.net/api/chat/rooms");
         setRooms(res.data);
         applyFilters(res.data);
       } catch (err) {
@@ -82,7 +82,7 @@ const RoomList: React.FC<RoomListProps> = ({
       setSelectedPrivateRoom(room);
     } else {
       try {
-        const res = await api.post(`/chat/rooms/${room._id}/join/${currentUserId}`);
+        const res = await api.post(`https://foodreduce-backend.azurewebsites.net/api/chat/rooms/${room._id}/join`, { userId: currentUserId });
         const updatedRoom = { ...room, members: [...room.members, currentUserId] };
         setRooms((prev) => prev.map(r => r._id === room._id ? updatedRoom : r));
         selectRoom(updatedRoom);
@@ -94,7 +94,7 @@ const RoomList: React.FC<RoomListProps> = ({
 
   const leaveRoom = async (room: Room) => {
     try {
-      const res = await api.post(`/chat/rooms/${room._id}/leave/${currentUserId}`);
+      const res = await api.post(`https://foodreduce-backend.azurewebsites.net/api/chat/rooms/${room._id}/leave`, { userId: currentUserId });
       const updatedRoom = { ...room, members: room.members.filter(id => id !== currentUserId) };
       setRooms((prev) => prev.map(r => r._id === room._id ? updatedRoom : r));
       if (selectedRoom?._id === room._id) setSelectedRoom(null);
@@ -251,7 +251,7 @@ const PrivateJoinModal = ({ room, onClose, onJoinSuccess, currentUserId, theme }
 
   const handleJoin = async () => {
     try {
-      const res = await api.post(`/chat/rooms/${room._id}/join/${currentUserId}`, { code });
+      const res = await api.post(`https://foodreduce-backend.azurewebsites.net/api/chat/rooms/join-by-code`, { userId: currentUserId, code });
       if (res.data.roomId === room._id) {
         const updatedRoom = { ...room, members: [...room.members, currentUserId] };
         onJoinSuccess(updatedRoom);
