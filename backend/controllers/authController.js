@@ -42,23 +42,18 @@ export async function signup(req, res) {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // ✅ Générer un token de vérification
-    const verificationToken = crypto.randomBytes(32).toString("hex");
-
     const userAgent = req.headers['user-agent'];
     const deviceFingerprint = crypto.createHash('sha256').update(userAgent).digest('hex');
     const defaultImage = "https://foodreduce-backend.azurewebsites.net/../../frontend/src/assets/default_user_img.jpg"; // Ensure proper syntax
 
-    // ✅ Créer un nouvel utilisateur non vérifié
+    // Créer un nouvel utilisateur directement vérifié
     const newUser = new User({
       username,
       email,
       password: hashedPassword,
       role,
       profileImage: defaultImage,
-      verificationToken,
-      verificationExpires: Date.now() + 3600000, // Expiration dans 1 heure
-      verified: false,
+      verified: true,
     });
 
     newUser.registeredDevices.push(deviceFingerprint);
@@ -75,13 +70,10 @@ export async function signup(req, res) {
     });
     await newSettings.save();
 
-    // ✅ Envoyer l'email de vérification
-    console.log("📡 Tentative d'envoi de l'email de vérification...");
-    await sendEmailVerification(newUser, verificationToken);
-    console.log("✅ Email de vérification envoyé avec succès !");
+    // Email verification disabled: skip sending verification email
 
-    // ✅ UNE SEULE réponse HTTP après toutes les opérations
-    return res.status(201).json({ message: "User registered successfully. Please check your email for verification." });
+    // Réponse HTTP après l'inscription
+    return res.status(201).json({ message: "User registered successfully. You can now log in." });
 
   } catch (error) {
     console.error("❌ Signup Error:", error);
