@@ -249,10 +249,15 @@ const Layout: React.FC = () => {
       });
       if (!res.ok) throw new Error('Network response was not ok');
       const data: RecentMessage[] = await res.json();
-      const filtered = data.filter((m) => m.senderId !== currentUserId);
+      const filtered = data
+      .filter((m) => m.senderId !== currentUserId)
+      .map((m) => ({
+        ...m,
+        timestamp: m.createdAt || m.timestamp,
+      }));
 
-      setRecentMessages(filtered);
-      setUnreadMessageCount(filtered.filter((m) => !m.isRead).length);
+    setRecentMessages(filtered);
+    setUnreadMessageCount(filtered.filter((m) => !m.isRead).length);
     } catch (err) {
       console.error('Failed to fetch recent messages:', err);
     }
