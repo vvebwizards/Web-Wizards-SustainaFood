@@ -53,15 +53,25 @@ const Cart: FC = () => {
         body: JSON.stringify(orderPayload),
       });
 
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || "Order submission failed");
+      let data;
+      try {
+        data = await response.json();
+      } catch (e) {
+        data = {};
       }
 
-      toast.success("Your order has been placed successfully!");
-      clearCart();
-      setShowModal(false);
-      setLatLng(null);
+      // Check for order ID (assume _id or id)
+      if ((data && (data._id || data.id)) || response.ok) {
+        toast.success("Your order has been placed successfully!");
+        clearCart();
+        setShowModal(false);
+        setLatLng(null);
+        return;
+      }
+
+      // Otherwise, show error as before
+      const errMsg = (data && data.error) || "Order submission failed";
+      throw new Error(errMsg);
     } catch (error: any) {
       console.error("Order error:", error);
       alert(`❌ ${error.message}`);
