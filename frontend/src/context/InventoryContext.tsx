@@ -1,10 +1,10 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import axiosInstance from '../services/axiosConfig';
 import { FoodItem } from '../components/FoodItemModal';
 import { Category } from '../components/CategoryModal';
 
-const FOOD_ITEM_API_URL = "https://foodreduce-backend.azurewebsites.net/api/foodItem";
-const CATEGORY_API_URL = "https://foodreduce-backend.azurewebsites.net/api/category";
+const FOOD_ITEM_PATH = "/foodItem";
+const CATEGORY_PATH = "/category";
 
 interface InventoryContextType {
   inventory: FoodItem[];
@@ -35,15 +35,15 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const fetchInventory = async () => {
       try {
         const [foodItemResponse, categoryResponse] = await Promise.all([
-          axios.get(`${FOOD_ITEM_API_URL}/getAll`, { withCredentials: true }),
-          axios.get(`${CATEGORY_API_URL}/getAll`, { withCredentials: true }),
+          axiosInstance.get(`${FOOD_ITEM_PATH}/getAll`),
+          axiosInstance.get(`${CATEGORY_PATH}/getAll`),
         ]);
 
         setInventory(foodItemResponse.data);
         setCategories(categoryResponse.data);
       } catch (err) {
         setError(err.message || 'Error fetching data');
-        console.error('Error:', err);
+        console.error('Error fetching inventory data:', err);
       }
     };
     fetchInventory();
@@ -63,8 +63,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       formData.append('status', item.status || 'In Stock');
       if (item.imageFile) formData.append('imageUrl', item.imageFile);
 
-      const response = await axios.post(`${FOOD_ITEM_API_URL}/add`, formData, {
-        withCredentials: true,
+      const response = await axiosInstance.post(`${FOOD_ITEM_PATH}/add`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
@@ -90,8 +89,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (item.status !== undefined) formData.append('status', item.status);
       if (item.imageFile) formData.append('imageUrl', item.imageFile);
 
-      const response = await axios.put(`${FOOD_ITEM_API_URL}/updateOne/${id}`, formData, {
-        withCredentials: true,
+      const response = await axiosInstance.put(`${FOOD_ITEM_PATH}/update/${id}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
@@ -105,9 +103,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const addCategory = async (category: Omit<Category, '_id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      const response = await axios.post(`${CATEGORY_API_URL}/add`, category, {
-        withCredentials: true,
-      });
+      const response = await axiosInstance.post(`${CATEGORY_PATH}/add`, category);
       setCategories(prev => [...prev, response.data.category]);
     } catch (err) {
       setError(err.message || 'Error adding category');
@@ -118,9 +114,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const deleteFoodItem = async (id: string) => {
     try {
-      await axios.delete(`${FOOD_ITEM_API_URL}/deleteOne/${id}`, {
-        withCredentials: true,
-      });
+      await axiosInstance.delete(`${FOOD_ITEM_PATH}/deleteOne/${id}`);
       setInventory(prev => prev.filter(item => item._id !== id));
     } catch (err) {
       setError(err.message || 'Error deleting food item');
@@ -131,9 +125,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const deleteCategory = async (id: string) => {
     try {
-      await axios.delete(`${CATEGORY_API_URL}/deleteOne/${id}`, {
-        withCredentials: true,
-      });
+      await axiosInstance.delete(`${CATEGORY_PATH}/deleteOne/${id}`);
       setCategories(prev => prev.filter(item => item._id !== id));
     } catch (err) {
       setError(err.message || 'Error deleting category');
@@ -144,9 +136,8 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const donateFoodItem = async (id: string, quantityToDonation: number) => {
     try {
-      const response = await axios.put(`${FOOD_ITEM_API_URL}/donate/${id}`, 
-        { quantityToDonation },
-        { withCredentials: true }
+      const response = await axiosInstance.put(`${FOOD_ITEM_PATH}/donate/${id}`, 
+        { quantityToDonation }
       );
       setInventory(prev => prev.map(item => (item._id === id ? response.data.foodItem : item)));
     } catch (err) {
@@ -158,18 +149,12 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const cancelDonation = async (id: string) => {
     try {
-      await axios.put(`${FOOD_ITEM_API_URL}/cancelDonation/${id}`, {}, {
-        withCredentials: true,
-      });
+      await axiosInstance.put(`${FOOD_ITEM_PATH}/cancelDonation/${id}`, {});
 
-      const foodItemResponse = await axios.get(`${FOOD_ITEM_API_URL}/getAll`, {
-        withCredentials: true,
-      });
+      const foodItemResponse = await axiosInstance.get(`${FOOD_ITEM_PATH}/getAll`);
       setInventory(foodItemResponse.data);
 
-      const donationResponse = await axios.get(`${FOOD_ITEM_API_URL}/toBeDonatedFoodByDonor`, {
-        withCredentials: true,
-      });
+      const donationResponse = await axiosInstance.get(`${FOOD_ITEM_PATH}/toBeDonatedFoodByDonor`);
       return donationResponse.data;
     } catch (err) {
       setError(err.message || 'Error cancelling donation');
@@ -180,9 +165,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const fetchFoodAvailableForDonation = async (): Promise<FoodItem[]> => {
     try {
-      const response = await axios.get(`${FOOD_ITEM_API_URL}/toBedonatedFoodByDonor`, {
-        withCredentials: true,
-      });
+      const response = await axiosInstance.get(`${FOOD_ITEM_PATH}/toBedonatedFoodByDonor`);
       return response.data.foodItems;
     } catch (err) {
       setError(err.message || 'Error fetching food items for donation');
@@ -193,9 +176,8 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const predictQuantityRequested = async (foodItem: string, startDate: string, endDate: string): Promise<number> => {
     try {
-      const response = await axios.post(`${FOOD_ITEM_API_URL}/predict-quantity-requested`,
-        { foodItem, startDate, endDate },
-        { withCredentials: true }
+      const response = await axiosInstance.post(`${FOOD_ITEM_PATH}/predict-quantity-requested`,
+        { foodItem, startDate, endDate }
       );
       
       if (typeof response.data.predictedQuantityRequested === 'number') {
