@@ -105,18 +105,32 @@ export const createOrder = async (req, res) => {
 
     await order.save();
 
-    for (const item of order.items) {
-      const urgencyScore = await getTransportationUrgency(
-        order._id,
-        item.productId,
-        item.orderedQuantity
-      );
-      item.urgencyScore = urgencyScore;
-    }
-
-    await order.save();
-
     res.status(201).json({ message: "Order submitted successfully", order });
+
+    // Non-blocking urgency prediction
+    (async () => {
+      try {
+        let updated = false;
+        for (const item of order.items) {
+          try {
+            const urgencyScore = await getTransportationUrgency(
+              order._id,
+              item.productId,
+              item.orderedQuantity
+            );
+            item.urgencyScore = urgencyScore;
+            updated = true;
+          } catch (e) {
+            console.error('Urgency prediction failed:', e);
+          }
+        }
+        if (updated) {
+          await order.save();
+        }
+      } catch (e) {
+        console.error('Non-blocking urgency prediction error:', e);
+      }
+    })();
   } catch (err) {
     console.error("[CREATE ORDER ERROR]", err);
     res.status(500).json({ message: "Internal server error" });
