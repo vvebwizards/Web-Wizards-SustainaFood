@@ -158,13 +158,13 @@ router.get('/recent/:userId', isAuthenticated, async (req, res) => {
     const messages = await Message.find({
       $or: [
         { sender: userId },
-        { receiver: userId }
+        { recipient: userId }
       ]
     })
     .sort({ createdAt: -1 })
     .limit(50)
     .populate('sender', 'username profileImage')
-    .populate('receiver', 'username profileImage');
+    .populate('recipient', 'username profileImage');
     
     res.json(messages);
   } catch (error) {
