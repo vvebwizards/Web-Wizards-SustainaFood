@@ -13,8 +13,12 @@ const MyRequests: React.FC = () => {
     const fetchOrders = async () => {
       try {
         console.log("📦 Fetching orders for the authenticated user");
+        const token = localStorage.getItem('token');
         const response = await fetch(`https://foodreduce-backend.azurewebsites.net/api/orders/my`, {
-          credentials: "include",
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         });
 
         if (!response.ok) {
